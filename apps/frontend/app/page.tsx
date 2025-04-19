@@ -1,7 +1,8 @@
+"use client";
 import React from "react";
 
 const HomePage: React.FC = () => {
-  return <div>Hello World!</div>;
+  return <p>Soscial Network Platform</p>;
 };
 
 export default HomePage;
