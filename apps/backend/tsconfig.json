@@ -24,8 +24,6 @@
       "@app/common/*": [
         "libs/common/src/*"
       ]
-    },
-    "allowJs": true,
-  },
-  "include": ["scripts/**/*.js", "src"]
+    }
+  }
 }
