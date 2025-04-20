@@ -32,8 +32,8 @@
     "db:migrate:prod": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "db:migrate:no-seed": "npx prisma migrate dev --skip-seed",
-    "prepare": "husky",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.3",
