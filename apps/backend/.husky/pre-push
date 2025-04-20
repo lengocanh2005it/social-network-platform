@@ -1,0 +1,5 @@
+echo "🔍 Running pre-push checks..."
+
+npm run build:all || exit 1
+
+echo "✅ All checks passed! Pushing..."

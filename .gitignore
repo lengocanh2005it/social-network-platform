@@ -38,3 +38,5 @@ yarn-error.log*
 *.pem
 
 next-env.d.ts
+apps/backend/prisma/@generated
+apps/backend/scripts
