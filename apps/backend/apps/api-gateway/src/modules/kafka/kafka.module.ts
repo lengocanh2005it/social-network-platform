@@ -16,14 +16,19 @@ import { Partitioners } from 'kafkajs';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: configService.get<string>(KAFKA_USER_CLIENT_ID, ''),
-              brokers: configService.get<string[]>('kafka.brokers', []),
-              ssl: true,
-              sasl: {
-                mechanism: 'plain',
-                username: configService.get<string>('kafka.username', ''),
-                password: configService.get<string>('kafka.password', ''),
-              },
+              clientId: KAFKA_USER_CLIENT_ID,
+              brokers: configService
+                .get<string>('kafka.brokers', '')
+                ?.split(',')
+                ?.filter(Boolean),
+              ...(configService.get<string>('node_env') === 'production' && {
+                ssl: true,
+                sasl: {
+                  mechanism: 'plain',
+                  username: configService.get<string>('kafka.username', ''),
+                  password: configService.get<string>('kafka.password', ''),
+                },
+              }),
             },
             producer: {
               createPartitioner: Partitioners.LegacyPartitioner,

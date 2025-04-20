@@ -1,0 +1,565 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/@generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                 String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email              String? @unique @db.VarChar(255)
+  password           String? @db.VarChar(255)
+  is_email_verified  Boolean @default(false) @db.Boolean
+  two_factor_enabled Boolean @default(false) @db.Boolean
+  role               Role    @default(user)
+
+  profile                   UserProfiles?
+  oauth_account             OAuthAccounts?
+  educations                UserEducations[]
+  socials                   UserSocials[]
+  work_places               UserWorkPlaces[]
+  posts                     Posts[]
+  devices                   UserDevices[]
+  post_tags                 PostTags[]
+  comments                  Comments[]
+  comment_likes             CommentLikes[]
+  groups                    Groups[]
+  groupJoinRequests         GroupJoinRequests[]
+  stories                   Stories[]
+  story_views               StoryViews[]
+  story_reactions           StoryReactions[]
+  notifications             Notifications[]
+  initiators                Friends[]                  @relation("InitiatorUser")
+  targets                   Friends[]                  @relation("TargetUser")
+  followers                 Followers[]                @relation("UserFollowers")
+  followings                Followers[]                @relation("UserFollowing")
+  blockedUsers              Blocks[]                   @relation("UserBlocks")
+  blockedBy                 Blocks[]                   @relation("BlockedUsers")
+  conversations             Conversations[]
+  conversation_participants ConversationParticipants[]
+  messages                  Messages[]
+  post_likes                PostLikes[]
+  post_shares               PostShares[]
+  post_image_likes          PostImageLikes[]
+  post_image_shares         PostImageShares[]
+  post_video_likes          PostVideoLikes[]
+  post_video_shares         PostVideoShares[]
+}
+
+model UserProfiles {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  phone_number    String        @unique @db.VarChar(255)
+  gender          Gender
+  dob             DateTime
+  address         String        @db.Text
+  avatar_url      String        @db.Text
+  bio             String?       @db.Text
+  status          ProfileStatus @default(active)
+  nickname        String?       @db.VarChar(50)
+  cover_photo_url String        @db.Text
+  user_id         String        @unique @db.Uuid
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @default(now())
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model OAuthAccounts {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider    OAuthProvider
+  provider_id String?       @unique @db.Text
+  user_id     String        @unique @db.Uuid
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserEducations {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  school_name String    @db.Text
+  major       String    @db.Text
+  degree      String    @db.Text
+  start_date  DateTime
+  end_date    DateTime?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @default(now())
+  user_id     String    @db.Uuid
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserSocials {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  social_name String @db.VarChar(255)
+  social_link String @db.Text
+  user_id     String @db.Uuid
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserWorkPlaces {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_name String    @db.VarChar(255)
+  position     String    @db.Text
+  start_date   DateTime
+  end_date     DateTime?
+  user_id      String    @db.Uuid
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserDevices {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  finger_print  String   @db.Text
+  device_name   String   @db.VarChar(255)
+  user_agent    String   @db.Text
+  ip_address    String   @db.Text
+  location      String   @db.Text
+  is_trusted    Boolean  @default(false) @db.Boolean
+  last_login_at DateTime @default(now())
+  user_id       String   @db.Uuid
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model HashTags {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name String @db.VarChar(255)
+
+  posts PostHashTags[]
+}
+
+model Posts {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  privacy        PostPrivacies
+  total_likes    Int           @default(0) @db.Integer
+  total_comments Int           @default(0) @db.Integer
+  total_shares   Int           @default(0) @db.Integer
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @default(now())
+  deleted_at     DateTime?
+  user_id        String        @db.Uuid
+  group_id       String?       @db.Uuid
+
+  user     Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  contents PostContents[]
+  videos   PostVideos[]
+  images   PostImages[]
+  hashtags PostHashTags[]
+  tags     PostTags[]
+  comments Comments[]
+  likes    PostLikes[]
+  shares   PostShares[]
+}
+
+model PostLikes {
+  post_id  String   @db.Uuid
+  user_id  String   @db.Uuid
+  liked_at DateTime @default(now())
+
+  post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, user_id])
+}
+
+model PostShares {
+  post_id   String   @db.Uuid
+  user_id   String   @db.Uuid
+  shared_at DateTime @default(now())
+
+  post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, user_id])
+}
+
+model PostContents {
+  id       String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content  String              @db.Text
+  type     PostContentType     @default(text)
+  language PostContentLanguage @default(en)
+  post_id  String              @db.Uuid
+
+  post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+}
+
+model PostVideos {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  video_url      String @db.Text
+  total_likes    Int    @db.Integer
+  total_comments Int    @db.Integer
+  total_shares   Int    @db.Integer
+  post_id        String @db.Uuid
+
+  post     Posts             @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  comments Comments[]
+  likes    PostVideoLikes[]
+  shares   PostVideoShares[]
+}
+
+model PostVideoLikes {
+  post_video_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  liked_at      DateTime @default(now())
+
+  post_video PostVideos @relation(fields: [post_video_id], references: [id], onDelete: Cascade)
+  user       Users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_video_id, user_id])
+}
+
+model PostVideoShares {
+  post_video_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  shared_at     DateTime @default(now())
+
+  post_video PostVideos @relation(fields: [post_video_id], references: [id], onDelete: Cascade)
+  user       Users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_video_id, user_id])
+}
+
+model PostImages {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  image_url      String @db.Text
+  total_likes    Int    @db.Integer
+  total_comments Int    @db.Integer
+  total_shares   Int    @db.Integer
+  post_id        String @db.Uuid
+
+  post     Posts             @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  comments Comments[]
+  likes    PostImageLikes[]
+  shares   PostImageShares[]
+}
+
+model PostImageLikes {
+  post_image_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  liked_at      DateTime @default(now())
+
+  post_image PostImages @relation(fields: [post_image_id], references: [id], onDelete: Cascade)
+  user       Users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_image_id, user_id])
+}
+
+model PostImageShares {
+  post_image_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  shared_at     DateTime @default(now())
+
+  post_image PostImages @relation(fields: [post_image_id], references: [id], onDelete: Cascade)
+  user       Users      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_image_id, user_id])
+}
+
+model PostHashTags {
+  post_id    String @db.Uuid
+  hashtag_id String @db.Uuid
+
+  post    Posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  hashtag HashTags @relation(fields: [hashtag_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, hashtag_id])
+}
+
+model PostTags {
+  post_id        String @db.Uuid
+  tagged_user_id String @db.Uuid
+
+  post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user Users @relation(fields: [tagged_user_id], references: [id], onDelete: Cascade)
+
+  @@id([post_id, tagged_user_id])
+}
+
+model Comments {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content           String    @db.Text
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @default(now())
+  deleted_at        DateTime?
+  post_id           String?   @db.Uuid
+  post_video_id     String?   @db.Uuid
+  post_image_id     String?   @db.Uuid
+  parent_comment_id String?   @db.Uuid
+  user_id           String    @db.Uuid
+
+  comment       Comments?      @relation("CommentReplies", fields: [parent_comment_id], references: [id], onDelete: SetNull)
+  comments      Comments[]     @relation("CommentReplies")
+  post          Posts?         @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  post_video    PostVideos?    @relation(fields: [post_video_id], references: [id], onDelete: Cascade)
+  post_image    PostImages?    @relation(fields: [post_image_id], references: [id], onDelete: Cascade)
+  user          Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comment_likes CommentLikes[]
+}
+
+model CommentLikes {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime @default(now())
+  user_id    String   @db.Uuid
+  comment_id String   @db.Uuid
+
+  user    Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  comment Comments @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+}
+
+model Groups {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.Text
+  description     String?  @db.Text
+  cover_photo_url String?  @db.Text
+  is_private      Boolean  @default(false) @db.Boolean
+  created_at      DateTime @default(now())
+  created_by      String   @db.Uuid
+
+  user              Users               @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  groupJoinRequests GroupJoinRequests[]
+}
+
+model GroupMembers {
+  group_id String          @db.Uuid
+  user_id  String          @db.Uuid
+  role     GroupMemberRole
+
+  @@id([group_id, user_id])
+  @@unique([group_id, user_id])
+}
+
+model GroupJoinRequests {
+  id         String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status     GroupJoinRequestsStatus @default(pending)
+  created_at DateTime                @default(now())
+  group_id   String                  @db.Uuid
+  user_id    String                  @db.Uuid
+
+  user  Users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group Groups @relation(fields: [group_id], references: [id], onDelete: Cascade)
+}
+
+model Stories {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content_type ContentStoryType @default(text)
+  content_url  String?          @db.Text
+  text_content String?          @db.Text
+  created_at   DateTime         @default(now())
+  expires_at   DateTime
+  user_id      String           @db.Uuid
+
+  user      Users            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  views     StoryViews[]
+  reactions StoryReactions[]
+}
+
+model StoryViews {
+  story_id  String @db.Uuid
+  viewer_id String @db.Uuid
+
+  story  Stories @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  viewer Users   @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
+
+  @@id([story_id, viewer_id])
+  @@unique([story_id, viewer_id])
+}
+
+model StoryReactions {
+  story_id   String   @db.Uuid
+  viewer_id  String   @db.Uuid
+  reaction   String   @db.Text
+  reacted_at DateTime @default(now())
+
+  story  Stories @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  viewer Users   @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
+
+  @@id([story_id, viewer_id])
+  @@unique([story_id, viewer_id])
+}
+
+model Notifications {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type         NotificationType
+  messages     String           @db.Text
+  metadata     Json?            @db.JsonB
+  is_read      Boolean          @default(false) @db.Boolean
+  created_at   DateTime         @default(now())
+  recipient_id String           @db.Uuid
+
+  recipient Users @relation(fields: [recipient_id], references: [id], onDelete: Cascade)
+}
+
+model Friends {
+  friendship_status FriendShipStatus @default(pending)
+  initiated_at      DateTime         @default(now())
+  confirmed_at      DateTime?
+  initiator_id      String           @db.Uuid
+  target_id         String           @db.Uuid
+
+  initiator Users @relation("InitiatorUser", fields: [initiator_id], references: [id], onDelete: Cascade)
+  target    Users @relation("TargetUser", fields: [target_id], references: [id], onDelete: Cascade)
+
+  @@id([initiator_id, target_id])
+}
+
+model Followers {
+  user_id     String @db.Uuid
+  follower_id String @db.Uuid
+
+  user     Users @relation("UserFollowers", fields: [user_id], references: [id], onDelete: Cascade)
+  follower Users @relation("UserFollowing", fields: [follower_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, follower_id])
+  @@unique([user_id, follower_id])
+}
+
+model Blocks {
+  user_id         String @db.Uuid
+  blocked_user_id String @db.Uuid
+
+  user        Users @relation("UserBlocks", fields: [user_id], references: [id], onDelete: Cascade)
+  blockedUser Users @relation("BlockedUsers", fields: [blocked_user_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, blocked_user_id])
+  @@unique([user_id, blocked_user_id])
+}
+
+model Conversations {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  is_group         Boolean  @default(false) @db.Boolean
+  group_name       String?  @db.Text
+  group_avatar_url String?  @db.Text
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now())
+  created_by       String   @db.Uuid
+
+  creator      Users                      @relation(fields: [created_by], references: [id], onDelete: Cascade)
+  participants ConversationParticipants[]
+  messages     Messages[]
+}
+
+model ConversationParticipants {
+  user_id         String    @db.Uuid
+  conversation_id String    @db.Uuid
+  joined_at       DateTime  @default(now())
+  leaved_at       DateTime?
+
+  user         Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  conversation Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, conversation_id])
+  @@unique([user_id, conversation_id])
+}
+
+model Messages {
+  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content             String      @db.Text
+  message_type        MessageType @default(text)
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @default(now())
+  deleted_at          DateTime?
+  conversation_id     String      @db.Uuid
+  reply_to_message_id String?     @db.Uuid
+  user_id             String      @db.Uuid
+
+  conversation  Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  parentMessage Messages?     @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: Cascade)
+  replies       Messages[]    @relation("MessageReplies")
+  user          Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model MessageReactions {
+  message_id    String   @db.Uuid
+  user_id       String   @db.Uuid
+  reaction_type String
+  reacted_at    DateTime @default(now())
+
+  @@id([message_id, user_id])
+}
+
+enum Role {
+  admin
+  user
+}
+
+enum GroupMemberRole {
+  member
+  censor
+  owner
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum ProfileStatus {
+  inactive
+  active
+}
+
+enum OAuthProvider {
+  google
+  facebook
+  local
+}
+
+enum PostPrivacies {
+  public
+  only_friend
+  only_me
+}
+
+enum PostContentType {
+  text
+  link
+}
+
+enum PostContentLanguage {
+  vn
+  en
+}
+
+enum GroupJoinRequestsStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ContentStoryType {
+  text
+  image
+}
+
+enum NotificationType {
+  friend_request
+  friend_request_accepted
+  friend_request_rejected
+  post_liked
+  post_commented
+  comment_replied
+  post_shared
+  tagged_in_post
+  tagged_in_comment
+  group_invite
+  group_join_request
+  group_role_changed
+  followed_you
+  birthday_reminder
+  system_announcement
+}
+
+enum FriendShipStatus {
+  appcepted
+  rejected
+  pending
+}
+
+enum MessageType {
+  text
+  file
+}
