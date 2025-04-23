@@ -1,5 +1,5 @@
 echo "🔍 Running pre-push checks..."
 
-npm run build || exit 1
+yarn build || exit 1
 
 echo "✅ All checks passed! Pushing..."

@@ -5,7 +5,7 @@ import { lastValueFrom } from 'rxjs';
 @Injectable()
 export class UsersService implements OnModuleInit {
   constructor(
-    @Inject('USER_SERVICE') private readonly userClient: ClientKafka,
+    @Inject('USERS_SERVICE') private readonly userClient: ClientKafka,
   ) {}
 
   async onModuleInit() {
