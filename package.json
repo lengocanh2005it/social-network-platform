@@ -6,10 +6,10 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types",
-    "prepare": "husky"
+    "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.16",
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
     "turbo": "^2.5.0",
@@ -18,9 +18,13 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "npm@11.2.0",
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "zod": "^3.24.3"
+  }
 }

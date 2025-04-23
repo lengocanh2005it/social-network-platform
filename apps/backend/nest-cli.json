@@ -19,6 +19,15 @@
         "tsConfigPath": "apps/api-gateway/tsconfig.app.json"
       }
     },
+    "auth": {
+      "type": "application",
+      "root": "apps/auth",
+      "entryFile": "main",
+      "sourceRoot": "apps/auth/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth/tsconfig.app.json"
+      }
+    },
     "common": {
       "type": "library",
       "root": "libs/common",
@@ -26,6 +35,15 @@
       "sourceRoot": "libs/common/src",
       "compilerOptions": {
         "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
+    "emails": {
+      "type": "application",
+      "root": "apps/emails",
+      "entryFile": "main",
+      "sourceRoot": "apps/emails/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/emails/tsconfig.app.json"
       }
     },
     "notifications": {
@@ -44,6 +62,24 @@
       "sourceRoot": "apps/posts/src",
       "compilerOptions": {
         "tsConfigPath": "apps/posts/tsconfig.app.json"
+      }
+    },
+    "prisma": {
+      "type": "application",
+      "root": "apps/prisma",
+      "entryFile": "main",
+      "sourceRoot": "apps/prisma/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/prisma/tsconfig.app.json"
+      }
+    },
+    "redis": {
+      "type": "application",
+      "root": "apps/redis",
+      "entryFile": "main",
+      "sourceRoot": "apps/redis/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/redis/tsconfig.app.json"
       }
     },
     "users": {
