@@ -1,14 +1,18 @@
-import { InjectRedis } from '@nestjs-modules/ioredis';
+import Keyv from '@keyv/redis';
 import { Injectable } from '@nestjs/common';
-import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RedisService {
-  constructor(@InjectRedis() private readonly redis: Redis) {}
+  private readonly redis: Keyv<any>;
+
+  constructor(private readonly configService: ConfigService) {
+    this.redis = new Keyv(configService.get<string>('redis_url', ''));
+  }
 
   public async setKey(key: string, data: any, ttl?: number): Promise<void> {
     if (ttl) {
-      await this.redis.set(key, data, 'EX', ttl);
+      await this.redis.set(key, data, ttl);
     } else {
       await this.redis.set(key, data);
     }

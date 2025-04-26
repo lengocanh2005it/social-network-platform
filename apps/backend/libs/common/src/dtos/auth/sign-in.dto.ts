@@ -1,11 +1,11 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsValidPassword } from 'libs/common/decorators';
 
 export class SignInDto {
   @IsEmail()
   readonly email!: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsValidPassword()
   readonly password!: string;
 
   @IsString()

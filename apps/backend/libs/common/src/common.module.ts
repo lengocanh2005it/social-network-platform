@@ -3,6 +3,7 @@ import { KafkaModule, PrismaModule } from '@app/common/modules';
 import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 import {
   KeycloakConnectModule,
   PolicyEnforcementMode,
@@ -39,6 +40,16 @@ import { CommonService } from './common.service';
     }),
     KafkaModule,
     PrismaModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt.secret_key', ''),
+        signOptions: {
+          expiresIn: configService.get<string>('jwt.access_token_life', ''),
+        },
+      }),
+    }),
   ],
   providers: [CommonService],
   exports: [
@@ -48,6 +59,7 @@ import { CommonService } from './common.service';
     PrismaModule,
     HttpModule,
     KeycloakConnectModule,
+    JwtModule,
   ],
 })
 export class CommonModule {}

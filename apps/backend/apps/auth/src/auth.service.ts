@@ -1,5 +1,7 @@
 import {
   DeviceDetailsDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
   SignInDto,
   SignUpDto,
   VerifyOtpDto,
@@ -8,16 +10,26 @@ import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
   DEFAULT_TTL_OTP_EXPIRED,
   EmailTemplateNameEnum,
+  JwtResetPasswordPayload,
   KeycloakSignUpData,
   generateOtp,
   hashPassword,
   isValidPassword,
 } from '@app/common/utils';
 import { HttpService } from '@nestjs/axios';
-import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { OAuthProvider, Role } from '@prisma/generated';
+import { OAuthProvider, Role } from '@prisma/client';
 import { jwtDecode } from 'jwt-decode';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
@@ -34,9 +46,11 @@ export class AuthService implements OnModuleInit {
     private readonly redisClient: ClientKafka,
     @Inject('EMAILS_SERVICE')
     private readonly emailsClient: ClientKafka,
+    @Inject('USERS_SERVICE') private readonly usersClient: ClientKafka,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly prismaService: PrismaService,
+    private jwtService: JwtService,
   ) {
     this.keycloakAuthServerUrl = configService.get<string>(
       'keycloak.auth_server_url',
@@ -70,7 +84,7 @@ export class AuthService implements OnModuleInit {
     if (!existingUser)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: `User has email '${email}' doesn't exist.`,
+        message: `This email has not been registered.`,
       });
 
     if (
@@ -79,7 +93,7 @@ export class AuthService implements OnModuleInit {
     )
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `Your password isn't correct. Try again.`,
+        message: `The password you entered is incorrect. Please try again.`,
       });
 
     if (!existingUser.is_email_verified && existingUser.profile) {
@@ -214,7 +228,7 @@ export class AuthService implements OnModuleInit {
     if (!existingEmail)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: `Your email not found in the system.`,
+        message: `This email has not been registered.`,
       });
 
     const key = `${email}:otp-verify`;
@@ -254,6 +268,114 @@ export class AuthService implements OnModuleInit {
       success: true,
       message: 'Email verified successfully.',
     };
+  };
+
+  public forgotPassword = async (forgotPasswordDto: ForgotPasswordDto) => {
+    const { email } = forgotPasswordDto;
+
+    const existingEmail = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        oauth_account: true,
+        profile: true,
+      },
+    });
+
+    if (!existingEmail)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    if (existingEmail.oauth_account?.provider !== OAuthProvider.local)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `This is not a local account, therefore password recovery via OTP is not available.`,
+      });
+
+    const authorizationCode = this.jwtService.sign(
+      { email },
+      {
+        expiresIn: '30m',
+      },
+    );
+
+    const resetPasswordLink = `${this.configService.get<string>('frontend_url', '')}/auth/reset-password/?authorization_code=${authorizationCode}`;
+
+    this.emailsClient.emit('send-email', {
+      email,
+      templateName: EmailTemplateNameEnum.EMAIL_RESET_PASSWORD,
+      context: {
+        reset_link: resetPasswordLink,
+        full_name:
+          existingEmail.profile?.first_name +
+          ' ' +
+          existingEmail.profile?.last_name,
+      },
+    });
+
+    return {
+      success: true,
+      message: `A reset password link has been sent to your email.`,
+    };
+  };
+
+  public resetPassword = async (resetPasswordDto: ResetPasswordDto) => {
+    const { newPassword, authorizationCode } = resetPasswordDto;
+
+    try {
+      const { email } =
+        this.jwtService.verify<JwtResetPasswordPayload>(authorizationCode);
+
+      const existingEmail = await this.prismaService.users.findUnique({
+        where: {
+          email,
+        },
+        include: {
+          oauth_account: true,
+        },
+      });
+
+      if (!existingEmail)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `This email has not been registered.`,
+        });
+
+      if (existingEmail.oauth_account?.provider !== OAuthProvider.local)
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `This is a local account, therefore changing the password via password recovery is not available.`,
+        });
+
+      this.usersClient.emit(
+        'update-password',
+        JSON.stringify({
+          email,
+          password: newPassword,
+        }),
+      );
+
+      await this.updatePasswordUserKeyCloak(newPassword, email);
+
+      return {
+        sucess: true,
+        message:
+          'Congratulations! Your password has been successfully updated.',
+      };
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        throw new BadRequestException(
+          'The authorization code you provided has expired.',
+        );
+      } else {
+        throw new BadRequestException(
+          'The authorization code you provided is invalid.',
+        );
+      }
+    }
   };
 
   private createNewOAuthAcccount = async (
@@ -350,180 +472,284 @@ export class AuthService implements OnModuleInit {
   };
 
   private signInByKeycloak = async (email: string, password: string) => {
-    const keycloakUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+    try {
+      const keycloakUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
 
-    const data = new URLSearchParams();
+      const data = new URLSearchParams();
 
-    data.append('grant_type', 'password');
+      data.append('grant_type', 'password');
 
-    data.append('client_id', this.clientId);
+      data.append('client_id', this.clientId);
 
-    data.append('client_secret', this.clientSecret);
+      data.append('client_secret', this.clientSecret);
 
-    data.append('username', email);
+      data.append('username', email);
 
-    data.append('password', password);
+      data.append('password', password);
 
-    const response = await firstValueFrom(
-      this.httpService.post(keycloakUrl, data),
-    );
+      const response = await firstValueFrom(
+        this.httpService.post(keycloakUrl, data),
+      );
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private signUpByKeycloak = async (keycloakSignUpData: KeycloakSignUpData) => {
-    const { email, password } = keycloakSignUpData;
+    try {
+      const { email, password } = keycloakSignUpData;
 
-    const baseUrl = `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users`;
+      const baseUrl = `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users`;
 
-    const data = {
-      ...omit(keycloakSignUpData, ['password']),
-      enabled: true,
-      credentials: [
-        {
-          type: 'password',
-          value: password,
-          temporary: false,
-        },
-      ],
-    };
+      const data = {
+        ...omit(keycloakSignUpData, ['password']),
+        enabled: true,
+        credentials: [
+          {
+            type: 'password',
+            value: password,
+            temporary: false,
+          },
+        ],
+      };
 
-    const response = await firstValueFrom(
-      this.httpService.post(baseUrl, data, {
-        headers: {
-          Authorization: `Bearer ${await this.getAdminToken()}`,
-          'Content-Type': 'application/json',
-        },
-      }),
-    );
-
-    if (response.status !== 201)
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: `Have an error when creating user`,
-      });
-
-    const users = await firstValueFrom(
-      this.httpService.get(`${baseUrl}?username=${email}`, {
-        headers: {
-          Authorization: `Bearer ${await this.getAdminToken()}`,
-        },
-      }),
-    );
-
-    const userId = users.data[0]?.id;
-
-    if (!userId)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'User not found.',
-      });
-
-    const clientId = await this.getClientId(this.clientId);
-
-    const roles = await this.getClientRoles(clientId);
-
-    const userRole = roles.find((role) => role.name === 'user');
-
-    if (!userRole)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `Role user not found.`,
-      });
-
-    await firstValueFrom(
-      this.httpService.post(
-        `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/clients/${clientId}`,
-        [userRole],
-        {
+      const response = await firstValueFrom(
+        this.httpService.post(baseUrl, data, {
           headers: {
             Authorization: `Bearer ${await this.getAdminToken()}`,
             'Content-Type': 'application/json',
           },
-        },
-      ),
-    );
+        }),
+      );
+
+      if (response.status !== 201)
+        throw new RpcException({
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: `Have an error when creating user`,
+        });
+
+      const users = await firstValueFrom(
+        this.httpService.get(`${baseUrl}?username=${email}`, {
+          headers: {
+            Authorization: `Bearer ${await this.getAdminToken()}`,
+          },
+        }),
+      );
+
+      const userId = users.data[0]?.id;
+
+      if (!userId)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'User not found.',
+        });
+
+      const clientId = await this.getClientId(this.clientId);
+
+      const roles = await this.getClientRoles(clientId);
+
+      const userRole = roles.find((role) => role.name === 'user');
+
+      if (!userRole)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Role user not found.`,
+        });
+
+      await firstValueFrom(
+        this.httpService.post(
+          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/clients/${clientId}`,
+          [userRole],
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private getAdminToken = async (): Promise<string> => {
-    const baseUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
+    try {
+      const baseUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
 
-    const data = new URLSearchParams();
+      const data = new URLSearchParams();
 
-    data.append('grant_type', 'client_credentials');
+      data.append('grant_type', 'client_credentials');
 
-    data.append('client_id', this.clientId);
+      data.append('client_id', this.clientId);
 
-    data.append('client_secret', this.clientSecret);
+      data.append('client_secret', this.clientSecret);
 
-    const response = await firstValueFrom(this.httpService.post(baseUrl, data));
+      const response = await firstValueFrom(
+        this.httpService.post(baseUrl, data),
+      );
 
-    return response.data.access_token;
+      return response.data.access_token;
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private getClientId = async (clientName: string): Promise<string> => {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients`,
-        {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients`,
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+            },
           },
-        },
-      ),
-    );
+        ),
+      );
 
-    const client = response.data.find((c: any) => c.clientId === clientName);
+      const client = response.data.find((c: any) => c.clientId === clientName);
 
-    return client ? client.id : '';
+      return client ? client.id : '';
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private getClientRoles = async (clientId: string): Promise<any[]> => {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients/${clientId}/roles`,
-        {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients/${clientId}/roles`,
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+            },
           },
-        },
-      ),
-    );
+        ),
+      );
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private verifyUserEmailKeycloak = async (userId: string): Promise<void> => {
     const baseUrl = `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${userId}`;
 
-    await firstValueFrom(
-      this.httpService.put(
-        baseUrl,
-        {
-          emailVerified: true,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
-            'Content-Type': 'application/json',
+    try {
+      await firstValueFrom(
+        this.httpService.put(
+          baseUrl,
+          {
+            emailVerified: true,
           },
-        },
-      ),
-    );
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 
   private getUserByEmailKeycloak = async (email: string): Promise<any> => {
-    const response = await firstValueFrom(
-      this.httpService.get(
-        `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users?email=${encodeURIComponent(email)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users?email=${encodeURIComponent(email)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+            },
           },
-        },
-      ),
-    );
+        ),
+      );
 
-    return response.data.length > 0 ? response.data[0] : null;
+      return response.data.length > 0 ? response.data[0] : null;
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
+  };
+
+  private updatePasswordUserKeyCloak = async (
+    newPassword: string,
+    email: string,
+  ) => {
+    const user = await this.getUserByEmailKeycloak(email);
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    try {
+      await firstValueFrom(
+        this.httpService.put(
+          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${user.id}/reset-password`,
+          {
+            type: 'password',
+            temporary: false,
+            value: newPassword,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${await this.getAdminToken()}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        ),
+      );
+    } catch (error) {
+      console.error(error?.response?.data || error?.message);
+
+      throw new RpcException({
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'A system error has occurred. Please try again.',
+      });
+    }
   };
 }
