@@ -27,4 +27,8 @@ export default () => ({
     user: process.env.MAILER_USER,
     pass: process.env.MAILER_PASSWORD,
   },
+  jwt: {
+    secret_key: process.env.JWT_SECRET_KEY,
+    access_token_life: process.env.JWT_ACCESS_TOKEN_LIFE,
+  },
 });

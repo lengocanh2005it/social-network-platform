@@ -24,9 +24,6 @@
       "@app/common/*": [
         "libs/common/src/*"
       ],
-      "@prisma/generated": [
-        "prisma/@generated"
-      ]
     }
   }
 }

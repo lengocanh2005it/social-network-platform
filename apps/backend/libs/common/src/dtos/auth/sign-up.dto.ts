@@ -1,4 +1,4 @@
-import { Gender } from '@prisma/generated';
+import { Gender } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import {
   IsDate,
@@ -10,6 +10,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { IsValidPassword } from 'libs/common/decorators';
 
 export class DeviceDetailsDto {
   @IsString()
@@ -33,8 +34,7 @@ export class SignUpDto {
   @IsEmail()
   readonly email!: string;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsValidPassword()
   readonly password!: string;
 
   @IsPhoneNumber('VN')

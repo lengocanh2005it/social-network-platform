@@ -1,4 +1,10 @@
-import { SignInDto, SignUpDto, VerifyOtpDto } from '@app/common/dtos/auth';
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  SignInDto,
+  SignUpDto,
+  VerifyOtpDto,
+} from '@app/common/dtos/auth';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
@@ -20,5 +26,15 @@ export class AuthController {
   @MessagePattern('verify-otp')
   async verifyOtp(@Payload() verifyOtp: VerifyOtpDto) {
     return this.authService.verifyOtp(verifyOtp);
+  }
+
+  @MessagePattern('forgot-password')
+  async forgotPassword(@Payload() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @MessagePattern('reset-password')
+  async resetPassword(@Payload() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }
