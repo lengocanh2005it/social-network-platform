@@ -36,17 +36,19 @@ const SideCredentials = () => {
         pagination={{ clickable: true }}
         autoplay={{ delay: 4000 }}
         loop
-        className="rounded-xl w-full mx-auto"
+        className="rounded-xl w-full mx-auto relative"
       >
         {bannerImages.map((banner, index) => (
-          <SwiperSlide key={index} className="select-none">
+          <SwiperSlide
+            key={index}
+            className="select-none w-full h-[300px] bg-red-300 relative"
+          >
             <Image
               src={banner.src}
               alt={banner.alt}
-              layout="responsive"
-              width={500}
-              height={300}
-              className="cursor-pointer"
+              width={450}
+              height={450}
+              className="cursor-pointer w-full h-full"
             />
           </SwiperSlide>
         ))}

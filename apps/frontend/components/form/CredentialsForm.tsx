@@ -40,6 +40,8 @@ type CredentialsFormProps = {
 const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
   const router = useRouter();
   const handleContinue = () => {
+    form.trigger("email");
+    form.trigger("password");
     const values = {
       email: form.getValues("email"),
       password: form.getValues("password"),
