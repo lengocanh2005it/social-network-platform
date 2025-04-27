@@ -4,6 +4,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import Image from "next/image";
 
 const SideCredentials = () => {
   const bannerImages = [
@@ -19,7 +20,7 @@ const SideCredentials = () => {
     justify-center md:gap-4 gap-2"
     >
       <div className="flex flex-col md:gap-2 gap-1 items-center justify-center text-center">
-        <h1 className="md:text-xl text-lg">Social Network Media Platform</h1>
+        <h1 className="md:text-xl text-lg">Social Network Platform</h1>
 
         <p className="md:text-sm text-[14px] text-black/60">
           A platform used to build communities, connect with people who share
@@ -35,14 +36,19 @@ const SideCredentials = () => {
         pagination={{ clickable: true }}
         autoplay={{ delay: 4000 }}
         loop
-        className="rounded-xl w-full mx-auto"
+        className="rounded-xl w-full mx-auto relative"
       >
         {bannerImages.map((banner, index) => (
-          <SwiperSlide key={index} className="select-none">
-            <img
+          <SwiperSlide
+            key={index}
+            className="select-none w-full h-[300px] bg-red-300 relative"
+          >
+            <Image
               src={banner.src}
               alt={banner.alt}
-              className="w-full h-full object-cover cursor-pointer"
+              width={450}
+              height={450}
+              className="cursor-pointer w-full h-full"
             />
           </SwiperSlide>
         ))}

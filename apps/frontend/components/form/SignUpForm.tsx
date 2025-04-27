@@ -109,7 +109,6 @@ const SignUpForm = () => {
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     if (deviceDetails) {
       setIsLoading(true);
-      setIsModalOTPOpen(false);
 
       const signUpDto: SignUpDto = {
         ...values,
@@ -121,7 +120,6 @@ const SignUpForm = () => {
       setTimeout(() => {
         mutateSignUp(signUpDto);
         setIsLoading(false);
-        setIsModalOTPOpen(true);
       }, 2500);
     }
   };

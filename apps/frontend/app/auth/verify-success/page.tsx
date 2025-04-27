@@ -1,10 +1,23 @@
 "use client";
+import NotFoundPage from "@/app/not-found";
+import { isValidJWT } from "@/utils";
 import { Button } from "@heroui/react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-const VerifyEmailSuccess = () => {
+const VerifyEmailPageContent = () => {
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  const authorizationCode = searchParams.get("authorization_code");
+
+  if (
+    !authorizationCode ||
+    (authorizationCode && !isValidJWT(authorizationCode))
+  ) {
+    return <NotFoundPage />;
+  }
 
   const handleBackToSignIn = () => {
     router.push("/auth/sign-in");
@@ -34,6 +47,14 @@ const VerifyEmailSuccess = () => {
         </Button>
       </div>
     </main>
+  );
+};
+
+const VerifyEmailSuccess = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyEmailPageContent />
+    </Suspense>
   );
 };
 

@@ -3,8 +3,8 @@ import ForgotPasswordForm from "@/components/form/ForgotPasswordForm";
 const ForgetPassword = () => {
   return (
     <main
-      className="flex flex-col px-10 py-4 bg-white text-black h-screen mx-auto w-full items-center
-    justify-center"
+      className="flex flex-col md:px-10 px-4 py-4 bg-white text-black h-screen 
+      mx-auto w-full items-center justify-center"
     >
       <div
         className="flex flex-col justify-center items-center gap-8 md:w-1/2 w-full p-8 py-6
