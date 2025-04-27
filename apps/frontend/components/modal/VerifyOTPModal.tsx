@@ -25,7 +25,7 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
   email,
 }) => {
   const targetRef = React.useRef<HTMLElement>(
-    null,
+    null
   ) as React.RefObject<HTMLElement>;
   const { moveProps } = useDraggable({ targetRef, isDisabled: !isOpen });
   const [isLoading, setIsLoading] = useState<boolean>(false);

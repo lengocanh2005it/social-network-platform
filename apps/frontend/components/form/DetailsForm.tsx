@@ -42,7 +42,7 @@ const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
             .then((data) => {
               form.setValue(
                 "address",
-                data.display_name || "Unable to fetch address",
+                data.display_name || "Unable to fetch address"
               );
               form.trigger("address");
               setLoading(false);
@@ -57,7 +57,7 @@ const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
           form.setValue("address", "Unable to get location");
           form.trigger("address");
           setLoading(false);
-        },
+        }
       );
     } else {
       form.setValue("address", "Browser does not support Geolocation");

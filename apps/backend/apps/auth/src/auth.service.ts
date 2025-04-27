@@ -153,10 +153,10 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    if (existingUser)
+    if (existingUser && existingUser.is_email_verified)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `User with email '${email}' has existed.`,
+        message: `The email '${email}' has already been registered.`,
       });
 
     const existingPhoneNumber =
@@ -166,11 +166,20 @@ export class AuthService implements OnModuleInit {
         },
       });
 
-    if (existingPhoneNumber)
+    if (existingPhoneNumber && existingUser?.is_email_verified)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `User with phone '${res.phone_number}' has existed.`,
+        message: `The phone number '${res.phone_number}' has already been registered.`,
       });
+
+    if (existingUser && !existingUser.is_email_verified) {
+      this.processVerifyEmail(email, signUpDto.first_name, signUpDto.last_name);
+
+      return {
+        success: true,
+        message: 'Please check your email and enter the OTP.',
+      };
+    }
 
     const newUser = await this.prismaService.users.create({
       data: {
@@ -212,7 +221,7 @@ export class AuthService implements OnModuleInit {
 
     return {
       success: true,
-      message: 'Open email and enter OTP now.',
+      message: 'Please check your email and enter the OTP.',
     };
   };
 
@@ -240,13 +249,13 @@ export class AuthService implements OnModuleInit {
     if (!cachedOtp)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: `Your otp has expired.`,
+        message: `Your OTP has expired. Please request a new one.`,
       });
 
     if (typeof cachedOtp === 'string' && cachedOtp !== otp)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `Invalid otp. Please try again.`,
+        message: `Invalid OTP. Please try again.`,
       });
 
     await this.prismaService.users.update({
@@ -264,9 +273,17 @@ export class AuthService implements OnModuleInit {
       await this.verifyUserEmailKeycloak(user.id);
     }
 
+    const authorization_code = this.jwtService.sign(
+      { email },
+      {
+        expiresIn: '5m',
+      },
+    );
+
     return {
       success: true,
-      message: 'Email verified successfully.',
+      authorization_code,
+      message: 'Your email has been verified successfully.',
     };
   };
 
