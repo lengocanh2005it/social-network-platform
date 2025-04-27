@@ -66,9 +66,9 @@ const formSchema = z
         },
         {
           message: "You must be 18 or older to register.",
-        }
+        },
       ),
-    })
+    }),
   );
 
 export type FormSchemaType = z.infer<typeof formSchema>;
@@ -76,7 +76,7 @@ export type FormSchemaType = z.infer<typeof formSchema>;
 const SignUpForm = () => {
   const [step, setStep] = useState<"credentials" | "details">("credentials");
   const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
-    null
+    null,
   );
   const [fingerprint, setFingerprint] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);

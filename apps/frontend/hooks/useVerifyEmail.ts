@@ -14,7 +14,7 @@ export const useVerifyEmail = () => {
         toast.success(data.message || "Success");
 
         router.push(
-          `/auth/verify-success/?authorization_code=${data.authorization_code}`
+          `/auth/verify-success/?authorization_code=${data.authorization_code}`,
         );
       }
     },
