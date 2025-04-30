@@ -10,11 +10,9 @@ export const useSignIn = () => {
   return useMutation({
     mutationFn: (data: SignInDto) => signIn(data),
     onSuccess: (data: any) => {
-      localStorage.setItem("accessToken", data?.access_token);
-
-      if (data?.role.includes("user")) {
+      if (data?.role === "user") {
         router.push("/home");
-      } else if (data?.role.includes("admin")) {
+      } else if (data?.role === "admin") {
         router.push("/home/dashboard");
       }
 

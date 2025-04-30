@@ -1,5 +1,5 @@
 "use client";
-import SocialsLoginForm from "@/components/form/SocialsLoginForm";
+import SocialsAuthForm from "@/components/form/SocialsAuthForm";
 import PasswordToggleInput from "@/components/input/PasswordToggleInput";
 import {
   Form,
@@ -10,12 +10,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useSignIn } from "@/hooks";
-import { SignInDto } from "@/utils";
+import { useAppStore } from "@/store";
+import { AuthMethod, SignInDto } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { Button, Checkbox, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -26,10 +27,12 @@ const formSchema = z.object({
 });
 
 const SignInForm = () => {
+  const pathname = usePathname();
   const router = useRouter();
   const [fingerprint, setFingerprint] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { mutate: mutateSignIn } = useSignIn();
+  const { setAuthMethod } = useAppStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,7 +67,11 @@ const SignInForm = () => {
     };
 
     loadFingerprint();
-  }, []);
+
+    if (pathname.includes("sign-in")) setAuthMethod(AuthMethod.SIGN_IN);
+
+    sessionStorage.setItem("oauth-in-progress", "true");
+  }, [pathname, setAuthMethod]);
 
   const handleSignUp = () => router.push("/auth/sign-up");
 
@@ -147,7 +154,7 @@ const SignInForm = () => {
         )}
       </form>
 
-      <SocialsLoginForm />
+      <SocialsAuthForm method={AuthMethod.SIGN_IN} />
 
       <div className="text-sm text-center text-black/60">
         Don’t have an account?{" "}

@@ -1,4 +1,5 @@
 import { FormSchemaType } from "@/components/form/SignUpForm";
+import SocialsAuthForm from "@/components/form/SocialsAuthForm";
 import PasswordToggleInput from "@/components/input/PasswordToggleInput";
 import {
   FormControl,
@@ -7,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { AuthMethod } from "@/utils";
 import { Button, Input } from "@heroui/react";
 import { MoveRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -112,6 +114,8 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
       >
         Continue
       </Button>
+
+      <SocialsAuthForm method={AuthMethod.SIGN_UP} />
 
       <div className="text-sm text-center text-black/60 select-none">
         Have an account?{" "}

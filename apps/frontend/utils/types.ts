@@ -1,3 +1,5 @@
+import { AuthMethod } from "@/utils/constants";
+
 export type DeviceDetails = {
   device_name: string;
   user_agent: string;
@@ -42,4 +44,41 @@ export type ForgotPasswordDto = {
 export type ResetPasswordDto = {
   newPassword: string;
   authorizationCode: string;
+};
+
+export type OAuthCallbackDto = {
+  first_name: string;
+  last_name: string;
+  access_token: string;
+  refresh_token: string;
+  phone_number: string;
+  dob: string;
+  gender: string;
+  address: string;
+  finger_print: string;
+  deviceDetailsDto: DeviceDetails;
+};
+
+export type GetInfoOAuthCallbackDto = {
+  iss: string;
+  code: string;
+  authMethod: AuthMethod;
+};
+
+export type Tokens = {
+  access_token: string;
+  refresh_token: string;
+};
+
+export type OAuthNames = {
+  first_name: string;
+  last_name: string;
+};
+
+export type GenerateToken = {
+  payload: string;
+};
+
+export type VerifyToken = {
+  token: string;
 };

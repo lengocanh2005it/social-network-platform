@@ -64,6 +64,8 @@ CREATE TABLE "UserProfiles" (
     "user_id" UUID NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "last_name" TEXT NOT NULL,
+    "first_name" TEXT NOT NULL,
 
     CONSTRAINT "UserProfiles_pkey" PRIMARY KEY ("id")
 );
@@ -453,6 +455,9 @@ CREATE UNIQUE INDEX "OAuthAccounts_provider_id_key" ON "OAuthAccounts"("provider
 CREATE UNIQUE INDEX "OAuthAccounts_user_id_key" ON "OAuthAccounts"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "UserDevices_user_id_key" ON "UserDevices"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "GroupMembers_group_id_user_id_key" ON "GroupMembers"("group_id", "user_id");
 
 -- CreateIndex
@@ -537,10 +542,10 @@ ALTER TABLE "PostImageShares" ADD CONSTRAINT "PostImageShares_post_image_id_fkey
 ALTER TABLE "PostImageShares" ADD CONSTRAINT "PostImageShares_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PostHashTags" ADD CONSTRAINT "PostHashTags_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PostHashTags" ADD CONSTRAINT "PostHashTags_hashtag_id_fkey" FOREIGN KEY ("hashtag_id") REFERENCES "HashTags"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PostHashTags" ADD CONSTRAINT "PostHashTags_hashtag_id_fkey" FOREIGN KEY ("hashtag_id") REFERENCES "HashTags"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "PostHashTags" ADD CONSTRAINT "PostHashTags_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostTags" ADD CONSTRAINT "PostTags_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -555,28 +560,28 @@ ALTER TABLE "Comments" ADD CONSTRAINT "Comments_parent_comment_id_fkey" FOREIGN 
 ALTER TABLE "Comments" ADD CONSTRAINT "Comments_post_id_fkey" FOREIGN KEY ("post_id") REFERENCES "Posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Comments" ADD CONSTRAINT "Comments_post_video_id_fkey" FOREIGN KEY ("post_video_id") REFERENCES "PostVideos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Comments" ADD CONSTRAINT "Comments_post_image_id_fkey" FOREIGN KEY ("post_image_id") REFERENCES "PostImages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Comments" ADD CONSTRAINT "Comments_post_image_id_fkey" FOREIGN KEY ("post_image_id") REFERENCES "PostImages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Comments" ADD CONSTRAINT "Comments_post_video_id_fkey" FOREIGN KEY ("post_video_id") REFERENCES "PostVideos"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Comments" ADD CONSTRAINT "Comments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CommentLikes" ADD CONSTRAINT "CommentLikes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CommentLikes" ADD CONSTRAINT "CommentLikes_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "Comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CommentLikes" ADD CONSTRAINT "CommentLikes_comment_id_fkey" FOREIGN KEY ("comment_id") REFERENCES "Comments"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CommentLikes" ADD CONSTRAINT "CommentLikes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Groups" ADD CONSTRAINT "Groups_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "GroupJoinRequests" ADD CONSTRAINT "GroupJoinRequests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupJoinRequests" ADD CONSTRAINT "GroupJoinRequests_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "Groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "GroupJoinRequests" ADD CONSTRAINT "GroupJoinRequests_group_id_fkey" FOREIGN KEY ("group_id") REFERENCES "Groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GroupJoinRequests" ADD CONSTRAINT "GroupJoinRequests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Stories" ADD CONSTRAINT "Stories_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -603,25 +608,25 @@ ALTER TABLE "Friends" ADD CONSTRAINT "Friends_initiator_id_fkey" FOREIGN KEY ("i
 ALTER TABLE "Friends" ADD CONSTRAINT "Friends_target_id_fkey" FOREIGN KEY ("target_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Followers" ADD CONSTRAINT "Followers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Followers" ADD CONSTRAINT "Followers_follower_id_fkey" FOREIGN KEY ("follower_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Blocks" ADD CONSTRAINT "Blocks_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Followers" ADD CONSTRAINT "Followers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Blocks" ADD CONSTRAINT "Blocks_blocked_user_id_fkey" FOREIGN KEY ("blocked_user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Blocks" ADD CONSTRAINT "Blocks_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Conversations" ADD CONSTRAINT "Conversations_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationParticipants" ADD CONSTRAINT "ConversationParticipants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ConversationParticipants" ADD CONSTRAINT "ConversationParticipants_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "Conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ConversationParticipants" ADD CONSTRAINT "ConversationParticipants_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "Conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "ConversationParticipants" ADD CONSTRAINT "ConversationParticipants_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Messages" ADD CONSTRAINT "Messages_conversation_id_fkey" FOREIGN KEY ("conversation_id") REFERENCES "Conversations"("id") ON DELETE CASCADE ON UPDATE CASCADE;

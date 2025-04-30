@@ -10,6 +10,7 @@ import {
   TokenValidation,
 } from 'nest-keycloak-connect';
 import { CommonService } from './common.service';
+import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
 
 @Global()
 @Module({
@@ -51,7 +52,7 @@ import { CommonService } from './common.service';
       }),
     }),
   ],
-  providers: [CommonService],
+  providers: [CommonService, InfisicalProvider, KeycloakProvider],
   exports: [
     ConfigModule,
     CommonService,
@@ -60,6 +61,8 @@ import { CommonService } from './common.service';
     HttpModule,
     KeycloakConnectModule,
     JwtModule,
+    InfisicalProvider,
+    KeycloakProvider,
   ],
 })
 export class CommonModule {}

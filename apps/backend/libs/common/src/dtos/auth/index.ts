@@ -4,3 +4,7 @@ export * from './verify-otp.dto';
 export * from './forgot-password.dto';
 export * from './reset-password.dto';
 export * from './update-password.dto';
+export * from './oauth-callback.dto';
+export * from './get-info-oauth-callback.dto';
+export * from './generate-token.dto';
+export * from './verify-token.dto';
