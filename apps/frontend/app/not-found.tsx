@@ -1,8 +1,20 @@
 "use client";
+import { useAppStore } from "@/store";
+import { getCookie } from "@/utils";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 
 const NotFoundPage = () => {
+  const { isLoggedIn, setIsLoggedIn } = useAppStore();
+
+  useEffect(() => {
+    const isLoggedInCookie = getCookie("logged_in");
+
+    if (isLoggedInCookie) setIsLoggedIn(true);
+    else setIsLoggedIn(false);
+  }, [setIsLoggedIn]);
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center bg-white 
@@ -33,7 +45,7 @@ const NotFoundPage = () => {
         </p>
 
         <Link
-          href="/"
+          href={isLoggedIn ? "/home" : "/"}
           className="px-6 py-3 bg-black/80 text-white rounded-full hover:bg-black transition"
         >
           Back to Home

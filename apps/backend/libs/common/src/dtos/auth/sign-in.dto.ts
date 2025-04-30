@@ -5,7 +5,8 @@ export class SignInDto {
   @IsEmail()
   readonly email!: string;
 
-  @IsValidPassword()
+  @IsString()
+  @IsNotEmpty()
   readonly password!: string;
 
   @IsString()

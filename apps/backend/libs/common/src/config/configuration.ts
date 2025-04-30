@@ -17,6 +17,7 @@ export default () => ({
     client_id: process.env.KEYCLOAK_CLIENT_ID,
     secret: process.env.KEYCLOAK_SECRET,
     realm: process.env.KEYCLOAK_REALM,
+    redirect_uri: process.env.KEYCLOAK_REDIRECT_URI,
   },
   default_avatar_url: process.env.DEFAULT_AVATAR_URL,
   default_cover_photo: process.env.DEFAULT_COVER_PHOTO,

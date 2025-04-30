@@ -1,9 +1,13 @@
 import {
   ForgotPasswordDto,
+  GenerateTokenDto,
+  GetInfoOAuthCallbackDto,
+  OAuthCallbackDto,
   ResetPasswordDto,
   SignInDto,
   SignUpDto,
   VerifyOtpDto,
+  VerifyTokenDto,
 } from '@app/common/dtos/auth';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -36,5 +40,27 @@ export class AuthController {
   @MessagePattern('reset-password')
   async resetPassword(@Payload() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @MessagePattern('oauth-callback')
+  async oAuthCallback(@Payload() oAuthCallbackDto: OAuthCallbackDto) {
+    return this.authService.oAuthCallback(oAuthCallbackDto);
+  }
+
+  @MessagePattern('get-info-oauth-callback')
+  async getInfoOAuthCallback(
+    @Payload() getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto,
+  ) {
+    return this.authService.getInfoOAuthCallback(getInfoOAuthCallbackDto);
+  }
+
+  @MessagePattern('generate-token')
+  async generateToken(@Payload() generateTokenDto: GenerateTokenDto) {
+    return this.authService.generateToken(generateTokenDto);
+  }
+
+  @MessagePattern('verify-token')
+  async verifyToken(@Payload() verifyTokenDto: VerifyTokenDto) {
+    return this.authService.verifyToken(verifyTokenDto);
   }
 }

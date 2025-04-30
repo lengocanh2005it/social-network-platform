@@ -1,9 +1,13 @@
 import {
   ForgotPasswordDto,
+  GenerateTokenDto,
+  GetInfoOAuthCallbackDto,
+  OAuthCallbackDto,
   ResetPasswordDto,
   SignInDto,
   SignUpDto,
   VerifyOtpDto,
+  VerifyTokenDto,
 } from '@app/common/dtos/auth';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
@@ -23,6 +27,10 @@ export class AuthService implements OnModuleInit {
       'verify-otp',
       'forgot-password',
       'reset-password',
+      'oauth-callback',
+      'get-info-oauth-callback',
+      'generate-token',
+      'verify-token',
     ];
 
     patterns.forEach((pattern) => {
@@ -52,5 +60,29 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(
       this.authClient.send('reset-password', resetPasswordDto),
     );
+  };
+
+  public oAuthCallback = async (oAuthCallbackDto: OAuthCallbackDto) => {
+    return firstValueFrom(
+      this.authClient.send('oauth-callback', oAuthCallbackDto),
+    );
+  };
+
+  public getInfoOAuthCallback = async (
+    getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto,
+  ) => {
+    return firstValueFrom(
+      this.authClient.send('get-info-oauth-callback', getInfoOAuthCallbackDto),
+    );
+  };
+
+  public handleGenerateToken = async (generateTokenDto: GenerateTokenDto) => {
+    return firstValueFrom(
+      this.authClient.send('generate-token', generateTokenDto),
+    );
+  };
+
+  public handleVerifyToken = async (verifyTokenDto: VerifyTokenDto) => {
+    return firstValueFrom(this.authClient.send('verify-token', verifyTokenDto));
   };
 }

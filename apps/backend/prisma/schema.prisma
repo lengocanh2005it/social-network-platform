@@ -107,15 +107,17 @@ model UserWorkPlaces {
 
 model UserDevices {
   id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  finger_print  String   @unique(map: "unique_finger_print")
+  finger_print  String
   device_name   String   @db.VarChar(255)
   user_agent    String
   ip_address    String
   location      String
   is_trusted    Boolean  @default(false)
   last_login_at DateTime @default(now())
-  user_id       String   @db.Uuid
+  user_id       String   @unique @db.Uuid
   user          Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([finger_print, user_id])
 }
 
 model HashTags {

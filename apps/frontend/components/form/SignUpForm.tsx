@@ -2,7 +2,12 @@
 import VerifyOTPModal from "@/components/modal/VerifyOTPModal";
 import { useSignUp } from "@/hooks";
 import { useAppStore } from "@/store";
-import { DeviceDetails, formatDateToString, SignUpDto } from "@/utils";
+import {
+  AuthMethod,
+  DeviceDetails,
+  formatDateToString,
+  SignUpDto,
+} from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { now, ZonedDateTime } from "@internationalized/date";
@@ -11,6 +16,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import CredentialsForm from "./CredentialsForm";
 import DetailsForm from "./DetailsForm";
+import { usePathname } from "next/navigation";
 
 const formSchema = z
   .object({
@@ -66,22 +72,23 @@ const formSchema = z
         },
         {
           message: "You must be 18 or older to register.",
-        },
+        }
       ),
-    }),
+    })
   );
 
 export type FormSchemaType = z.infer<typeof formSchema>;
 
 const SignUpForm = () => {
+  const pathname = usePathname();
   const [step, setStep] = useState<"credentials" | "details">("credentials");
   const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
-    null,
+    null
   );
   const [fingerprint, setFingerprint] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { mutate: mutateSignUp } = useSignUp();
-  const { isModalOTPOpen, setIsModalOTPOpen } = useAppStore();
+  const { isModalOTPOpen, setIsModalOTPOpen, setAuthMethod } = useAppStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -144,7 +151,11 @@ const SignUpForm = () => {
     };
 
     fetchDeviceDetails();
-  }, []);
+
+    if (pathname?.includes("sign-up")) setAuthMethod(AuthMethod.SIGN_UP);
+
+    sessionStorage.setItem("oauth-in-progress", "true");
+  }, [pathname, setAuthMethod]);
 
   return (
     <FormProvider {...form}>
