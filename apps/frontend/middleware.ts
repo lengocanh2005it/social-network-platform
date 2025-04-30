@@ -1,7 +1,7 @@
-import { generateToken } from "@/lib/api/auth";
 import { generateUUID } from "@/utils";
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import axios from "axios";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
@@ -21,15 +21,19 @@ export async function middleware(request: NextRequest) {
     (token && authPages.includes(pathname)) ||
     (loggedIn && loggedIn === "true" && pathname === "/")
   ) {
-    const data = await generateToken({
-      payload: generateUUID(),
-    });
+    const res = await axios.post(
+      `${request.nextUrl.origin}/api/generate-token`,
+      {
+        payload: generateUUID(),
+      },
+    );
 
-    if (!data || !data.token)
+    if (!res.data || !res.data.token) {
       throw new Error("Get token from server failed. Try again.");
+    }
 
     return NextResponse.redirect(
-      new URL(`/auth/not-found/?token=${data.token}`, request.url),
+      new URL(`/auth/not-found/?token=${res.data.token}`, request.url),
     );
   }
 

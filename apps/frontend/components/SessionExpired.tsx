@@ -2,26 +2,26 @@
 import NotFoundPage from "@/app/not-found";
 import { verifyToken } from "@/lib/api/auth";
 import { VerifyToken } from "@/utils";
+import { Link } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-interface SessonExpiredPageProps {
+interface SessionExpiredProps {
   token: string;
 }
 
-export default function SessionExpiredPage({ token }: SessonExpiredPageProps) {
+const SessionExpired: React.FC<SessionExpiredProps> = ({ token }) => {
   const [isValidToken, setIsValidToken] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!token) setIsValidToken(false);
+    if (!token) {
+      setIsValidToken(false);
+      return;
+    }
 
     const handleVerifyToken = async (verifyTokenDto: VerifyToken) => {
       const response = await verifyToken(verifyTokenDto);
-
-      if (!response || !response.success) setIsValidToken(false);
-
-      if (response.success) setIsValidToken(true);
+      setIsValidToken(!!response?.success);
     };
 
     handleVerifyToken({ token });
@@ -37,7 +37,6 @@ export default function SessionExpiredPage({ token }: SessonExpiredPageProps) {
           alt="Session Expired"
           width={300}
           height={300}
-          sizes=""
           priority
           className="mx-auto mb-6 select-none"
         />
@@ -53,11 +52,13 @@ export default function SessionExpiredPage({ token }: SessonExpiredPageProps) {
         <Link
           href="/auth/sign-in"
           className="inline-block bg-black text-white px-6 py-2 rounded-md 
-          hover:bg-gray-800 transition"
+            hover:bg-gray-800 transition"
         >
           Back to Login
         </Link>
       </div>
     </main>
   );
-}
+};
+
+export default SessionExpired;
