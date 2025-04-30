@@ -57,7 +57,7 @@ export function getCookie(name: string): string | undefined {
 export function setCookie(
   name: string,
   value: string,
-  options?: Cookies.CookieAttributes
+  options?: Cookies.CookieAttributes,
 ) {
   Cookies.set(name, value, options);
 }

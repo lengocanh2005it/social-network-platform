@@ -18,7 +18,7 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
     const keyCloakClientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID;
 
     router.push(
-      `${keyCloakUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&client_id=${keyCloakClientId}&redirect_uri=${keyCloakRedirectUri}&scope=openid&kc_idp_hint=${provider}`
+      `${keyCloakUrl}/realms/${realm}/protocol/openid-connect/auth?response_type=code&client_id=${keyCloakClientId}&redirect_uri=${keyCloakRedirectUri}&scope=openid&kc_idp_hint=${provider}`,
     );
   };
 

@@ -25,7 +25,7 @@ const CallbackSocialPage = () => {
     useGetInfoOAuthCallback();
   const [fingerprint, setFingerprint] = useState<string>("");
   const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
-    null
+    null,
   );
   const { authMethod, oAuthNames, hasHydrated } = useAppStore();
   const [expired, setExpired] = useState(false);

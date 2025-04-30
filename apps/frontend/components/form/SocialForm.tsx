@@ -70,7 +70,7 @@ const SocialForm: React.FC<SocialFormProps> = ({
           },
           {
             message: "You must be 18 or older to register.",
-          }
+          },
         ),
         gender: z.enum(["male", "female", "other"], {
           errorMap: () => ({
@@ -112,7 +112,7 @@ const SocialForm: React.FC<SocialFormProps> = ({
           },
           {
             message: "You must be 18 or older to register.",
-          }
+          },
         ),
         address: z.string().min(1, { message: `Address can't be empty.` }),
         otp: z.string().optional(),
@@ -179,7 +179,7 @@ const SocialForm: React.FC<SocialFormProps> = ({
             .then((data) => {
               form.setValue(
                 "address",
-                data.display_name || "Unable to fetch address"
+                data.display_name || "Unable to fetch address",
               );
               form.trigger("address");
               setLoading(false);
@@ -194,7 +194,7 @@ const SocialForm: React.FC<SocialFormProps> = ({
           form.setValue("address", "Unable to get location");
           form.trigger("address");
           setLoading(false);
-        }
+        },
       );
     } else {
       form.setValue("address", "Browser does not support Geolocation");

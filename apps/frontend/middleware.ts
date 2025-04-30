@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
       throw new Error("Get token from server failed. Try again.");
 
     return NextResponse.redirect(
-      new URL(`/auth/not-found/?token=${data.token}`, request.url)
+      new URL(`/auth/not-found/?token=${data.token}`, request.url),
     );
   }
 

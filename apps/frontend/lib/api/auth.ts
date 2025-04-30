@@ -48,11 +48,11 @@ export const oAuthCallback = async (oAuthCallbackDto: OAuthCallbackDto) => {
 };
 
 export const getInfoOAuthCallback = async (
-  getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto
+  getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto,
 ) => {
   const response = await axios.post(
     "/auth/oauth/callback/get-info",
-    getInfoOAuthCallbackDto
+    getInfoOAuthCallbackDto,
   );
 
   return response.data;
