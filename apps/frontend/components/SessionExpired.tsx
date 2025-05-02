@@ -33,6 +33,7 @@ const SessionExpired: React.FC<SessionExpiredProps> = ({ token }) => {
     <main className="flex min-h-screen w-full items-center justify-center bg-white px-4">
       <div className="text-center max-w-md">
         <Image
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           src="/pages/session-expired.avif"
           alt="Session Expired"
           width={300}

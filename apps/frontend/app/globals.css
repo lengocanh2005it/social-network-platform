@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @plugin '../config/hero.config.ts';
 @source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
 @custom-variant dark (&:is(.dark *));
@@ -44,8 +43,8 @@
 }
 
 body {
-  background: var(--foreground);
-  color: var(--background);
+  background: bg-white;
+  color: text-black;
   font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
 }
 
@@ -121,9 +120,6 @@ body {
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
   p,
   a {

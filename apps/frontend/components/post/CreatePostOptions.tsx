@@ -1,0 +1,90 @@
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Tooltip,
+} from "@heroui/react";
+import {
+  Ellipsis,
+  Flag,
+  ImageIcon,
+  MapPin,
+  SmileIcon,
+  UserPlus,
+  Video,
+  WandSparkles,
+} from "lucide-react";
+import React from "react";
+
+const options = [
+  {
+    key: 1,
+    icon: <ImageIcon className="focus:outline-none" />,
+    content: "Photo/video",
+  },
+  {
+    key: 2,
+    icon: <UserPlus className="focus:outline-none" />,
+    content: "Tag people",
+  },
+  {
+    key: 3,
+    icon: <SmileIcon className="focus:outline-none" />,
+    content: "Feeling/activity",
+  },
+  {
+    key: 4,
+    icon: <MapPin className="focus:outline-none" />,
+    content: "Check in",
+  },
+  {
+    key: 5,
+    icon: <WandSparkles className="focus:outline-none" />,
+    content: "GIF",
+  },
+];
+
+const CreatePostOptions: React.FC = () => {
+  return (
+    <div
+      className="w-full flex items-center justify-between px-4 py-2 border
+     border-black/10 rounded-lg"
+    >
+      <p className="text-sm text-gray-700">Add to your post</p>
+
+      <div className="flex items-center md:gap-3 gap-2">
+        <div className="flex items-center md:gap-3 gap-2">
+          {options.map((option) => (
+            <div key={option.key} className="focus:outline-none cursor-pointer">
+              <Tooltip content={option.content}>{option.icon}</Tooltip>
+            </div>
+          ))}
+        </div>
+
+        <Dropdown className="text-black" shouldBlockScroll={false}>
+          <DropdownTrigger>
+            <div>
+              <Tooltip content="More">
+                <Ellipsis
+                  size={30}
+                  className="cursor-pointer focus:outline-none"
+                />
+              </Tooltip>
+            </div>
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Create Post Options" variant="flat">
+            <DropdownItem key="live-video" startContent={<Video />}>
+              Live video
+            </DropdownItem>
+            <DropdownItem key="life-event" startContent={<Flag />}>
+              Life event
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      </div>
+    </div>
+  );
+};
+
+export default CreatePostOptions;
