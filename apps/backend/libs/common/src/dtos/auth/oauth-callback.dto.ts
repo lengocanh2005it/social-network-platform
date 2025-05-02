@@ -14,7 +14,7 @@ import {
 import {
   IsValidAccessToken,
   IsValidRefreshToken,
-} from 'libs/common/decorators';
+} from '@app/common/decorators';
 
 export class OAuthCallbackDto {
   @IsValidAccessToken()

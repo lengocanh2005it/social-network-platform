@@ -1,3 +1,4 @@
+import { GetUserQueryDto } from '@app/common/dtos/users';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
@@ -8,11 +9,20 @@ export class UsersService implements OnModuleInit {
     @Inject('USERS_SERVICE') private readonly userClient: ClientKafka,
   ) {}
 
-  async onModuleInit() {
-    await this.userClient.connect();
+  onModuleInit() {
+    const patterns = ['get-me'];
+
+    patterns.forEach((pattern) => {
+      this.userClient.subscribeToResponseOf(pattern);
+    });
   }
 
-  async getUser(id: number): Promise<any> {
-    return lastValueFrom(this.userClient.send('get-user', { id }));
+  async getMe(email: string, getUserQueryDto?: GetUserQueryDto): Promise<any> {
+    return lastValueFrom(
+      this.userClient.send('get-me', {
+        email,
+        getUserQueryDto,
+      }),
+    );
   }
 }

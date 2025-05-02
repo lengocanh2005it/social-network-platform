@@ -147,3 +147,14 @@ export const initializeCookies = (
     maxAge: ACCESS_TOKEN_LIFE,
   });
 };
+
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export function toPascalCase(s: string) {
+  return s
+    .split(/_|-/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
