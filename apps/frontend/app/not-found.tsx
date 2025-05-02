@@ -26,6 +26,7 @@ const NotFoundPage = () => {
      flex-col select-none"
       >
         <Image
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           src="/pages/404-page-not-found.jpg"
           alt="Page Not Found"
           fill

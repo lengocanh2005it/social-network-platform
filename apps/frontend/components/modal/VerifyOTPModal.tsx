@@ -62,6 +62,7 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
       onOpenChange={() => setIsOpen(!isOpen)}
       isKeyboardDismissDisabled={false}
       isDismissable={false}
+      shouldBlockScroll={false}
       size="lg"
       placement="center"
       motionProps={{

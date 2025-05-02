@@ -37,7 +37,13 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
          border-gray-300 hover:bg-gray-100 transition cursor-pointer"
           onClick={() => socialsLogin("google")}
         >
-          <Image src="/icons/google.svg" alt="Google" width={24} height={24} />
+          <Image
+            src="/icons/google.svg"
+            alt="Google"
+            width={24}
+            height={24}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         </button>
 
         <button
@@ -46,6 +52,7 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
           onClick={() => socialsLogin("facebook")}
         >
           <Image
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             src="/icons/facebook.svg"
             alt="Google"
             width={24}

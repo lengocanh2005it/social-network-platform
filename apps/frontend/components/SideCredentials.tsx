@@ -41,6 +41,7 @@ const SideCredentials = () => {
         {bannerImages.map((banner, index) => (
           <SwiperSlide key={index} className="select-none">
             <Image
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               src={banner.src}
               alt={banner.alt}
               fill
