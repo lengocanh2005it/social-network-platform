@@ -10,7 +10,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { IsValidPassword } from 'libs/common/decorators';
+import { IsValidPassword } from '@app/common/decorators';
 
 export class DeviceDetailsDto {
   @IsString()

@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { initializeCookies } from '@app/common/utils';
+import { Public } from 'nest-keycloak-connect';
 
 @Controller('auth')
 export class AuthController {
@@ -22,6 +23,7 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  @Public()
   @Post('sign-in')
   async signIn(@Body() signInDto: SignInDto, @Res() res: Response) {
     const data = await this.authService.signIn(signInDto);
@@ -35,26 +37,31 @@ export class AuthController {
     return res.status(HttpStatus.CREATED).json(data);
   }
 
+  @Public()
   @Post('sign-up')
   async signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
 
+  @Public()
   @Post('verify-otp')
   async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
     return this.authService.verifyOtp(verifyOtpDto);
   }
 
+  @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return this.authService.forgotPassword(forgotPasswordDto);
   }
 
+  @Public()
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
+  @Public()
   @Post('oauth/callback')
   async oAuthCallback(
     @Body() oAuthCallbackDto: OAuthCallbackDto,
@@ -62,21 +69,16 @@ export class AuthController {
   ) {
     const data = await this.authService.oAuthCallback(oAuthCallbackDto);
 
-    res.cookie('access_token', data.access_token, {
-      httpOnly: true,
-    });
+    if (data && data?.access_token && data?.refresh_token && data?.role) {
+      const { access_token, refresh_token, role } = data;
 
-    res.cookie('refresh_token', data.refresh_token, {
-      httpOnly: true,
-    });
+      initializeCookies(res, { access_token, refresh_token, role });
+    }
 
-    res.redirect(
-      this.configService.get<string>('frontend_url', '') + '/home/dadadad',
-    );
-
-    //   return res.status(HttpStatus.CREATED).json(data);
+    return res.status(HttpStatus.CREATED).json(data);
   }
 
+  @Public()
   @Post('oauth/callback/get-info')
   async getInfoOAuthCallback(
     @Body() getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto,
@@ -101,11 +103,13 @@ export class AuthController {
     return res.status(HttpStatus.CREATED).json(data);
   }
 
+  @Public()
   @Post('generate-token')
   async generateToken(@Body() generateTokenDto: GenerateTokenDto) {
     return this.authService.handleGenerateToken(generateTokenDto);
   }
 
+  @Public()
   @Post('verify-token')
   async verifyToken(@Body() verifyTokenDto: VerifyTokenDto) {
     return this.authService.handleVerifyToken(verifyTokenDto);

@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString } from 'class-validator';
-import { IsValidJwt, IsValidPassword } from 'libs/common/decorators';
+import { IsValidJwt, IsValidPassword } from '@app/common/decorators';
 import { config } from 'dotenv';
 
 config();

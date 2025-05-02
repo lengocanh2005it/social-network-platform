@@ -1,5 +1,7 @@
 import configuration from '@app/common/config/configuration';
+import { JwtGuard, RoleGuard } from '@app/common/guards';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
+import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
 import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,7 +12,6 @@ import {
   TokenValidation,
 } from 'nest-keycloak-connect';
 import { CommonService } from './common.service';
-import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
 
 @Global()
 @Module({
@@ -52,7 +53,13 @@ import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
       }),
     }),
   ],
-  providers: [CommonService, InfisicalProvider, KeycloakProvider],
+  providers: [
+    CommonService,
+    InfisicalProvider,
+    KeycloakProvider,
+    JwtGuard,
+    RoleGuard,
+  ],
   exports: [
     ConfigModule,
     CommonService,
@@ -63,6 +70,8 @@ import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
     JwtModule,
     InfisicalProvider,
     KeycloakProvider,
+    RoleGuard,
+    JwtGuard,
   ],
 })
 export class CommonModule {}
