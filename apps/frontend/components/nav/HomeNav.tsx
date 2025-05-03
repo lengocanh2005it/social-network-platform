@@ -34,7 +34,11 @@ import {
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
-const HomeNav: React.FC = () => {
+interface HomeNavProps {
+  shouldShowIndicator?: boolean;
+}
+
+const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
@@ -143,6 +147,7 @@ const HomeNav: React.FC = () => {
         <div
           className="absolute bottom-4 h-1 bg-blue-500 transition-all duration-200 
           ease-[cubic-bezier(0.4,0,0.2,1)]"
+          hidden={shouldShowIndicator ? false : true}
           style={{
             left: `${indicatorStyle.left}px`,
             width: `${indicatorStyle.width}px`,
