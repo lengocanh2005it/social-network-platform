@@ -32,7 +32,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, level = 0 }) => {
         <div className="flex-1 min-w-0">
           <div className="bg-gray-100 p-2 rounded-lg max-w-fit overflow-hidden">
             <p className="font-bold truncate">{comment.author}</p>
-            <p className="text-black/80 break-words whitespace-pre-wrap max-w-[600px]">
+            <p className="text-black/80 break-all whitespace-pre-wrap max-w-[600px]">
               {comment.content}
             </p>
           </div>

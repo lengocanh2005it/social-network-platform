@@ -82,3 +82,35 @@ export type GenerateToken = {
 export type VerifyToken = {
   token: string;
 };
+
+export type SocialType = "instagram" | "github" | "x";
+
+export interface SocialItem {
+  key: number | string;
+  type: SocialType;
+  username: string;
+  url: string;
+}
+
+export type FriendType = {
+  avatar: string;
+  name: string;
+  id: string;
+};
+
+export interface Post {
+  id: number;
+  author: string;
+  content: string;
+  time: string;
+  avatar: string;
+  image?: string;
+  isShared?: boolean;
+  originalPost?: {
+    author: string;
+    content: string;
+    time: string;
+    avatar: string;
+    image?: string;
+  };
+}
