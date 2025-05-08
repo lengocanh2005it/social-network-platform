@@ -3,6 +3,7 @@ import CommentItem, { CommentType } from "@/components/post/CommentItem";
 import PostContent from "@/components/post/PostContent";
 import PostHeader from "@/components/post/PostHeader";
 import PostOptions from "@/components/post/PostOptions";
+import { useUserStore } from "@/store";
 import {
   Avatar,
   Divider,
@@ -97,105 +98,114 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
   isOpen,
   setIsOpen,
 }) => {
+  const { user } = useUserStore();
+
   return (
-    <Modal
-      backdrop="opaque"
-      isOpen={isOpen}
-      size="2xl"
-      shouldBlockScroll={false}
-      motionProps={{
-        variants: {
-          enter: {
-            y: 0,
-            opacity: 1,
-            transition: {
-              duration: 0.3,
-              ease: "easeOut",
-            },
-          },
-          exit: {
-            y: -20,
-            opacity: 0,
-            transition: {
-              duration: 0.2,
-              ease: "easeIn",
-            },
-          },
-        },
-      }}
-      onOpenChange={() => setIsOpen(!isOpen)}
-    >
-      <ModalContent className="md:py-3 py-2">
-        {() => (
-          <>
-            <ModalHeader className="flex flex-col gap-1 text-center">
-              John Doe&apos;s Post
-            </ModalHeader>
+    <>
+      {user && (
+        <>
+          <Modal
+            backdrop="opaque"
+            isOpen={isOpen}
+            size="2xl"
+            placement="center"
+            shouldBlockScroll={false}
+            motionProps={{
+              variants: {
+                enter: {
+                  y: 0,
+                  opacity: 1,
+                  transition: {
+                    duration: 0.3,
+                    ease: "easeOut",
+                  },
+                },
+                exit: {
+                  y: -20,
+                  opacity: 0,
+                  transition: {
+                    duration: 0.2,
+                    ease: "easeIn",
+                  },
+                },
+              },
+            }}
+            onOpenChange={() => setIsOpen(!isOpen)}
+          >
+            <ModalContent className="md:py-3 py-2">
+              {() => (
+                <>
+                  <ModalHeader className="flex flex-col gap-1 text-center">
+                    John Doe&apos;s Post
+                  </ModalHeader>
 
-            <Divider />
+                  <Divider />
 
-            <ModalBody className="px-3">
-              <ScrollShadow
-                className="max-h-[500px] pr-1 max-w-full overflow-x-hidden"
-                offset={0}
-                size={0}
-              >
-                <div className="flex flex-col">
-                  <PostHeader
-                    time={time}
-                    avatar={avatar}
-                    author={author}
-                    shouldHiddenXCloseIcon
-                  />
-                  <PostContent content={content} image={image} />
-                  <PostOptions />
-                </div>
+                  <ModalBody className="px-3">
+                    <ScrollShadow
+                      className="max-h-[500px] pr-1 max-w-full overflow-x-hidden"
+                      offset={0}
+                      size={0}
+                    >
+                      <div className="flex flex-col">
+                        <PostHeader
+                          time={time}
+                          avatar={avatar}
+                          author={author}
+                          shouldHiddenXCloseIcon
+                        />
+                        <PostContent content={content} image={image} />
+                        <PostOptions />
+                      </div>
 
-                <Divider />
+                      <Divider />
 
-                <div className="mt-6">
-                  {comments.map((comment) => (
-                    <CommentItem key={comment.id} comment={comment} />
-                  ))}
-                </div>
-              </ScrollShadow>
+                      <div className="mt-6">
+                        {comments.map((comment) => (
+                          <CommentItem key={comment.id} comment={comment} />
+                        ))}
+                      </div>
+                    </ScrollShadow>
 
-              <div className="flex md:gap-3 gap-2">
-                <Avatar
-                  src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
-                  className="rounded-full w-10 h-10 select-none"
-                />
+                    <div className="flex md:gap-3 gap-2">
+                      <Avatar
+                        src={user.profile.avatar_url}
+                        className="rounded-full w-10 h-10 select-none"
+                      />
 
-                <div className="w-full bg-gray-100 rounded-xl p-3">
-                  <textarea
-                    rows={1}
-                    placeholder="Write a comment..."
-                    className="w-full bg-transparent resize-none focus:outline-none text-sm"
-                  />
+                      <div className="w-full bg-gray-100 rounded-xl p-3">
+                        <textarea
+                          rows={1}
+                          placeholder="Write a comment..."
+                          className="w-full bg-transparent resize-none focus:outline-none text-sm"
+                        />
 
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="flex gap-2">
-                      {icons.map((icon) => (
-                        <button
-                          className="text-gray-500 hover:text-gray-700 transition-all"
-                          key={icon.key}
-                        >
-                          {icon.icon}
-                        </button>
-                      ))}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex gap-2">
+                            {icons.map((icon) => (
+                              <button
+                                className="text-gray-500 hover:text-gray-700 transition-all"
+                                key={icon.key}
+                              >
+                                {icon.icon}
+                              </button>
+                            ))}
+                          </div>
+
+                          <button className="text-gray-500 hover:text-gray-700">
+                            <SendHorizontal className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-
-                    <button className="text-gray-500 hover:text-gray-700">
-                      <SendHorizontal className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </ModalBody>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+                  </ModalBody>
+                </>
+              )}
+            </ModalContent>
+          </Modal>
+        </>
+      )}
+    </>
   );
 };
 

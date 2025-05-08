@@ -1,5 +1,6 @@
 "use client";
 import NotFoundPage from "@/app/not-found";
+import LoadingComponent from "@/components/loading/LoadingComponent";
 import { isValidJWT } from "@/utils";
 import { Button } from "@heroui/react";
 import Image from "next/image";
@@ -53,7 +54,7 @@ const VerifyEmailPageContent = () => {
 
 const VerifyEmailSuccess = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingComponent />}>
       <VerifyEmailPageContent />
     </Suspense>
   );

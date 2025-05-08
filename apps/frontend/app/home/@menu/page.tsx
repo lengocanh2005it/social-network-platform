@@ -1,4 +1,5 @@
 "use client";
+import { useUserStore } from "@/store";
 import { Divider, ScrollShadow, User } from "@heroui/react";
 import {
   BadgeHelp,
@@ -8,6 +9,7 @@ import {
   Settings,
   UsersRound,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const categories = [
   {
@@ -42,20 +44,27 @@ const settings = [
 ];
 
 const MenuPage = () => {
+  const router = useRouter();
+  const { user } = useUserStore();
+
   return (
     <main className="flex flex-col w-full justify-between">
       <section className="flex flex-col md:gap-4 gap-2 w-full">
         <div
           className="hover:bg-gray-200 flex items-center p-2 rounded-md
         transition-all ease-in-out duration-300 cursor-pointer"
+          onClick={() => router.push("/profile")}
         >
-          <User
-            avatarProps={{
-              src: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-            }}
-            name="Jane Doe"
-            className="select-none"
-          />
+          {user && (
+            <User
+              avatarProps={{
+                src: user.profile.avatar_url,
+                alt: user.profile.first_name + " " + user.profile.last_name,
+              }}
+              name={user.profile.first_name + " " + user.profile.last_name}
+              className="select-none"
+            />
+          )}
         </div>
 
         <div className="flex flex-col">

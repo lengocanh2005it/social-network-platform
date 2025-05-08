@@ -1,5 +1,5 @@
 "use client";
-import GlobalIcon from "@/components/ui/icons/global-icon";
+import GlobalIcon from "@/components/ui/icons/global";
 import {
   Avatar,
   Dropdown,
@@ -42,7 +42,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
           <h4 className="font-semibold">{author}</h4>
           <div className="flex items-center gap-1">
             <span className="text-sm text-gray-500">{time}</span>
-            <GlobalIcon />
+            <GlobalIcon width={20} height={20} />
           </div>
         </div>
       </div>

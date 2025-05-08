@@ -1,5 +1,5 @@
 import { DeviceDetailsDto } from '@app/common/dtos/auth';
-import { Gender } from '@prisma/client';
+import { GenderEnum } from '@repo/db';
 import { Transform, Type } from 'class-transformer';
 import {
   IsDate,
@@ -47,8 +47,8 @@ export class OAuthCallbackDto {
   @IsNotEmpty()
   readonly finger_print!: string;
 
-  @IsEnum(Gender)
-  readonly gender!: Gender;
+  @IsEnum(GenderEnum)
+  readonly gender!: GenderEnum;
 
   @IsPhoneNumber('VN')
   @IsNotEmpty()

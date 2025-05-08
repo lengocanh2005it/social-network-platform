@@ -1,9 +1,12 @@
 import {
+  BadRequestException,
   ExecutionContext,
+  HttpException,
   HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { AuthGuard } from 'nest-keycloak-connect';
 
 @Injectable()
@@ -14,10 +17,10 @@ export class JwtGuard extends AuthGuard {
     } catch (err) {
       console.error(err);
 
-      throw new UnauthorizedException({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'You are not authenticated. Please login.',
-      });
+      throw new HttpException(
+        'You are not authenticated. Please login.',
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 }

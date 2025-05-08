@@ -19,6 +19,8 @@ interface AppState {
   setProvider: (provider: Provider) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
+  isModalEditProfileOpen: boolean;
+  setIsModalEditProfileOpen: (isModlaEditProfileOpen: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -41,6 +43,9 @@ export const useAppStore = create<AppState>()(
       setProvider: (provider) => set({ provider }),
       isLoggedIn: false,
       setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+      isModalEditProfileOpen: false,
+      setIsModalEditProfileOpen: (isModalEditProfileOpen) =>
+        set({ isModalEditProfileOpen }),
     }),
     {
       name: "app-storage",

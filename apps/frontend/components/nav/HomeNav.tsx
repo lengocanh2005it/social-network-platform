@@ -1,4 +1,5 @@
 "use client";
+import { useUserStore } from "@/store";
 import {
   Avatar,
   Dropdown,
@@ -32,6 +33,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 interface HomeNavProps {
@@ -39,21 +41,23 @@ interface HomeNavProps {
 }
 
 const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const [, setIsHovering] = useState(false);
   const isHoveringRef = useRef(false);
+  const { user } = useUserStore();
 
   const menuItems = ["Profile", "Dashboard", "Activity", "Log Out"];
 
   const navItems = [
-    { icon: HomeIcon, label: "Home" },
-    { icon: Contact, label: "Friends" },
-    { icon: TvMinimal, label: "Video" },
-    { icon: MapPinHouse, label: "Marketplace" },
-    { icon: UsersRound, label: "Groups" },
+    { icon: HomeIcon, label: "Home", redirectTo: "/home" },
+    { icon: Contact, label: "Friends", redirectTo: "/" },
+    { icon: TvMinimal, label: "Video", redirectTo: "/" },
+    { icon: MapPinHouse, label: "Marketplace", redirectTo: "/" },
+    { icon: UsersRound, label: "Groups", redirectTo: "/" },
   ];
 
   const updateIndicator = (element: HTMLElement | null) => {
@@ -113,7 +117,8 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             sizes=""
             width={40}
             height={40}
-            alt=""
+            alt="icon"
+            onClick={() => router.push("/home")}
             className="rounded-full cursor-pointer select-none"
           />
         </NavbarBrand>
@@ -155,7 +160,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
           }}
         />
 
-        {navItems.map(({ icon: Icon, label }, index) => (
+        {navItems.map(({ icon: Icon, label, redirectTo }, index) => (
           <div
             key={label}
             className="relative inline-block"
@@ -165,6 +170,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             onClick={() => {
               setActiveIndex(index);
               updateIndicator(itemsRef.current[index]);
+              router.push(redirectTo);
             }}
           >
             <NavbarItem className="list-none px-4 py-2">
@@ -224,29 +230,36 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         <MessageCircle className="cursor-pointer" />
         <BellIcon className="cursor-pointer" />
 
-        <Dropdown
-          placement="bottom-end"
-          className="text-black"
-          shouldBlockScroll={false}
-        >
-          <DropdownTrigger>
-            <Avatar
-              as="button"
-              className="transition-transform select-none"
-              color="secondary"
-              name="Jason Hughes"
-              size="md"
-              src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
-            />
-          </DropdownTrigger>
-          <DropdownMenu aria-label="Profile Actions" variant="flat">
-            <DropdownItem key="profile">View Profile</DropdownItem>
-            <DropdownItem key="setting">Settings</DropdownItem>
-            <DropdownItem key="log-out" color="danger">
-              Log Out
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+        {user && (
+          <Dropdown
+            placement="bottom-end"
+            className="text-black"
+            shouldBlockScroll={false}
+          >
+            <DropdownTrigger>
+              <Avatar
+                as="button"
+                className="transition-transform select-none"
+                color="secondary"
+                name={user.profile.first_name + " " + user.profile.last_name}
+                size="md"
+                src={user?.profile.avatar_url}
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Profile Actions" variant="flat">
+              <DropdownItem
+                key="profile"
+                onClick={() => router.push("/profile")}
+              >
+                View Profile
+              </DropdownItem>
+              <DropdownItem key="setting">Settings</DropdownItem>
+              <DropdownItem key="log-out" color="danger">
+                Log Out
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        )}
       </NavbarContent>
 
       <NavbarMenu className="h-full mt-3">

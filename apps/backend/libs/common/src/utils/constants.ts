@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { RoleEnum } from '@repo/db';
 import { config } from 'dotenv';
 
 config();
@@ -36,11 +36,11 @@ export type GetInfoAuthorizationCode = {
 export type TokensReponse = {
   access_token: string;
   refresh_token: string;
-  role: Role;
+  role: RoleEnum;
 };
 
 export type SignInResponse = TokensReponse & {
-  role: Role;
+  role: RoleEnum;
 };
 
 export const DEFAULT_TTL_OTP_EXPIRED = 600000;
@@ -49,8 +49,8 @@ export const BULLMQ_RETRY_LIMIT = 3;
 export const BULLMQ_RETRY_DELAY = 5000;
 export const IS_PRODUCTION =
   process.env.NODE_ENV === 'production' ? true : false;
-export const ACCESS_TOKEN_LIFE = 30 * 60 * 1000;
-export const REFRESH_TOKEN_LIFE = ACCESS_TOKEN_LIFE * 2;
+export const ACCESS_TOKEN_LIFE = 30 * 60 * 1000; // 30 minutes
+export const REFRESH_TOKEN_LIFE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export enum EmailTemplateNameEnum {
   EMAIL_OTP_VERIFICATION = 'email-otp-verification',
@@ -85,3 +85,14 @@ export enum AuthMethod {
   SIGN_IN = 'sign-in',
   SIGN_UP = 'sign-up',
 }
+
+export type Dateable = string | Date | null | undefined;
+
+export type SyncOptions<T> = {
+  idKey: keyof T;
+  compareFields: (a: T, b: T) => boolean;
+  isTempId: (id: any) => boolean;
+  onCreate: (item: T) => Promise<any>;
+  onUpdate: (item: T) => Promise<any>;
+  onDelete: (item: T) => Promise<any>;
+};

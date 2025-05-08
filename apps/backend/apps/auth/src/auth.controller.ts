@@ -63,4 +63,9 @@ export class AuthController {
   async verifyToken(@Payload() verifyTokenDto: VerifyTokenDto) {
     return this.authService.verifyToken(verifyTokenDto);
   }
+
+  @MessagePattern('refresh-token')
+  async refreshToken(@Payload() refreshToken: string) {
+    return this.authService.refreshToken(refreshToken);
+  }
 }

@@ -1,8 +1,11 @@
 import { SimpleDate } from "@/utils";
+import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
+import { AxiosError } from "axios";
 import { format } from "date-fns";
-import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
 import Cookies from "js-cookie";
+import jwt from "jsonwebtoken";
+import { toast } from "react-hot-toast";
+import { v4 as uuidv4 } from "uuid";
 
 export const formatDateToString = (date: SimpleDate): string => {
   const jsDate = new Date(date.year, date.month - 1, date.day);
@@ -64,4 +67,41 @@ export function setCookie(
 
 export function removeCookie(name: string, options?: Cookies.CookieAttributes) {
   Cookies.remove(name, options);
+}
+
+export function toZonedDate(
+  value: Date | string | undefined,
+  timeZone: string = "UTC",
+): ZonedDateTime | undefined {
+  if (!value) return undefined;
+
+  const dateObj = value instanceof Date ? value : new Date(value);
+
+  if (isNaN(dateObj.getTime())) return undefined;
+
+  const calendarDateTime = fromDate(dateObj, timeZone);
+
+  const zonedDateTime = toZoned(calendarDateTime, timeZone);
+
+  return zonedDateTime;
+}
+
+export function handleAxiosError(error: any) {
+  if (!error || typeof error !== "object") {
+    toast.error("An unexpected error occurred.");
+    return;
+  }
+
+  const axiosError = error as AxiosError;
+
+  if (!axiosError.response) {
+    toast.error("Unable to connect to the server. Please try again later.");
+  } else {
+    const message =
+      (axiosError.response.data as any)?.message ||
+      axiosError.message ||
+      "An unexpected error occurred. Please try again.";
+
+    toast.error(message);
+  }
 }
