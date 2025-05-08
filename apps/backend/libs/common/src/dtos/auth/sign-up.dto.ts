@@ -1,4 +1,4 @@
-import { Gender } from '@prisma/client';
+import { GenderEnum } from '@repo/db';
 import { Transform, Type } from 'class-transformer';
 import {
   IsDate,
@@ -11,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { IsValidPassword } from '@app/common/decorators';
+import { TransformToDate } from 'libs/common/transformers';
 
 export class DeviceDetailsDto {
   @IsString()
@@ -40,23 +41,12 @@ export class SignUpDto {
   @IsPhoneNumber('VN')
   readonly phone_number!: string;
 
-  @IsEnum(Gender)
-  readonly gender!: Gender;
+  @IsEnum(GenderEnum)
+  readonly gender!: GenderEnum;
 
   @IsNotEmpty()
   @IsDate()
-  @Transform(({ value }) => {
-    if (!value) return undefined;
-
-    if (value instanceof Date) return value;
-
-    if (typeof value === 'string') {
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? undefined : date;
-    }
-
-    return undefined;
-  })
+  @TransformToDate()
   readonly dob!: Date;
 
   @IsString()

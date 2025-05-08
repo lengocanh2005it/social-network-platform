@@ -1,4 +1,5 @@
 import { AuthMethod } from "@/utils/constants";
+import { GenderType, UserEducationsType, UserWorkPlacesType } from "@repo/db";
 
 export type DeviceDetails = {
   device_name: string;
@@ -83,7 +84,7 @@ export type VerifyToken = {
   token: string;
 };
 
-export type SocialType = "instagram" | "github" | "x";
+export type SocialType = "instagram" | "github" | "twitter";
 
 export interface SocialItem {
   key: number | string;
@@ -114,3 +115,55 @@ export interface Post {
     image?: string;
   };
 }
+
+export type GetUserQueryDto = {
+  includeProfile?: boolean;
+  includeFollowings?: boolean;
+  includeGroups?: boolean;
+  includeWorkPlaces?: boolean;
+  includeTargets?: boolean;
+  includeEducations?: boolean;
+  includeSocials?: boolean;
+  includePosts?: boolean;
+};
+
+export type Education = {
+  id: string;
+  major: string;
+  degree: string;
+  school_name: string;
+  start_date: string;
+  end_date: string;
+};
+
+export type WorkPlace = {
+  id: string;
+  position: string;
+  company_name: string;
+  start_date: string;
+  end_date: string;
+};
+
+export type InfoDetailsType = {
+  dob: string;
+  phone_number: string;
+  gender: GenderType;
+  address: string;
+  bio?: string;
+  first_name: string;
+  last_name: string;
+  nickname?: string;
+};
+
+export type SocialsLinkType = {
+  github_link?: string;
+  twitter_link?: string;
+  instagram_link?: string;
+};
+
+export type UpdateUserProfile = {
+  infoDetails?: InfoDetailsType;
+  workPlaces?: UserWorkPlacesType[];
+  socials?: SocialsLinkType;
+  educations?: UserEducationsType[];
+};

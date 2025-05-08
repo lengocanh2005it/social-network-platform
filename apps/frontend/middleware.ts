@@ -37,5 +37,12 @@ export async function middleware(request: NextRequest) {
     );
   }
 
+  if (
+    (!loggedIn || loggedIn === "false") &&
+    (pathname.startsWith("/home") || pathname.startsWith("/profile"))
+  ) {
+    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+  }
+
   return NextResponse.next();
 }

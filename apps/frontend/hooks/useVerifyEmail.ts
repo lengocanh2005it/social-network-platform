@@ -1,5 +1,5 @@
 import { verifyEmail } from "@/lib/api/auth";
-import { VerifyEmailDto } from "@/utils";
+import { handleAxiosError, VerifyEmailDto } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -18,8 +18,6 @@ export const useVerifyEmail = () => {
         );
       }
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || error.message);
-    },
+    onError: (error: any) => handleAxiosError(error),
   });
 };

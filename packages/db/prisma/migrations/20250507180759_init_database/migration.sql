@@ -458,6 +458,9 @@ CREATE UNIQUE INDEX "OAuthAccounts_user_id_key" ON "OAuthAccounts"("user_id");
 CREATE UNIQUE INDEX "UserDevices_user_id_key" ON "UserDevices"("user_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "UserDevices_finger_print_user_id_key" ON "UserDevices"("finger_print", "user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "GroupMembers_group_id_user_id_key" ON "GroupMembers"("group_id", "user_id");
 
 -- CreateIndex

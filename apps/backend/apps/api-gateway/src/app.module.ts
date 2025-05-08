@@ -1,6 +1,7 @@
 import { CommonModule } from '@app/common';
 import { JwtGuard, RoleGuard } from '@app/common/guards';
-import { Module } from '@nestjs/common';
+import { AttachAuthMiddleware } from '@app/common/middlewares';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -18,4 +19,8 @@ import { UsersModule } from './modules/users/users.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AttachAuthMiddleware).forRoutes('*');
+  }
+}

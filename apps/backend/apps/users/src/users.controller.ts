@@ -2,7 +2,7 @@ import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { GetUserQueryDto } from '@app/common/dtos/users';
+import { GetUserQueryDto, UpdateUserProfileDto } from '@app/common/dtos/users';
 
 @Controller()
 export class UsersController {
@@ -19,5 +19,13 @@ export class UsersController {
     @Payload('getUserQueryDto') getUserQueryDto?: GetUserQueryDto,
   ) {
     return this.usersService.handleGetMe(email, getUserQueryDto);
+  }
+
+  @MessagePattern('update-profile')
+  async updateUserProfile(
+    @Payload('updateUserProfileDto') updateUserProfileDto: UpdateUserProfileDto,
+    @Payload('email') email: string,
+  ) {
+    return this.usersService.updateUserProfile(updateUserProfileDto, email);
   }
 }

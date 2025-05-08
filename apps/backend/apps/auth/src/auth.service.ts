@@ -29,17 +29,11 @@ import {
   isValidUUID,
 } from '@app/common/utils';
 import { HttpService } from '@nestjs/axios';
-import {
-  BadRequestException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  OnModuleInit,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { OAuthProvider, Role } from '@prisma/client';
+import { OAuthProviderEnum, RoleEnum } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -102,7 +96,7 @@ export class AuthService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    if (existingUser.oauth_account?.provider !== OAuthProvider.local)
+    if (existingUser.oauth_account?.provider !== OAuthProviderEnum.local)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
         message: `This email is registered using a different sign-in method and cannot be used for standard login.`,
@@ -202,7 +196,7 @@ export class AuthService implements OnModuleInit {
       data: {
         email,
         password: hashPassword(password),
-        role: Role.user,
+        role: RoleEnum.user,
       },
     });
 
@@ -215,7 +209,7 @@ export class AuthService implements OnModuleInit {
 
     await this.createNewUserDevice(finger_print, deviceDetailsDto, newUser.id);
 
-    await this.createNewOAuthAcccount(OAuthProvider.local, newUser.id);
+    await this.createNewOAuthAcccount(OAuthProviderEnum.local, newUser.id);
 
     this.processVerifyEmail(email, signUpDto.first_name, signUpDto.last_name);
 
@@ -314,7 +308,7 @@ export class AuthService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    if (existingEmail.oauth_account?.provider !== OAuthProvider.local)
+    if (existingEmail.oauth_account?.provider !== OAuthProviderEnum.local)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
         message: `This is not a local account, therefore password recovery via OTP is not available.`,
@@ -369,7 +363,7 @@ export class AuthService implements OnModuleInit {
           message: `This email has not been registered.`,
         });
 
-      if (existingEmail.oauth_account?.provider !== OAuthProvider.local)
+      if (existingEmail.oauth_account?.provider !== OAuthProviderEnum.local)
         throw new RpcException({
           statusCode: HttpStatus.BAD_REQUEST,
           message: `This is a local account, therefore changing the password via password recovery is not available.`,
@@ -392,13 +386,15 @@ export class AuthService implements OnModuleInit {
       };
     } catch (err) {
       if (err.name === 'TokenExpiredError') {
-        throw new BadRequestException(
-          'The authorization code you provided has expired.',
-        );
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'The authorization code you provided has expired.',
+        });
       } else {
-        throw new BadRequestException(
-          'The authorization code you provided is invalid.',
-        );
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'The authorization code you provided is invalid.',
+        });
       }
     }
   };
@@ -452,12 +448,12 @@ export class AuthService implements OnModuleInit {
           email,
         },
         update: {
-          role: Role.user,
+          role: RoleEnum.user,
         },
         create: {
           email,
           is_email_verified: identity_provider === 'google' ? true : false,
-          role: Role.user,
+          role: RoleEnum.user,
         },
       });
 
@@ -484,8 +480,8 @@ export class AuthService implements OnModuleInit {
 
       await this.createNewOAuthAcccount(
         identity_provider === 'google'
-          ? OAuthProvider.google
-          : OAuthProvider.facebook,
+          ? OAuthProviderEnum.google
+          : OAuthProviderEnum.facebook,
         newUser.id,
         sub,
       );
@@ -546,7 +542,7 @@ export class AuthService implements OnModuleInit {
   };
 
   private createNewOAuthAcccount = async (
-    provider: OAuthProvider,
+    provider: OAuthProviderEnum,
     userId: string,
     providerId?: string,
   ) => {
@@ -1133,7 +1129,10 @@ export class AuthService implements OnModuleInit {
       const payload = await this.jwtService.verifyAsync(token);
 
       if (!payload || !payload.payload || !isValidUUID(payload.payload))
-        throw new BadRequestException('Invalid token.');
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Invalid token.',
+        });
 
       return {
         success: true,
@@ -1141,7 +1140,11 @@ export class AuthService implements OnModuleInit {
     } catch (error) {
       console.error(error);
 
-      throw new BadRequestException('Invalid token or token expired.');
+      throw error;
     }
+  };
+
+  public refreshToken = async (refreshToken: string) => {
+    return this.keyCloakProvider.refreshToken(refreshToken);
   };
 }

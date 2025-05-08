@@ -45,15 +45,22 @@ export const useGetInfoOAuthCallback = () => {
       }
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || error.message;
+      if (!error.response) {
+        toast.error("Unable to connect to the server. Please try again later.");
+      } else {
+        const errorMessage =
+          error.response?.data?.message ||
+          error?.message ||
+          "An unexpected error occurred. Please try again.";
 
-      if (errorMessage?.includes("This email has not been registered."))
-        router.push("/auth/sign-in");
+        if (errorMessage?.includes("This email has not been registered."))
+          router.push("/auth/sign-in");
 
-      if (errorMessage?.includes("This email has already been registered."))
-        router.push("/auth/sign-up");
+        if (errorMessage?.includes("This email has already been registered."))
+          router.push("/auth/sign-up");
 
-      toast.error(errorMessage);
+        toast.error(errorMessage);
+      }
     },
   });
 };

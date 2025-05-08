@@ -12,6 +12,7 @@ import {
   TokenValidation,
 } from 'nest-keycloak-connect';
 import { CommonService } from './common.service';
+import { AttachAuthMiddleware } from '@app/common/middlewares';
 
 @Global()
 @Module({
@@ -59,6 +60,7 @@ import { CommonService } from './common.service';
     KeycloakProvider,
     JwtGuard,
     RoleGuard,
+    AttachAuthMiddleware,
   ],
   exports: [
     ConfigModule,
@@ -72,6 +74,7 @@ import { CommonService } from './common.service';
     KeycloakProvider,
     RoleGuard,
     JwtGuard,
+    AttachAuthMiddleware,
   ],
 })
 export class CommonModule {}

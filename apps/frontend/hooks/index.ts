@@ -5,3 +5,5 @@ export * from "./useForgotPassword";
 export * from "./useResetPassword";
 export * from "./useOAuthCallback";
 export * from "./useGetInfoOAuthCallback";
+export * from "./useGetMe";
+export * from "./useUpdateProfile";

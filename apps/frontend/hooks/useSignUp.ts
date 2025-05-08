@@ -1,6 +1,6 @@
 import { signUp } from "@/lib/api/auth";
 import { useAppStore } from "@/store";
-import { SignUpDto } from "@/utils";
+import { handleAxiosError, SignUpDto } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
@@ -18,7 +18,7 @@ export const useSignUp = () => {
     },
     onError: (error: any) => {
       setIsModalOTPOpen(false);
-      toast.error(error.response?.data?.message || error.message);
+      handleAxiosError(error);
     },
   });
 };

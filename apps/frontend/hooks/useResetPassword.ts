@@ -1,6 +1,6 @@
 import { resetPassword } from "@/lib/api/auth";
 import { useAppStore } from "@/store";
-import { ResetPasswordDto } from "@/utils";
+import { handleAxiosError, ResetPasswordDto } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
@@ -14,8 +14,6 @@ export const useResetPassword = () => {
       toast.success(data?.message || "Success");
       setIsPasswordResetSuccess(true);
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || error.message);
-    },
+    onError: (error: any) => handleAxiosError(error),
   });
 };

@@ -1,0 +1,39 @@
+{
+  "name": "@repo/db",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "prisma": {
+    "seed": "ts-node ./prisma/seed.ts"
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "db:push": "npx prisma db push",
+    "db:migrate:dev": "npx prisma migrate dev",
+    "db:pull": "npx prisma db pull",
+    "db:reset": "npx prisma migrate reset",
+    "db:studio": "npx prisma studio",
+    "db:generate": "npx prisma generate",
+    "db:migrate:prod": "npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed",
+    "db:migrate:no-seed": "npx prisma migrate dev --skip-seed"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "0.0.0",
+    "prisma": "^6.7.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0"
+  }
+}

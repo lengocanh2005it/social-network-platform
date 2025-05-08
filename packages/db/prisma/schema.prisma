@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -40,7 +41,7 @@ model Users {
   stories                   Stories[]
   story_reactions           StoryReactions[]
   story_views               StoryViews[]
-  devices                   UserDevices[]
+  devices                   UserDevices?
   educations                UserEducations[]
   profile                   UserProfiles?
   socials                   UserSocials[]
@@ -93,6 +94,8 @@ model UserSocials {
   social_link String
   user_id     String @db.Uuid
   user        Users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([social_name, user_id])
 }
 
 model UserWorkPlaces {
@@ -102,6 +105,8 @@ model UserWorkPlaces {
   start_date   DateTime
   end_date     DateTime?
   user_id      String    @db.Uuid
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now())
   user         Users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 

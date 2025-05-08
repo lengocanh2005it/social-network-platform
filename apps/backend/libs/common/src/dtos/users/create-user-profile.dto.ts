@@ -1,4 +1,4 @@
-import { Gender } from '@prisma/client';
+import { GenderEnum } from '@repo/db';
 import { Transform } from 'class-transformer';
 import {
   IsDate,
@@ -13,8 +13,8 @@ export class CreateUserProfileDto {
   @IsPhoneNumber('VN')
   readonly phone_number!: string;
 
-  @IsEnum(Gender)
-  readonly gender!: Gender;
+  @IsEnum(GenderEnum)
+  readonly gender!: GenderEnum;
 
   @IsNotEmpty()
   @IsDate()

@@ -9,19 +9,23 @@ import {
   VerifyOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
-import { Body, Controller, HttpStatus, Post, Res } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { Response } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { initializeCookies } from '@app/common/utils';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
 import { Public } from 'nest-keycloak-connect';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('sign-in')
@@ -113,5 +117,24 @@ export class AuthController {
   @Post('verify-token')
   async verifyToken(@Body() verifyTokenDto: VerifyTokenDto) {
     return this.authService.handleVerifyToken(verifyTokenDto);
+  }
+
+  @Public()
+  @Post('token/refresh')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken)
+      throw new HttpException(
+        'Refresh token expired or missing',
+        HttpStatus.UNAUTHORIZED,
+      );
+
+    const { access_token, refresh_token, role } =
+      await this.authService.refreshToken(refreshToken);
+
+    initializeCookies(res, { access_token, refresh_token, role });
+
+    return res.status(HttpStatus.CREATED).json({ access_token, refreshToken });
   }
 }

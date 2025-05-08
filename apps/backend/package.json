@@ -5,9 +5,6 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
-  "prisma": {
-    "seed": "ts-node ./prisma/seed.ts"
-  },
   "scripts": {
     "build": "node scripts/build-all.js",
     "format": "prettier --check \"apps/**/*.ts\" \"libs/**/*.ts\"",
@@ -22,15 +19,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
-    "db:push": "npx prisma db push",
-    "db:migrate:dev": "npx prisma migrate dev",
-    "db:pull": "npx prisma db pull",
-    "db:reset": "npx prisma migrate reset",
-    "db:studio": "npx prisma studio",
-    "db:generate": "npx prisma generate",
-    "db:migrate:prod": "npx prisma migrate deploy",
-    "db:seed": "npx prisma db seed",
-    "db:migrate:no-seed": "npx prisma migrate dev --skip-seed",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
@@ -45,11 +33,11 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/microservices": "^11.0.20",
     "@nestjs/platform-express": "^11.0.1",
-    "@prisma/client": "^6.6.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.49.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^16.5.0",
     "ioredis": "^5.6.1",
     "jwks-rsa": "^3.2.0",
@@ -70,6 +58,7 @@
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
     "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.7",

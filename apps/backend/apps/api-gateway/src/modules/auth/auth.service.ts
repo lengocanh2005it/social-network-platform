@@ -31,6 +31,7 @@ export class AuthService implements OnModuleInit {
       'get-info-oauth-callback',
       'generate-token',
       'verify-token',
+      'refresh-token',
     ];
 
     patterns.forEach((pattern) => {
@@ -84,5 +85,9 @@ export class AuthService implements OnModuleInit {
 
   public handleVerifyToken = async (verifyTokenDto: VerifyTokenDto) => {
     return firstValueFrom(this.authClient.send('verify-token', verifyTokenDto));
+  };
+
+  public refreshToken = async (refreshToken: string) => {
+    return firstValueFrom(this.authClient.send('refresh-token', refreshToken));
   };
 }
