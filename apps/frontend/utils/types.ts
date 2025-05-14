@@ -207,3 +207,13 @@ export type Verify2FaType = {
   otp: string;
   action: Verify2FaActionEnum;
 };
+
+export enum UploadUserImageTypeEnum {
+  AVATAR = "avatar",
+  COVER_PHOTO = "cover_photo",
+}
+
+export type UploadUserImageType = {
+  type: UploadUserImageTypeEnum;
+  file: File;
+};

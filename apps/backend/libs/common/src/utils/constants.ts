@@ -132,3 +132,8 @@ export enum Verify2FaActions {
   ENABLE = 'enable',
   DISABLE = 'disable',
 }
+
+export enum UploadUserImageTypeEnum {
+  AVATAR = 'avatar',
+  COVER_PHOTO = 'cover_photo',
+}

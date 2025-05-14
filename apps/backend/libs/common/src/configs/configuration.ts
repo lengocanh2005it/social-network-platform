@@ -38,4 +38,9 @@ export default () => ({
     phone_number: process.env.TWILIO_PHONE_NUMBER,
   },
   application_name: process.env.APPLICATION_NAME,
+  cloudinary: {
+    name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  },
 });

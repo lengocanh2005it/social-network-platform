@@ -8,6 +8,7 @@ import {
   UpdateUserProfileDto,
   UpdateUserSessionDto,
   UpdateWorkPlaceDto,
+  UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
@@ -15,6 +16,7 @@ import {
   REFRESH_TOKEN_LIFE,
   SyncOptions,
   toPascalCase,
+  UploadUserImageTypeEnum,
   Verify2FaActions,
   verifyPassword,
 } from '@app/common/utils';
@@ -523,7 +525,7 @@ export class UsersService {
       return acc;
     }, {});
 
-    let findUser: UsersType | UserProfilesType | null = null;
+    let findUser: any;
 
     if (field === 'id') {
       findUser = await this.prismaService.users.findUnique({
@@ -569,6 +571,43 @@ export class UsersService {
       },
       data: {
         two_factor_enabled: action === Verify2FaActions.ENABLE ? true : false,
+      },
+    });
+  };
+
+  public updateUserImage = async (
+    user_id: string,
+    uploadUserImageQueryDto: UploadUserImageQueryDto,
+    fileUrl: string,
+  ) => {
+    const { type } = uploadUserImageQueryDto;
+
+    const userProfile = await this.prismaService.userProfiles.findFirst({
+      where: {
+        user: {
+          id: user_id,
+        },
+      },
+    });
+
+    if (!userProfile)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    await this.prismaService.userProfiles.update({
+      where: {
+        id: userProfile.id,
+      },
+      data: {
+        ...(type === UploadUserImageTypeEnum.AVATAR
+          ? {
+              avatar_url: fileUrl,
+            }
+          : {
+              cover_photo_url: fileUrl,
+            }),
       },
     });
   };

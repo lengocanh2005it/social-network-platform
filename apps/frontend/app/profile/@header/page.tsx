@@ -1,4 +1,5 @@
 "use client";
+import EditImageButton from "@/components/button/EditImageButton";
 import PeopleKnow from "@/components/PeopleKnow";
 import { useAppStore, useUserStore } from "@/store";
 import {
@@ -8,10 +9,8 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Tooltip,
 } from "@heroui/react";
 import {
-  CameraIcon,
   ChevronDown,
   ChevronUp,
   Edit,
@@ -114,13 +113,7 @@ const ProfileHeaderSection = () => {
                 backgroundPosition: "center",
               }}
             >
-              <Button
-                startContent={<CameraIcon />}
-                className="absolute bottom-4 right-4 bg-white
-        text-black px-3 py-1 rounded-md flex items-center gap-1 transition"
-              >
-                Edit cover photo
-              </Button>
+              <EditImageButton type="cover_photo" />
             </div>
 
             <div
@@ -143,18 +136,11 @@ const ProfileHeaderSection = () => {
                     height={180}
                     priority
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="rounded-full border-4 border-white object-cover select-none cursor-pointer"
+                    className="rounded-full border-4 border-white object-cover 
+                    select-none cursor-pointer"
                   />
 
-                  <Tooltip content="Edit avatar">
-                    <Button
-                      isIconOnly
-                      className="absolute bottom-3 right-3 bg-gray-400 text-white p-2
-            rounded-full hover:bg-gray-500 transition"
-                    >
-                      <CameraIcon />
-                    </Button>
-                  </Tooltip>
+                  <EditImageButton type="avatar" />
                 </div>
 
                 <div className="flex-1">

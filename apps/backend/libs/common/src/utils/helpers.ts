@@ -218,3 +218,17 @@ export function formatPhoneNumberToE164(phoneNumber: string): string {
 
   return phoneNumber;
 }
+
+export function formatFileSize(sizeInBytes: number): string {
+  const KB = 1024;
+
+  const MB = KB * 1024;
+
+  if (sizeInBytes >= MB) {
+    return `${(sizeInBytes / MB).toFixed(2)} MB`;
+  } else if (sizeInBytes >= KB) {
+    return `${(sizeInBytes / KB).toFixed(2)} KB`;
+  } else {
+    return `${sizeInBytes} bytes`;
+  }
+}
