@@ -68,8 +68,38 @@ export class InfisicalProvider implements OnModuleInit {
         secretValue,
         secretComment,
       });
+    } catch (error: any) {
+      const message = error?.message || '';
+
+      if (message.includes('Secret already exist')) {
+        try {
+          await this.client.secrets().updateSecret(secretName, {
+            environment,
+            projectId: this.projectId,
+            secretValue,
+            secretComment,
+          });
+        } catch (updateError) {
+          console.error(`❌ Failed to update "${secretName}":`, updateError);
+
+          throw updateError;
+        }
+      } else {
+        console.error(`❌ Error saving "${secretName}":`, error);
+
+        throw error;
+      }
+    }
+  }
+
+  async deleteSecret(secretName: string, environment = 'dev'): Promise<void> {
+    try {
+      await this.client.secrets().deleteSecret(secretName, {
+        environment,
+        projectId: this.projectId,
+      });
     } catch (error) {
-      console.error(`❌ Error saving "${secretName}":`, error);
+      console.error(`❌ Error deleting "${secretName}":`, error);
     }
   }
 }

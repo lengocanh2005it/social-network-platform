@@ -158,3 +158,63 @@ export function toPascalCase(s: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
 }
+
+export function verifyPassword(plainPassword: string, hashedPassword: string) {
+  return bcryptjs.compareSync(plainPassword, hashedPassword);
+}
+
+export const clearCookies = (res: Response) => {
+  const cookieOptions = {
+    sameSite: 'lax' as const,
+    secure: IS_PRODUCTION,
+  };
+
+  res.clearCookie('access_token', {
+    ...cookieOptions,
+    httpOnly: true,
+  });
+
+  res.clearCookie('refresh_token', {
+    ...cookieOptions,
+    httpOnly: true,
+  });
+
+  res.clearCookie('role', {
+    ...cookieOptions,
+    httpOnly: false,
+  });
+
+  res.clearCookie('logged_in', {
+    ...cookieOptions,
+    httpOnly: false,
+  });
+};
+
+export function generateKafkaIds(baseClientId: string, baseGroupId: string) {
+  const suffix = Math.random().toString(36).substring(2, 8);
+  return {
+    clientId: `${baseClientId}-${suffix}`,
+    groupId: `${baseGroupId}-${suffix}`,
+  };
+}
+
+export const generateSmsOTPMessage = (
+  fullName: string,
+  otp: string,
+  type: 'update' | 'verify',
+): string => {
+  const actionMessage =
+    type === 'update'
+      ? 'to confirm your new phone number.'
+      : 'to verify your identity before enabling two-factor authentication.';
+
+  return `Hi ${fullName}, your verification code is ${otp}. Please enter it ${actionMessage}`;
+};
+
+export function formatPhoneNumberToE164(phoneNumber: string): string {
+  if (phoneNumber.startsWith('0')) {
+    return '+84' + phoneNumber.slice(1);
+  }
+
+  return phoneNumber;
+}

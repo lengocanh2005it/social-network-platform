@@ -1,26 +1,33 @@
 import {
+  ChangePasswordDto,
   ForgotPasswordDto,
   GenerateTokenDto,
   GetInfoOAuthCallbackDto,
   OAuthCallbackDto,
   ResetPasswordDto,
+  SendOtpDto,
   SignInDto,
+  SignOutDto,
   SignUpDto,
+  Verify2FaDto,
   VerifyOtpDto,
+  VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
-import { initializeCookies } from '@app/common/utils';
+import { clearCookies, initializeCookies } from '@app/common/utils';
 import {
   Body,
   Controller,
+  Headers,
   HttpException,
   HttpStatus,
   Post,
   Req,
   Res,
 } from '@nestjs/common';
+import { RoleEnum } from '@repo/db';
 import { Request, Response } from 'express';
-import { Public } from 'nest-keycloak-connect';
+import { KeycloakUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -121,7 +128,11 @@ export class AuthController {
 
   @Public()
   @Post('token/refresh')
-  async refreshToken(@Req() req: Request, @Res() res: Response) {
+  async refreshToken(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers() headers: Record<string, any>,
+  ) {
     const refreshToken = req.cookies?.refresh_token;
 
     if (!refreshToken)
@@ -130,11 +141,153 @@ export class AuthController {
         HttpStatus.UNAUTHORIZED,
       );
 
+    const finger_print = headers['x-fingerprint'];
+
+    if (!finger_print)
+      throw new HttpException(
+        'Finger print is missing.',
+        HttpStatus.UNAUTHORIZED,
+      );
+
     const { access_token, refresh_token, role } =
-      await this.authService.refreshToken(refreshToken);
+      await this.authService.refreshToken(refreshToken, finger_print);
 
     initializeCookies(res, { access_token, refresh_token, role });
 
     return res.status(HttpStatus.CREATED).json({ access_token, refreshToken });
+  }
+
+  @Post('change-password')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @KeycloakUser() user: any,
+    @Res() response: Response,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const finger_print = headers['x-fingerprint'];
+
+    if (!finger_print)
+      throw new HttpException(
+        'Finger print is missing.',
+        HttpStatus.UNAUTHORIZED,
+      );
+
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    const { access_token, refresh_token, role } =
+      await this.authService.changePassword(
+        changePasswordDto,
+        email,
+        finger_print,
+      );
+
+    initializeCookies(response, { access_token, refresh_token, role });
+
+    return response
+      .status(HttpStatus.CREATED)
+      .json({ success: true, message: `Password changed successfully.` });
+  }
+
+  @Post('sign-out')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async signOut(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const access_token = req.cookies['access_token'] as string;
+
+    const refresh_token = req.cookies['refresh_token'] as string;
+
+    const fingerprint = headers['x-fingerprint'] as string;
+
+    const isLoggedIn = req.cookies['logged_in'];
+
+    if (
+      !(access_token && refresh_token && fingerprint) ||
+      isLoggedIn !== 'true'
+    ) {
+      throw new HttpException(
+        'Your session has expired or been removed. Please sign in again.',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const signOutDto: SignOutDto = {
+      access_token,
+      refresh_token,
+      finger_print: fingerprint,
+    };
+
+    const data = await this.authService.signOut(signOutDto);
+
+    if (data) clearCookies(res);
+
+    clearCookies(res);
+
+    return res.status(HttpStatus.CREATED).json(data);
+  }
+
+  @Post('send-otp')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async sendOtp(@Body() sendOtpDto: SendOtpDto, @KeycloakUser() user: any) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.authService.sendOtp({
+      ...sendOtpDto,
+      email,
+    });
+  }
+
+  @Post('account/verify-ownership')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async verifyAccountOwnership(
+    @Body() verifyOwnershipOtpDto: VerifyOwnershipOtpDto,
+  ) {
+    return this.authService.verifyAccountOwnership(verifyOwnershipOtpDto);
+  }
+
+  @Post('2fa/generate')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async generate2FA(@KeycloakUser() user: any) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.authService.generate2FA(email);
+  }
+
+  @Post('2fa/verify')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async verify2FA(
+    @Body() verify2FaDto: Verify2FaDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.authService.verify2FA(verify2FaDto, email);
   }
 }

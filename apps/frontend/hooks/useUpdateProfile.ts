@@ -25,7 +25,9 @@ export const useUpdateProfile = () => {
         clearWorkPlacesHistory();
         resetUserEducations();
         resetUserWorkPlaces();
-        toast.success("Your profile updated successfully!");
+        toast.success("Your profile updated successfully!", {
+          position: "bottom-right",
+        });
       }
     },
     onError: (error: any) => handleAxiosError(error),

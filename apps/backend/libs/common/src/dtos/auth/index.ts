@@ -8,3 +8,8 @@ export * from './oauth-callback.dto';
 export * from './get-info-oauth-callback.dto';
 export * from './generate-token.dto';
 export * from './verify-token.dto';
+export * from './change-password.dto';
+export * from './sign-out.dto';
+export * from './send-otp.dto';
+export * from './verify-ownership-otp.dto';
+export * from './verify-2fa.dto';

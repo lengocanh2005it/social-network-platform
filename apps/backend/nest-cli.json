@@ -82,6 +82,15 @@
         "tsConfigPath": "apps/redis/tsconfig.app.json"
       }
     },
+    "sms": {
+      "type": "application",
+      "root": "apps/sms",
+      "entryFile": "main",
+      "sourceRoot": "apps/sms/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/sms/tsconfig.app.json"
+      }
+    },
     "users": {
       "type": "application",
       "root": "apps/users",

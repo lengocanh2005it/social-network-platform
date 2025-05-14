@@ -45,12 +45,20 @@ export type SignInResponse = TokensReponse & {
 
 export const DEFAULT_TTL_OTP_EXPIRED = 600000;
 export const EMAILS_QUEUE_NAME = 'emails-queue';
+export const SMS_QUEUE_NAME = 'sms-queue';
 export const BULLMQ_RETRY_LIMIT = 3;
 export const BULLMQ_RETRY_DELAY = 5000;
 export const IS_PRODUCTION =
   process.env.NODE_ENV === 'production' ? true : false;
 export const ACCESS_TOKEN_LIFE = 30 * 60 * 1000; // 30 minutes
 export const REFRESH_TOKEN_LIFE = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const DEFAULT_ERROR_MESSAGE =
+  'Oops! Something went wrong. Please try again.';
+export const KAFKA_RETRY_DEFAULT = 5;
+export const KAFKA_RETRY_TIME_INITIAL_DEFAULT = 1000;
+export const KAFKA_RETRY_TIME_MAX_DEFAULT = 30000;
+export const KAFKA_MAX_FLIGHT_REQUESTS_DEFAULT = 10;
+export const KAFKA_METADATA_MAX_AGE = 60000;
 
 export enum EmailTemplateNameEnum {
   EMAIL_OTP_VERIFICATION = 'email-otp-verification',
@@ -79,6 +87,11 @@ export const KAFKA_SERVICES = [
     clientId: 'redis',
     groupId: 'redis-group',
   },
+  {
+    serviceName: 'SMS_SERVICE',
+    clientId: 'sms',
+    groupId: 'sms-group',
+  },
 ] as const;
 
 export enum AuthMethod {
@@ -96,3 +109,26 @@ export type SyncOptions<T> = {
   onUpdate: (item: T) => Promise<any>;
   onDelete: (item: T) => Promise<any>;
 };
+
+export const publicPaths = [
+  '/auth/sign-in',
+  '/auth/sign-up',
+  '/auth/token/refresh',
+  '/auth/forgot-password',
+];
+
+export enum VerifyOwnershipOtpMethodEnum {
+  EMAIL = 'email',
+  SMS = 'sms',
+}
+
+export type SmsContentType = {
+  from: string;
+  to: string;
+  message: string;
+};
+
+export enum Verify2FaActions {
+  ENABLE = 'enable',
+  DISABLE = 'disable',
+}

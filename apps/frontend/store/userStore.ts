@@ -1,4 +1,5 @@
 import { getMe } from "@/lib/api/users";
+import { handleAxiosError } from "@/utils";
 import {
   UserEducationsType,
   UserProfilesType,
@@ -21,7 +22,7 @@ interface UserState {
   user: FullUserType | null;
   educationsHistory: UserEducationsType[][];
   workPlacesHistory: UserWorkPlacesType[][];
-  setUser: (user: FullUserType) => void;
+  setUser: (user: FullUserType | null) => void;
   resetUser: () => void;
   resetUserEducations: () => void;
   resetUserWorkPlaces: () => void;
@@ -105,9 +106,7 @@ export const useUserStore = create<UserState>()(
             },
           });
         } catch (error: any) {
-          console.error("Error fetching user profile", error);
-
-          toast.error(error.response?.data?.message || error.message);
+          handleAxiosError(error);
         }
       },
       removeUserEducation: (id: string) => {

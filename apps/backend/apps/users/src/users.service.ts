@@ -1,16 +1,26 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
+  CreateUserSessionDto,
   GetUserQueryDto,
   UpdateEducationsDto,
   UpdateInfoDetailsDto,
   UpdateSocialsLinkDto,
   UpdateUserProfileDto,
+  UpdateUserSessionDto,
   UpdateWorkPlaceDto,
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { hashPassword, SyncOptions, toPascalCase } from '@app/common/utils';
+import {
+  hashPassword,
+  REFRESH_TOKEN_LIFE,
+  SyncOptions,
+  toPascalCase,
+  Verify2FaActions,
+  verifyPassword,
+} from '@app/common/utils';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
+import { SessionStatusEnum, UserProfilesType, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 
 @Injectable()
@@ -73,7 +83,7 @@ export class UsersService {
     if (!findUser)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: 'This user information not found.',
+        message: `This email has not been registered.`,
       });
 
     return omit(findUser, ['password']);
@@ -326,7 +336,13 @@ export class UsersService {
       where: {
         user_id,
       },
-      data: updateInfoDetailsDto,
+      data: {
+        ...updateInfoDetailsDto,
+        nickname: updateInfoDetailsDto?.nickname
+          ? updateInfoDetailsDto.nickname
+          : null,
+        bio: updateInfoDetailsDto?.bio ? updateInfoDetailsDto.bio : null,
+      },
     });
   };
 
@@ -358,5 +374,202 @@ export class UsersService {
     await Promise.all(toAdd.map(onCreate));
     await Promise.all(toUpdate.map(onUpdate));
     await Promise.all(toDelete.map(onDelete));
+  };
+
+  public verifyUserPassword = async (
+    currentPassword: string,
+    email: string,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        password: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    if (!user.password)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Password recovery is not available for non-local accounts.`,
+      });
+
+    return verifyPassword(currentPassword, user.password);
+  };
+
+  public createUserSession = async (
+    createUserSessionDto: CreateUserSessionDto,
+  ) => {
+    const { user_id, finger_print, refresh_token } = createUserSessionDto;
+
+    await this.prismaService.userSessions.upsert({
+      where: {
+        user_id_finger_print: {
+          user_id,
+          finger_print,
+        },
+      },
+      update: {
+        last_login_at: new Date(),
+        refresh_token,
+        expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
+        status: SessionStatusEnum.active,
+      },
+      create: createUserSessionDto,
+    });
+  };
+
+  public getUserDevice = async (userId: string, fingerPrint: string) => {
+    const device = await this.prismaService.userDevices.findUnique({
+      where: {
+        finger_print_user_id: {
+          finger_print: fingerPrint,
+          user_id: userId,
+        },
+      },
+    });
+
+    if (!device)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Your device could not be recognized. Please log in again.',
+      });
+
+    return device;
+  };
+
+  public getUserSession = async (user_id: string, finger_print: string) => {
+    const session = await this.prismaService.userSessions.findUnique({
+      where: {
+        user_id_finger_print: {
+          user_id,
+          finger_print,
+        },
+      },
+    });
+
+    if (!session || session?.status !== SessionStatusEnum.active)
+      throw new RpcException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: 'Your session has expired. Please log in again.',
+      });
+
+    return session;
+  };
+
+  public deactivateOtherSessions = async (
+    user_id: string,
+    exludeFingerPrint: string,
+  ) => {
+    await this.prismaService.userSessions.updateMany({
+      where: {
+        user_id,
+        finger_print: {
+          not: exludeFingerPrint,
+        },
+      },
+      data: {
+        status: SessionStatusEnum.inactive,
+      },
+    });
+  };
+
+  public updateUserSession = async (
+    updateUserSessionDto: UpdateUserSessionDto,
+  ) => {
+    const { user_id, finger_print, status } = updateUserSessionDto;
+
+    await this.prismaService.userSessions.update({
+      where: {
+        user_id_finger_print: {
+          user_id,
+          finger_print,
+        },
+      },
+      data: {
+        status,
+      },
+    });
+  };
+
+  public handleGetUserByField = async (
+    field: 'email' | 'phone_number' | 'id',
+    value: string,
+    getUserQueryDto?: GetUserQueryDto,
+  ) => {
+    const relations = [
+      'profile',
+      'followings',
+      'groups',
+      'targets',
+      'educations',
+      'work_places',
+      'socials',
+      'posts',
+    ];
+
+    const include = relations.reduce((acc, relation) => {
+      const fieldName = `include${toPascalCase(relation)}`;
+      if (getUserQueryDto?.[fieldName]) {
+        acc[relation] = true;
+      }
+      return acc;
+    }, {});
+
+    let findUser: UsersType | UserProfilesType | null = null;
+
+    if (field === 'id') {
+      findUser = await this.prismaService.users.findUnique({
+        where: { id: value },
+        include,
+      });
+    } else if (field === 'email') {
+      findUser = await this.prismaService.users.findUnique({
+        where: { email: value },
+        include,
+      });
+    } else if (field === 'phone_number') {
+      findUser = await this.prismaService.users.findFirst({
+        where: {
+          profile: {
+            phone_number: value,
+          },
+        },
+        include,
+      });
+    } else {
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Invalid field`,
+      });
+    }
+
+    if (!findUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This ${field === 'email' ? 'email' : 'phone number'} has not been registered.`,
+      });
+
+    return omit(findUser, ['password']);
+  };
+
+  public updateStatus2Fa = async (email: string, action: Verify2FaActions) => {
+    await this.handleGetMe(email);
+
+    await this.prismaService.users.update({
+      where: {
+        email,
+      },
+      data: {
+        two_factor_enabled: action === Verify2FaActions.ENABLE ? true : false,
+      },
+    });
   };
 }

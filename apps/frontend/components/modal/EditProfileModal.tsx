@@ -38,7 +38,11 @@ const EditProfileModal: React.FC = () => {
     },
   ];
 
-  const { isModalEditProfileOpen, setIsModalEditProfileOpen } = useAppStore();
+  const {
+    isModalEditProfileOpen,
+    setIsModalEditProfileOpen,
+    setIsDifferentPhoneNumber,
+  } = useAppStore();
   const {
     resetUserEducations,
     resetUserWorkPlaces,
@@ -77,6 +81,7 @@ const EditProfileModal: React.FC = () => {
       }}
       onOpenChange={() => {
         setIsModalEditProfileOpen(!isModalEditProfileOpen);
+        setIsDifferentPhoneNumber(false);
         resetUserEducations();
         resetUserWorkPlaces();
         clearEducationsHistory();

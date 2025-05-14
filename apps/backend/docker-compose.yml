@@ -23,6 +23,8 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
 
   postgres:
     image: postgres:latest
@@ -74,3 +76,4 @@ volumes:
   social-network-platform-db-data:
   keycloak-data:
   redis-data:
+  kafka-data:

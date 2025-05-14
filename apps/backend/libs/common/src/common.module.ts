@@ -1,7 +1,11 @@
-import configuration from '@app/common/config/configuration';
+import configuration from '@app/common/configs/configuration';
 import { JwtGuard, RoleGuard } from '@app/common/guards';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
-import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
+import {
+  InfisicalProvider,
+  KeycloakProvider,
+  TwoFactorAuthProvider,
+} from '@app/common/providers';
 import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -11,8 +15,8 @@ import {
   PolicyEnforcementMode,
   TokenValidation,
 } from 'nest-keycloak-connect';
+import { TwilioModule } from 'nestjs-twilio';
 import { CommonService } from './common.service';
-import { AttachAuthMiddleware } from '@app/common/middlewares';
 
 @Global()
 @Module({
@@ -53,6 +57,14 @@ import { AttachAuthMiddleware } from '@app/common/middlewares';
         },
       }),
     }),
+    TwilioModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        accountSid: configService.get<string>('twilio.account_sid', ''),
+        authToken: configService.get<string>('twilio.auth_token', ''),
+      }),
+    }),
   ],
   providers: [
     CommonService,
@@ -60,7 +72,7 @@ import { AttachAuthMiddleware } from '@app/common/middlewares';
     KeycloakProvider,
     JwtGuard,
     RoleGuard,
-    AttachAuthMiddleware,
+    TwoFactorAuthProvider,
   ],
   exports: [
     ConfigModule,
@@ -74,7 +86,8 @@ import { AttachAuthMiddleware } from '@app/common/middlewares';
     KeycloakProvider,
     RoleGuard,
     JwtGuard,
-    AttachAuthMiddleware,
+    TwilioModule,
+    TwoFactorAuthProvider,
   ],
 })
 export class CommonModule {}

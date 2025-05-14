@@ -1,4 +1,5 @@
 "use client";
+import { useSignOut } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
   Avatar,
@@ -49,6 +50,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
   const [, setIsHovering] = useState(false);
   const isHoveringRef = useRef(false);
   const { user } = useUserStore();
+  const { mutate: mutateSignOut } = useSignOut();
 
   const menuItems = ["Profile", "Dashboard", "Activity", "Log Out"];
 
@@ -249,12 +251,21 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             <DropdownMenu aria-label="Profile Actions" variant="flat">
               <DropdownItem
                 key="profile"
-                onClick={() => router.push("/profile")}
+                onPress={() => router.push("/profile")}
               >
                 View Profile
               </DropdownItem>
-              <DropdownItem key="setting">Settings</DropdownItem>
-              <DropdownItem key="log-out" color="danger">
+              <DropdownItem
+                key="setting"
+                onPress={() => router.push("/settings")}
+              >
+                Settings
+              </DropdownItem>
+              <DropdownItem
+                key="log-out"
+                color="danger"
+                onPress={() => mutateSignOut()}
+              >
                 Log Out
               </DropdownItem>
             </DropdownMenu>

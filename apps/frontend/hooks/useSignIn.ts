@@ -30,7 +30,9 @@ export const useSignIn = () => {
         router.push("/home/dashboard");
       }
 
-      toast.success("Successfully logged in!");
+      toast.success("Successfully logged in!", {
+        position: "bottom-right",
+      });
     },
     onError: (error: any) => handleAxiosError(error),
   });
