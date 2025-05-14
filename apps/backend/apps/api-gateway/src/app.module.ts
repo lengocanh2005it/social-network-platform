@@ -5,10 +5,11 @@ import { publicPaths } from '@app/common/utils';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, CommonModule],
+  imports: [AuthModule, UsersModule, CommonModule, UploadsModule],
   providers: [
     {
       provide: APP_GUARD,

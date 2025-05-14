@@ -13,3 +13,4 @@ export * from "./useVerifyAccountOwnership";
 export * from "./useSendOtp";
 export * from "./useGenerate2Fa";
 export * from "./useVerify2Fa";
+export * from "./useUploadImage";

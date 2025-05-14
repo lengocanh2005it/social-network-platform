@@ -4,6 +4,7 @@ import {
   GetUserQueryDto,
   UpdateUserProfileDto,
   UpdateUserSessionDto,
+  UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -108,5 +109,19 @@ export class UsersController {
     @Payload('action') action: Verify2FaActions,
   ) {
     return this.usersService.updateStatus2Fa(email, action);
+  }
+
+  @EventPattern('update-image')
+  async updateUserImage(
+    @Payload('user_id') user_id: string,
+    @Payload('uploadUserImageQueryDto')
+    uploadUserImageQueryDto: UploadUserImageQueryDto,
+    @Payload('fileUrl') fileUrl: string,
+  ) {
+    return this.usersService.updateUserImage(
+      user_id,
+      uploadUserImageQueryDto,
+      fileUrl,
+    );
   }
 }
