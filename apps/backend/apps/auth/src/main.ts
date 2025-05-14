@@ -1,8 +1,8 @@
+import { createKafkaOptions } from '@app/common/configs';
 import { generateKafkaServiceMap, KAFKA_SERVICES } from '@app/common/utils';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { Partitioners } from 'kafkajs';
+import { MicroserviceOptions } from '@nestjs/microservices';
 import { AuthModule } from './auth.module';
 
 async function bootstrap() {
@@ -10,29 +10,15 @@ async function bootstrap() {
 
   const configService = appContext.get(ConfigService);
 
-  const kafkaBrokers = configService
-    .get<string>('kafka.brokers', 'localhost:9092')
-    ?.split(',');
+  const serviceMap = generateKafkaServiceMap(KAFKA_SERVICES);
+
+  const { clientId, groupId } = serviceMap['AUTH_SERVICE'];
+
+  const kafkaOptions = createKafkaOptions(configService, clientId, groupId);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AuthModule,
-    {
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          clientId:
-            generateKafkaServiceMap(KAFKA_SERVICES)['AUTH_SERVICE'].clientId,
-          brokers: kafkaBrokers,
-        },
-        consumer: {
-          groupId:
-            generateKafkaServiceMap(KAFKA_SERVICES)['AUTH_SERVICE'].groupId,
-        },
-        producer: {
-          createPartitioner: Partitioners.LegacyPartitioner,
-        },
-      },
-    },
+    kafkaOptions,
   );
 
   await app.listen();

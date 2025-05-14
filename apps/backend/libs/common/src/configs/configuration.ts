@@ -32,4 +32,10 @@ export default () => ({
     secret_key: process.env.JWT_SECRET_KEY,
     access_token_life: process.env.JWT_ACCESS_TOKEN_LIFE,
   },
+  twilio: {
+    account_sid: process.env.TWILIO_ACCOUNT_SID,
+    auth_token: process.env.TWILIO_AUTH_TOKEN,
+    phone_number: process.env.TWILIO_PHONE_NUMBER,
+  },
+  application_name: process.env.APPLICATION_NAME,
 });

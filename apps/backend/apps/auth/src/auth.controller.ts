@@ -1,12 +1,17 @@
 import {
+  ChangePasswordDto,
   ForgotPasswordDto,
   GenerateTokenDto,
   GetInfoOAuthCallbackDto,
   OAuthCallbackDto,
   ResetPasswordDto,
+  SendOtpDto,
   SignInDto,
+  SignOutDto,
   SignUpDto,
+  Verify2FaDto,
   VerifyOtpDto,
+  VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
 import { Controller } from '@nestjs/common';
@@ -65,7 +70,53 @@ export class AuthController {
   }
 
   @MessagePattern('refresh-token')
-  async refreshToken(@Payload() refreshToken: string) {
-    return this.authService.refreshToken(refreshToken);
+  async refreshToken(
+    @Payload('refreshToken') refreshToken: string,
+    @Payload('fingerPrint') fingerPrint: string,
+  ) {
+    return this.authService.refreshToken(refreshToken, fingerPrint);
+  }
+
+  @MessagePattern('change-password')
+  async changePassword(
+    @Payload('changePasswordDto') changePasswordDto: ChangePasswordDto,
+    @Payload('email') email: string,
+    @Payload('finger_print') fingerPrint: string,
+  ) {
+    return this.authService.changePassword(
+      changePasswordDto,
+      email,
+      fingerPrint,
+    );
+  }
+
+  @MessagePattern('sign-out')
+  async signOut(@Payload() signOutDto: SignOutDto) {
+    return this.authService.signOut(signOutDto);
+  }
+
+  @MessagePattern('send-otp')
+  async sendOtp(@Payload() sendOtpDto: SendOtpDto) {
+    return this.authService.sendOtp(sendOtpDto);
+  }
+
+  @MessagePattern('verify-ownership-otp')
+  async verifyOwnershipOtp(
+    @Payload() verifyOwnershipOtpDto: VerifyOwnershipOtpDto,
+  ) {
+    return this.authService.verifyOwnershipOtp(verifyOwnershipOtpDto);
+  }
+
+  @MessagePattern('verify-2fa')
+  async verify2Fa(
+    @Payload('email') email: string,
+    @Payload('verify2FaDto') verif2FaDto: Verify2FaDto,
+  ) {
+    return this.authService.verify2Fa(verif2FaDto, email);
+  }
+
+  @MessagePattern('generate-2fa')
+  async generate2Fa(@Payload() email: string) {
+    return this.authService.generate2Fa(email);
   }
 }

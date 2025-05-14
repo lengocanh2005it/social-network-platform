@@ -11,12 +11,12 @@ import {
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { now, ZonedDateTime } from "@internationalized/date";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
 import CredentialsForm from "./CredentialsForm";
 import DetailsForm from "./DetailsForm";
-import { usePathname } from "next/navigation";
 
 const formSchema = z
   .object({

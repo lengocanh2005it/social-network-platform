@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -41,9 +40,10 @@ model Users {
   stories                   Stories[]
   story_reactions           StoryReactions[]
   story_views               StoryViews[]
-  devices                   UserDevices?
+  devices                   UserDevices[]
   educations                UserEducations[]
   profile                   UserProfiles?
+  sessions                  UserSessions[]
   socials                   UserSocials[]
   work_places               UserWorkPlaces[]
 }
@@ -117,12 +117,28 @@ model UserDevices {
   user_agent    String
   ip_address    String
   location      String
-  is_trusted    Boolean  @default(false)
+  is_trusted    Boolean  @default(true)
   last_login_at DateTime @default(now())
-  user_id       String   @unique @db.Uuid
+  user_id       String   @db.Uuid
   user          Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([finger_print, user_id])
+}
+
+model UserSessions {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  refresh_token String
+  finger_print  String
+  user_agent    String
+  ip_address    String
+  device_name   String
+  user_id       String        @db.Uuid
+  expires_at    DateTime      @db.Timestamp(6)
+  last_login_at DateTime      @default(now()) @db.Timestamp(6)
+  status        SessionStatus @default(active)
+  user          Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, finger_print])
 }
 
 model HashTags {
@@ -536,4 +552,15 @@ enum FriendShipStatus {
 enum MessageType {
   text
   file
+}
+
+enum SessionStatus {
+  active
+  inactive
+  expired
+}
+
+enum Helloworld {
+  test1
+  test2
 }

@@ -13,3 +13,5 @@ export enum Provider {
   FACEBOOK = "facebook",
   GOOGLE = "google",
 }
+
+export const OTP_RESEND_INTERVAL = 120;

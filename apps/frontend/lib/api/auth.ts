@@ -1,13 +1,17 @@
 import axios from "@/lib/axios";
 import {
+  ChangePasswordDto,
   ForgotPasswordDto,
   GenerateToken,
   GetInfoOAuthCallbackDto,
   OAuthCallbackDto,
   ResetPasswordDto,
+  SendOtpType,
   SignInDto,
   SignUpDto,
+  Verify2FaType,
   VerifyEmailDto,
+  VerifyOwnershipOtpType,
   VerifyToken,
 } from "@/utils";
 
@@ -66,6 +70,47 @@ export const generateToken = async (generateTokenDto: GenerateToken) => {
 
 export const verifyToken = async (verifyTokenDto: VerifyToken) => {
   const response = await axios.post("/auth/verify-token", verifyTokenDto);
+
+  return response.data;
+};
+
+export const changePassword = async (changePasswordDto: ChangePasswordDto) => {
+  const response = await axios.post("/auth/change-password", changePasswordDto);
+
+  return response.data;
+};
+
+export const signOut = async () => {
+  const response = await axios.post("/auth/sign-out");
+
+  return response.data;
+};
+
+export const sendOtp = async (sendOtpDtp: SendOtpType) => {
+  const response = await axios.post("/auth/send-otp", sendOtpDtp);
+
+  return response.data;
+};
+
+export const verifyAccountOwnership = async (
+  verifyAccountOwnershipDto: VerifyOwnershipOtpType,
+) => {
+  const response = await axios.post(
+    "/auth/account/verify-ownership",
+    verifyAccountOwnershipDto,
+  );
+
+  return response.data;
+};
+
+export const generate2Fa = async () => {
+  const response = await axios.post("/auth/2fa/generate");
+
+  return response.data;
+};
+
+export const verify2Fa = async (verify2FaDto: Verify2FaType) => {
+  const response = await axios.post("/auth/2fa/verify", verify2FaDto);
 
   return response.data;
 };

@@ -1,4 +1,5 @@
 import { AuthMethod } from "@/utils/constants";
+import { ZonedDateTime } from "@internationalized/date";
 import { GenderType, UserEducationsType, UserWorkPlacesType } from "@repo/db";
 
 export type DeviceDetails = {
@@ -166,4 +167,43 @@ export type UpdateUserProfile = {
   workPlaces?: UserWorkPlacesType[];
   socials?: SocialsLinkType;
   educations?: UserEducationsType[];
+};
+
+export type ChangePasswordDto = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type VerifyOwnershipOtpType = {
+  method: "email" | "sms";
+  otp: string;
+  email?: string;
+  phone_number?: string;
+};
+
+export type SendOtpType = {
+  method: "email" | "sms";
+  email?: string;
+  phone_number?: string;
+  type: "update" | "verify";
+};
+
+export type TempUserUpdateType = {
+  first_name: string;
+  last_name: string;
+  nick_name?: string;
+  phone_number: string;
+  gender: GenderType;
+  dob: ZonedDateTime;
+  address: string;
+};
+
+export enum Verify2FaActionEnum {
+  DISABLE = "disable",
+  ENABLE = "enable",
+}
+
+export type Verify2FaType = {
+  otp: string;
+  action: Verify2FaActionEnum;
 };

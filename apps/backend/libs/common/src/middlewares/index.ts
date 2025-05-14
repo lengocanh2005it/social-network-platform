@@ -1,1 +1,1 @@
-export * from './attach-auth.middleware';
+export * from './session.middleware';

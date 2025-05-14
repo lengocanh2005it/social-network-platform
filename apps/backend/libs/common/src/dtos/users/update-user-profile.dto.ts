@@ -11,7 +11,7 @@ import {
   IsUUID,
   ValidateNested,
 } from 'class-validator';
-import { TransformToDate } from 'libs/common/transformers';
+import { TransformToDate } from '@app/common/transformers';
 
 export class UpdateSocialsLinkDto {
   @IsOptional()

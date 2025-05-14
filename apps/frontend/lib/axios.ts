@@ -1,3 +1,4 @@
+import { getFingerprint } from "@/utils";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -9,15 +10,33 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const fingerprint = await getFingerprint();
+
+    if (fingerprint) {
+      config.headers["X-Fingerprint"] = fingerprint;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
+    console.error(error);
+
     if (
       error?.response?.status === 401 &&
       !error.config._retry &&
-      error?.response?.data?.message?.includes(
+      (error?.response?.data?.message?.includes(
         "You are not authenticated. Please login.",
-      )
+      ) ||
+        error?.response?.data?.message?.includes(
+          "Token verification failed. Please check and try again.",
+        ))
     ) {
       error.config._retry = true;
 
@@ -41,6 +60,18 @@ axiosInstance.interceptors.response.use(
 
         window.location.href = "/auth/sign-in";
       }
+    }
+
+    if (
+      error?.response?.status === 401 &&
+      !error.config._retry &&
+      error?.response?.data?.message?.includes(
+        "We couldn't verify your session. Please sign in again to continue securely.",
+      )
+    ) {
+      localStorage.removeItem("user-storage");
+      localStorage.removeItem("app-storage");
+      window.location.href = "/auth/sign-in";
     }
 
     return Promise.reject(error);

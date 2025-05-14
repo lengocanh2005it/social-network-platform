@@ -1,4 +1,5 @@
 import { SimpleDate } from "@/utils";
+import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
 import { AxiosError } from "axios";
 import { format } from "date-fns";
@@ -92,6 +93,8 @@ export function handleAxiosError(error: any) {
     return;
   }
 
+  console.error(error);
+
   const axiosError = error as AxiosError;
 
   if (!axiosError.response) {
@@ -102,6 +105,33 @@ export function handleAxiosError(error: any) {
       axiosError.message ||
       "An unexpected error occurred. Please try again.";
 
-    toast.error(message);
+    const newMessage =
+      message === "timeout 500 exceeded"
+        ? "Server is very busy. Please try again."
+        : message;
+
+    toast.error(newMessage);
   }
+}
+
+export const getFingerprint = async (): Promise<string | null> => {
+  try {
+    const fp = await FingerprintJS.load();
+
+    const result = await fp.get();
+
+    return result.visitorId;
+  } catch (error) {
+    console.error("Error while getting fingerprint:", error);
+
+    return null;
+  }
+};
+
+export function formatPhoneNumber(phoneNumber: string): string {
+  if (phoneNumber.length === 10) {
+    return `${phoneNumber.slice(0, 2)}xx xxx ${phoneNumber.slice(-3)}`;
+  }
+
+  return phoneNumber;
 }

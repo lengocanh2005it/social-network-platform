@@ -1,48 +1,69 @@
 import {
+  ChangePasswordDto,
   DeviceDetailsDto,
   ForgotPasswordDto,
   GenerateTokenDto,
   GetInfoOAuthCallbackDto,
   OAuthCallbackDto,
   ResetPasswordDto,
+  SendOtpDto,
   SignInDto,
+  SignOutDto,
   SignUpDto,
+  Verify2FaDto,
   VerifyOtpDto,
+  VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
-import { CreateUserProfileDto } from '@app/common/dtos/users';
+import { SendSmsDto } from '@app/common/dtos/sms';
+import {
+  CreateUserProfileDto,
+  CreateUserSessionDto,
+  UpdateUserSessionDto,
+} from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { KeycloakProvider } from '@app/common/providers';
+import {
+  InfisicalProvider,
+  KeycloakProvider,
+  TwoFactorAuthProvider,
+} from '@app/common/providers';
 import {
   AuthMethod,
   DEFAULT_TTL_OTP_EXPIRED,
   EmailTemplateNameEnum,
   GetInfoAuthorizationCode,
   JwtResetPasswordPayload,
-  KeycloakSignUpData,
+  REFRESH_TOKEN_LIFE,
   SignInResponse,
   TokensReponse,
   UserGoogleKeycloakData,
+  Verify2FaActions,
+  VerifyOwnershipOtpMethodEnum,
   generateOtp,
+  generateSmsOTPMessage,
   hashPassword,
   isValidPassword,
   isValidUUID,
+  verifyPassword,
 } from '@app/common/utils';
 import { HttpService } from '@nestjs/axios';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { OAuthProviderEnum, RoleEnum } from '@repo/db';
-import { omit } from 'lodash';
+import {
+  OAuthProviderEnum,
+  RoleEnum,
+  SessionStatusEnum,
+  UserDevicesType,
+  UserSesstionsType,
+  UsersType,
+} from '@repo/db';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
-  private keycloakAuthServerUrl: string;
-  private realm: string;
   private clientId: string;
-  private clientSecret: string;
   private avatarUrl: string;
   private coverPhotoUrl: string;
 
@@ -55,16 +76,13 @@ export class AuthService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly prismaService: PrismaService,
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
     private readonly keyCloakProvider: KeycloakProvider,
+    @Inject('SMS_SERVICE') private readonly smsClient: ClientKafka,
+    private readonly twoFactorAuthProvider: TwoFactorAuthProvider,
+    private readonly infisicalProvider: InfisicalProvider,
   ) {
-    this.keycloakAuthServerUrl = configService.get<string>(
-      'keycloak.auth_server_url',
-      '',
-    );
-    this.realm = configService.get<string>('keycloak.realm', '');
     this.clientId = configService.get<string>('keycloak.client_id', '');
-    this.clientSecret = configService.get<string>('keycloak.secret', '');
     this.avatarUrl = configService.get<string>('default_avatar_url', '');
     this.coverPhotoUrl = configService.get<string>('default_cover_photo', '');
   }
@@ -72,8 +90,21 @@ export class AuthService implements OnModuleInit {
   onModuleInit() {
     const patterns = ['get-key'];
 
+    const usersPattern = [
+      'verify-password',
+      'get-user-device',
+      'get-user-session',
+      'get-me',
+      'update-profile',
+      'get-user-by-field',
+    ];
+
     patterns.forEach((pattern) => {
       this.redisClient.subscribeToResponseOf(pattern);
+    });
+
+    usersPattern.forEach((pattern) => {
+      this.usersClient.subscribeToResponseOf(pattern);
     });
   }
 
@@ -134,23 +165,41 @@ export class AuthService implements OnModuleInit {
 
     await this.prismaService.userDevices.update({
       where: {
-        user_id: existingUser.id,
+        finger_print_user_id: {
+          finger_print: fingerprint,
+          user_id: existingUser.id,
+        },
       },
       data: {
         is_trusted: true,
       },
     });
 
-    if (existingUser.two_factor_enabled) {
-      return;
-    }
+    // if (existingUser.two_factor_enabled) {
+    //   return;
+    // }
 
-    const data = await this.signInByKeycloak(email, password);
+    const data = await this.keyCloakProvider.signInByKeycloak(email, password);
+
+    const createUserSessionDto: CreateUserSessionDto = {
+      refresh_token: hashPassword(data?.refresh_token),
+      finger_print: fingerprint,
+      device_name: findDevice.device_name,
+      user_agent: findDevice.user_agent,
+      ip_address: findDevice.ip_address,
+      user_id: existingUser.id,
+      expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
+    };
+
+    this.usersClient.emit(
+      'create-user-session',
+      JSON.stringify(createUserSessionDto),
+    );
 
     return {
       access_token: data?.access_token,
       refresh_token: data?.refresh_token,
-      role: await this.getRolesKeycloak(data.access_token),
+      role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
     };
   };
 
@@ -213,7 +262,7 @@ export class AuthService implements OnModuleInit {
 
     this.processVerifyEmail(email, signUpDto.first_name, signUpDto.last_name);
 
-    await this.signUpByKeycloak({
+    await this.keyCloakProvider.signUpByKeycloak({
       username: email,
       email,
       password,
@@ -269,11 +318,9 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    const user = await this.getUserByEmailKeycloak(email);
+    const user = await this.keyCloakProvider.getUserByEmailKeycloak(email);
 
-    if (user) {
-      await this.verifyUserEmailKeycloak(user.id);
-    }
+    if (user) await this.keyCloakProvider.verifyUserEmailKeycloak(user.id);
 
     const authorization_code = this.jwtService.sign(
       { email },
@@ -366,7 +413,7 @@ export class AuthService implements OnModuleInit {
       if (existingEmail.oauth_account?.provider !== OAuthProviderEnum.local)
         throw new RpcException({
           statusCode: HttpStatus.BAD_REQUEST,
-          message: `This is a local account, therefore changing the password via password recovery is not available.`,
+          message: `Password recovery is not available for non-local accounts.`,
         });
 
       this.usersClient.emit(
@@ -377,7 +424,10 @@ export class AuthService implements OnModuleInit {
         }),
       );
 
-      await this.updatePasswordUserKeyCloak(newPassword, email);
+      await this.keyCloakProvider.updatePasswordUserKeyCloak(
+        newPassword,
+        email,
+      );
 
       return {
         sucess: true,
@@ -493,11 +543,13 @@ export class AuthService implements OnModuleInit {
         true,
       );
 
-      const userKeycloak = await this.getUserByEmailKeycloak(email);
+      const userKeycloak =
+        await this.keyCloakProvider.getUserByEmailKeycloak(email);
 
-      if (userKeycloak) await this.verifyUserEmailKeycloak(userKeycloak.id);
+      if (userKeycloak)
+        await this.keyCloakProvider.verifyUserEmailKeycloak(userKeycloak.id);
 
-      await this.assignRoleKeycloak('user', userKeycloak.id);
+      await this.keyCloakProvider.assignRoleKeycloak('user', userKeycloak.id);
 
       const payload: any =
         await this.keyCloakProvider.verifyToken(access_token);
@@ -711,7 +763,7 @@ export class AuthService implements OnModuleInit {
         !existingEmail ||
         (existingEmail && !existingEmail.is_email_verified)
       ) {
-        await this.logOutUserSessions(user.email);
+        await this.keyCloakProvider.logOutUserSessions(user.email);
 
         throw new RpcException({
           statusCode: HttpStatus.NOT_FOUND,
@@ -722,13 +774,13 @@ export class AuthService implements OnModuleInit {
       return {
         access_token,
         refresh_token,
-        role: await this.getRolesKeycloak(access_token),
+        role: await this.keyCloakProvider.getRolesKeycloak(access_token),
         provider: identity_provider,
       };
     }
 
     if (existingEmail && existingEmail.is_email_verified) {
-      await this.logOutUserSessions(user.email);
+      await this.keyCloakProvider.logOutUserSessions(user.email);
 
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
@@ -769,336 +821,6 @@ export class AuthService implements OnModuleInit {
         full_name: firstName + ' ' + lastName,
       },
     });
-  };
-
-  private signInByKeycloak = async (email: string, password: string) => {
-    try {
-      const keycloakUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
-
-      const data = new URLSearchParams();
-
-      data.append('grant_type', 'password');
-
-      data.append('client_id', this.clientId);
-
-      data.append('client_secret', this.clientSecret);
-
-      data.append('username', email);
-
-      data.append('password', password);
-
-      const response = await firstValueFrom(
-        this.httpService.post(keycloakUrl, data),
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: error?.response?.data || error?.message,
-      });
-    }
-  };
-
-  private signUpByKeycloak = async (keycloakSignUpData: KeycloakSignUpData) => {
-    try {
-      const { email, password } = keycloakSignUpData;
-
-      const baseUrl = `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users`;
-
-      const data = {
-        ...omit(keycloakSignUpData, ['password']),
-        enabled: true,
-        credentials: [
-          {
-            type: 'password',
-            value: password,
-            temporary: false,
-          },
-        ],
-      };
-
-      const response = await firstValueFrom(
-        this.httpService.post(baseUrl, data, {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
-
-      if (response.status !== 201)
-        throw new RpcException({
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: `Have an error when creating user`,
-        });
-
-      const users = await firstValueFrom(
-        this.httpService.get(`${baseUrl}?username=${email}`, {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
-          },
-        }),
-      );
-
-      const userId = users.data[0]?.id;
-
-      if (!userId)
-        throw new RpcException({
-          statusCode: HttpStatus.NOT_FOUND,
-          message: 'User not found.',
-        });
-
-      await this.assignRoleKeycloak('user', userId);
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: error?.response?.data || error?.message,
-      });
-    }
-  };
-
-  private getAdminToken = async (): Promise<string> => {
-    try {
-      const baseUrl = `${this.keycloakAuthServerUrl}/realms/${this.realm}/protocol/openid-connect/token`;
-
-      const data = new URLSearchParams();
-
-      data.append('grant_type', 'client_credentials');
-
-      data.append('client_id', this.clientId);
-
-      data.append('client_secret', this.clientSecret);
-
-      const response = await firstValueFrom(
-        this.httpService.post(baseUrl, data),
-      );
-
-      return response.data.access_token;
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: error?.response?.data || error?.message,
-      });
-    }
-  };
-
-  private getClientId = async (clientName: string): Promise<string> => {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(
-          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients`,
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-            },
-          },
-        ),
-      );
-
-      const client = response.data.find((c: any) => c.clientId === clientName);
-
-      return client ? client.id : '';
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: error?.response?.data || error?.message,
-      });
-    }
-  };
-
-  private getClientRoles = async (clientId: string): Promise<any[]> => {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(
-          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/clients/${clientId}/roles`,
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-            },
-          },
-        ),
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
-  };
-
-  private verifyUserEmailKeycloak = async (userId: string): Promise<void> => {
-    const baseUrl = `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${userId}`;
-
-    try {
-      await firstValueFrom(
-        this.httpService.put(
-          baseUrl,
-          {
-            emailVerified: true,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
-  };
-
-  private getUserByEmailKeycloak = async (email: string): Promise<any> => {
-    try {
-      const response = await firstValueFrom(
-        this.httpService.get(
-          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users?email=${encodeURIComponent(email)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-            },
-          },
-        ),
-      );
-
-      return response.data.length > 0 ? response.data[0] : null;
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
-  };
-
-  private updatePasswordUserKeyCloak = async (
-    newPassword: string,
-    email: string,
-  ) => {
-    const user = await this.getUserByEmailKeycloak(email);
-
-    if (!user)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `This email has not been registered.`,
-      });
-
-    try {
-      await firstValueFrom(
-        this.httpService.put(
-          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${user.id}/reset-password`,
-          {
-            type: 'password',
-            temporary: false,
-            value: newPassword,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
-  };
-
-  private logOutUserSessions = async (email: string) => {
-    try {
-      const user = await this.getUserByEmailKeycloak(email);
-
-      await firstValueFrom(
-        this.httpService.post(
-          `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${user.id}/logout`,
-          null,
-          {
-            headers: {
-              Authorization: `Bearer ${await this.getAdminToken()}`,
-            },
-          },
-        ),
-      );
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
-  };
-
-  private assignRoleKeycloak = async (
-    roleName: 'admin' | 'user',
-    userId: string,
-  ) => {
-    const clientId = await this.getClientId(this.clientId);
-
-    const roles = await this.getClientRoles(clientId);
-
-    const userRole = roles.find((role) => role.name === roleName);
-
-    if (!userRole)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `Role ${roleName} not found.`,
-      });
-
-    await firstValueFrom(
-      this.httpService.post(
-        `${this.keycloakAuthServerUrl}/admin/realms/${this.realm}/users/${userId}/role-mappings/clients/${clientId}`,
-        [userRole],
-        {
-          headers: {
-            Authorization: `Bearer ${await this.getAdminToken()}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      ),
-    );
-  };
-
-  private getRolesKeycloak = async (access_token: string): Promise<any> => {
-    try {
-      const payload: any =
-        await this.keyCloakProvider.verifyToken(access_token);
-
-      return payload?.resource_access?.[this.clientId]?.roles[0] || null;
-    } catch (error) {
-      console.error(error?.response?.data || error?.message);
-
-      throw new RpcException({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'A system error has occurred. Please try again.',
-      });
-    }
   };
 
   public generateToken = async (generateTokenDto: GenerateTokenDto) => {
@@ -1144,7 +866,342 @@ export class AuthService implements OnModuleInit {
     }
   };
 
-  public refreshToken = async (refreshToken: string) => {
+  public refreshToken = async (refreshToken: string, fingerPrint: string) => {
+    const { access_token, refresh_token } =
+      await this.keyCloakProvider.refreshToken(refreshToken);
+
+    const { email } = await this.keyCloakProvider.verifyToken(access_token);
+
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send('get-me', {
+        email,
+      }),
+    );
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const userSession = await firstValueFrom<UserSesstionsType>(
+      this.usersClient.send('get-user-session', {
+        user_id: user.id,
+        finger_print: fingerPrint,
+      }),
+    );
+
+    const isMatch = verifyPassword(refreshToken, userSession.refresh_token);
+
+    if (
+      !isMatch ||
+      new Date().getTime() > new Date(userSession.expires_at).getTime()
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message:
+          'Looks like your session has expired. Please log in again to keep going.',
+      });
+
+    const userDevice = await firstValueFrom<UserDevicesType>(
+      this.usersClient.send('get-user-device', {
+        user_id: user.id,
+        finger_print: fingerPrint,
+      }),
+    );
+
+    const createUserSessionDto: CreateUserSessionDto = {
+      refresh_token: hashPassword(refresh_token),
+      finger_print: fingerPrint,
+      device_name: userDevice.device_name,
+      user_agent: userDevice.user_agent,
+      ip_address: userDevice.ip_address,
+      user_id: user.id,
+      expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
+    };
+
+    this.usersClient.emit(
+      'create-user-session',
+      JSON.stringify(createUserSessionDto),
+    );
+
     return this.keyCloakProvider.refreshToken(refreshToken);
+  };
+
+  public changePassword = async (
+    changePasswordDto: ChangePasswordDto,
+    email: string,
+    finger_print: string,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send('get-me', {
+        email,
+      }),
+    );
+
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const isValidPassword = await firstValueFrom<string>(
+      this.usersClient.send('verify-password', { currentPassword, email }),
+    );
+
+    if (isValidPassword === 'false')
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `The current password you entered is not correct. Please verify and try again.`,
+      });
+
+    this.usersClient.emit(
+      'update-password',
+      JSON.stringify({
+        email,
+        password: newPassword,
+      }),
+    );
+
+    this.usersClient.emit(
+      'deactive-other-sessions',
+      JSON.stringify({
+        user_id: user.id,
+        exclude_fingerprint: finger_print,
+      }),
+    );
+
+    await this.keyCloakProvider.updatePasswordUserKeyCloak(newPassword, email);
+
+    const data = await this.keyCloakProvider.signInByKeycloak(
+      email,
+      newPassword,
+    );
+
+    return {
+      access_token: data?.access_token,
+      refresh_token: data?.refresh_token,
+      role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
+    };
+  };
+
+  public signOut = async (signOutDto: SignOutDto) => {
+    const { access_token, refresh_token, finger_print } = signOutDto;
+
+    await this.keyCloakProvider.revokeToken(refresh_token, 'refresh_token');
+
+    const { email } = await this.keyCloakProvider.verifyToken(access_token);
+
+    if (!email)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send('get-me', {
+        email,
+      }),
+    );
+
+    const updateUserSessionDto: UpdateUserSessionDto = {
+      user_id: user.id,
+      finger_print,
+      status: SessionStatusEnum.inactive,
+    };
+
+    this.usersClient.emit(
+      'update-user-session',
+      JSON.stringify(updateUserSessionDto),
+    );
+
+    return {
+      message: 'Signed out successfully.',
+      logged_in: false,
+    };
+  };
+
+  public sendOtp = async (sendOtpDto: SendOtpDto) => {
+    const { method, email, phone_number, type } = sendOtpDto;
+
+    if (method === 'email' && email === '')
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Please provide an email address to receive the OTP.`,
+      });
+
+    if (method === 'sms' && phone_number === '')
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Please provide a phone number to receive the OTP via SMS.`,
+      });
+
+    if (method && email === '' && phone_number === '')
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Missing contact information. Please provide either an email or phone number.`,
+      });
+
+    const payload = {
+      field: 'email',
+      value: email,
+      getUserQueryDto: {
+        includeProfile: true,
+      },
+    };
+
+    const user = await firstValueFrom(
+      this.usersClient.send('get-user-by-field', JSON.stringify(payload)),
+    );
+
+    const otp = generateOtp();
+
+    if (method === 'sms' && phone_number) {
+      this.redisClient.emit(
+        'set-key',
+        JSON.stringify({
+          key: `otp:verify-sms:sms:${phone_number}`,
+          data: otp,
+          ttl: DEFAULT_TTL_OTP_EXPIRED,
+        }),
+      );
+
+      const sendSmsDto: SendSmsDto = {
+        from: this.configService.get<string>('twilio.phone_number', ''),
+        to: phone_number,
+        message: generateSmsOTPMessage(
+          user.profile.first_name + ' ' + user.profile.last_name,
+          otp,
+          type,
+        ),
+      };
+
+      this.smsClient.emit('send-sms', JSON.stringify(sendSmsDto));
+
+      return {
+        success: true,
+        message:
+          type === 'update'
+            ? 'We have sent a verification code to your new phone number.'
+            : 'We have sent a verification code to your phone number to verify your identity.',
+      };
+    } else if (method === 'email' && email) {
+      this.redisClient.emit(
+        'set-key',
+        JSON.stringify({
+          key: `otp:verify-email:email:${email}`,
+          data: otp,
+          ttl: DEFAULT_TTL_OTP_EXPIRED,
+        }),
+      );
+
+      this.emailsClient.emit('send-email', {
+        email,
+        templateName: EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+        context: {
+          otp,
+          full_name:
+            user?.profile?.first_name + ' ' + user?.profile?.first_name,
+        },
+      });
+
+      return {
+        success: true,
+        message:
+          type === 'update'
+            ? 'We have sent a verification code to your email.'
+            : 'We have sent a verification code to your email to verify your identity.',
+      };
+    }
+  };
+
+  public verifyOwnershipOtp = async (
+    verifyOwnershipOtpDto: VerifyOwnershipOtpDto,
+  ) => {
+    const { method, otp, email, phone_number } = verifyOwnershipOtpDto;
+
+    const isSms = method === VerifyOwnershipOtpMethodEnum.SMS;
+
+    const isEmail = method === VerifyOwnershipOtpMethodEnum.EMAIL;
+
+    if (isSms || isEmail) {
+      const identifier = isSms ? phone_number : email;
+
+      const type = isSms ? 'sms' : 'email';
+
+      const key = `otp:verify-${type}:${type}:${identifier}`;
+
+      const cachedOtp = await firstValueFrom(
+        this.redisClient.send('get-key', key),
+      );
+
+      if (!cachedOtp) {
+        throw new RpcException({
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message:
+            'The OTP you received has expired. Please request a new one.',
+        });
+      }
+
+      if (otp !== cachedOtp) {
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'The OTP you entered is incorrect. Please try again.',
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Your OTP has been successfully verified.',
+    };
+  };
+
+  public generate2Fa = async (email: string) => {
+    const { otpAuthUrl } =
+      await this.twoFactorAuthProvider.generate2FASecret(email);
+
+    const qrCodeDataUrl =
+      await this.twoFactorAuthProvider.generate2FAQrCode(otpAuthUrl);
+
+    return {
+      otpAuthUrl,
+      qrCodeDataUrl,
+    };
+  };
+
+  public verify2Fa = async (verify2FaDto: Verify2FaDto, email: string) => {
+    const { otp, action } = verify2FaDto;
+
+    const secret = await this.infisicalProvider.getSecret(
+      `TOTP_SECRET_${email}`,
+    );
+
+    if (!secret)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `We couldn't find your 2FA setup. Please try setting it up again.`,
+      });
+
+    const isValid = this.twoFactorAuthProvider.verify2FAOtp(otp, secret);
+
+    if (!isValid)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `The verification code you entered is invalid. Please try again.`,
+      });
+
+    this.usersClient.emit(
+      'update-status-2fa',
+      JSON.stringify({
+        email,
+        action,
+      }),
+    );
+
+    return {
+      success: true,
+      message:
+        action === Verify2FaActions.ENABLE
+          ? 'Two-factor authentication has been enabled successfully.'
+          : 'Two-factor authentication has been disabled successfully.',
+      is2FAEnabled: action === Verify2FaActions.ENABLE ? true : false,
+    };
   };
 }

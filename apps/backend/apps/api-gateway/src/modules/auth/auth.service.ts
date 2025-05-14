@@ -1,12 +1,17 @@
 import {
+  ChangePasswordDto,
   ForgotPasswordDto,
   GenerateTokenDto,
   GetInfoOAuthCallbackDto,
   OAuthCallbackDto,
   ResetPasswordDto,
+  SendOtpDto,
   SignInDto,
+  SignOutDto,
   SignUpDto,
+  Verify2FaDto,
   VerifyOtpDto,
+  VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -32,6 +37,12 @@ export class AuthService implements OnModuleInit {
       'generate-token',
       'verify-token',
       'refresh-token',
+      'change-password',
+      'sign-out',
+      'send-otp',
+      'verify-ownership-otp',
+      'generate-2fa',
+      'verify-2fa',
     ];
 
     patterns.forEach((pattern) => {
@@ -87,7 +98,55 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(this.authClient.send('verify-token', verifyTokenDto));
   };
 
-  public refreshToken = async (refreshToken: string) => {
-    return firstValueFrom(this.authClient.send('refresh-token', refreshToken));
+  public refreshToken = async (refreshToken: string, fingerPrint: string) => {
+    return firstValueFrom(
+      this.authClient.send('refresh-token', {
+        refreshToken,
+        fingerPrint,
+      }),
+    );
+  };
+
+  public changePassword = async (
+    changePasswordDto: ChangePasswordDto,
+    email: string,
+    finger_print: string,
+  ) => {
+    return firstValueFrom(
+      this.authClient.send('change-password', {
+        changePasswordDto,
+        email,
+        finger_print,
+      }),
+    );
+  };
+
+  public signOut = async (signOutDto: SignOutDto) => {
+    return firstValueFrom(this.authClient.send('sign-out', signOutDto));
+  };
+
+  public sendOtp = async (sendOtpDto: SendOtpDto) => {
+    return firstValueFrom(this.authClient.send('send-otp', sendOtpDto));
+  };
+
+  public verifyAccountOwnership = async (
+    verifyOwnershipOtpDto: VerifyOwnershipOtpDto,
+  ) => {
+    return firstValueFrom(
+      this.authClient.send('verify-ownership-otp', verifyOwnershipOtpDto),
+    );
+  };
+
+  public generate2FA = async (email: string) => {
+    return firstValueFrom(this.authClient.send('generate-2fa', email));
+  };
+
+  public verify2FA = async (verify2FaDto: Verify2FaDto, email: string) => {
+    return firstValueFrom(
+      this.authClient.send('verify-2fa', {
+        verify2FaDto,
+        email,
+      }),
+    );
   };
 }

@@ -10,7 +10,13 @@ export class UsersService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const patterns = ['get-me', 'update-profile'];
+    const patterns = [
+      'get-me',
+      'update-profile',
+      'verify-password',
+      'get-user-device',
+      'get-user-session',
+    ];
 
     patterns.forEach((pattern) => {
       this.userClient.subscribeToResponseOf(pattern);

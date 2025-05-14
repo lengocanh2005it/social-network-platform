@@ -1,5 +1,7 @@
+import { IsValidPassword } from '@app/common/decorators';
+import { TransformToDate } from '@app/common/transformers';
 import { GenderEnum } from '@repo/db';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   IsDate,
   IsEmail,
@@ -10,8 +12,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { IsValidPassword } from '@app/common/decorators';
-import { TransformToDate } from 'libs/common/transformers';
 
 export class DeviceDetailsDto {
   @IsString()

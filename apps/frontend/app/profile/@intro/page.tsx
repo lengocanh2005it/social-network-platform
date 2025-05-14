@@ -34,6 +34,8 @@ const ProfileIntroSection = () => {
   useEffect(() => {
     if (user?.profile?.bio) {
       form.reset({ bio: user.profile.bio });
+    } else {
+      form.reset({ bio: undefined });
     }
   }, [user, form]);
 
@@ -118,11 +120,12 @@ const ProfileIntroSection = () => {
             </>
           )}
 
-          {!isClickedAddBio && user?.profile?.bio?.trim() === "" && (
-            <Button color="primary" onPress={handleClickAddBio}>
-              Add bio
-            </Button>
-          )}
+          {!isClickedAddBio &&
+            (user?.profile?.bio?.trim() === "" || !user?.profile?.bio) && (
+              <Button color="primary" onPress={handleClickAddBio}>
+                Add bio
+              </Button>
+            )}
         </>
 
         {user?.profile && <BasicInformation />}
