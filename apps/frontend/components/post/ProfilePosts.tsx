@@ -1,8 +1,20 @@
 "use client";
+import ConfirmModal from "@/components/modal/ConfirmModal";
+import UpdatePostModal from "@/components/modal/UpdatePostModal";
 import PostOptions from "@/components/post/PostOptions";
 import GlobalIcon from "@/components/ui/icons/global";
-import { useUserStore } from "@/store";
-import { Post } from "@/utils";
+import UndoPostToast from "@/components/UndoPostToast";
+import { useDeletePost, useUpdatePost } from "@/hooks";
+import { uploadMedia } from "@/lib/api/uploads";
+import { useMediaStore, usePostStore, useUserStore } from "@/store";
+import {
+  CreatePostImageDto,
+  CreatePostVideoDto,
+  formatDateTime,
+  HIDE_DURATION,
+  Post,
+  UpdatePostDto,
+} from "@/utils";
 import {
   Avatar,
   Dropdown,
@@ -11,17 +23,27 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import {
+  PostContentType,
+  PostContentTypeEnum,
+  PostPrivaciesEnum,
+  PostPrivaciesType,
+} from "@repo/db";
+import {
   Camera,
   Ellipsis,
   EyeOff,
+  Lock,
   SmileIcon,
+  SquarePen,
   Star,
   Sticker,
   Trash,
+  Users,
   WandSparkles,
 } from "lucide-react";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface ProfilePostsProps {
   post: Post;
@@ -57,27 +79,204 @@ const icons = [
 
 const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
   const { user } = useUserStore();
+  const { hidePost, posts, restorePostAtIndex } = usePostStore();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const {
+    mutate: mutateDeletePost,
+    isSuccess,
+    isError,
+    isPending,
+  } = useDeletePost();
+  const [openUpdateModal, setOpenUpdateModal] = useState<boolean>(false);
+  const {
+    clearMediaFiles,
+    clearDeletedMediaFiles,
+    clearNewMediaFiles,
+    deletedMediaFiles,
+  } = useMediaStore();
+  const { mutate: mutateUpdatePost } = useUpdatePost();
+
+  const handleConfirmClick = async (postId: string) => {
+    mutateDeletePost(postId);
+  };
+
+  const handleHidePost = (postId: string) => {
+    const index = posts.findIndex((p) => p.id === postId);
+
+    const post = posts[index];
+
+    if (index === -1 || !post) return;
+
+    hidePost(postId);
+
+    let toastId: string = "";
+
+    const intervalId: NodeJS.Timeout = setInterval(() => {
+      remaining -= 1;
+
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        return;
+      }
+
+      toast.custom(
+        () => <UndoPostToast onUndo={undo} remaining={remaining} />,
+        { id: toastId, duration: HIDE_DURATION },
+      );
+    }, 1000);
+
+    let remaining = HIDE_DURATION / 1000;
+
+    const undo = () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+      toast.dismiss(toastId);
+      restorePostAtIndex(post, index);
+    };
+
+    const timeoutId = setTimeout(() => {
+      toast.dismiss(toastId);
+    }, HIDE_DURATION);
+
+    toastId = toast.custom(
+      () => <UndoPostToast onUndo={undo} remaining={remaining} />,
+      {
+        duration: HIDE_DURATION + 500,
+        position: "bottom-right",
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (isSuccess) setIsOpen(false);
+    if (isError) setIsOpen(true);
+  }, [isSuccess, isError]);
+
+  const handleUpdate = async (
+    content: string,
+    privacy: PostPrivaciesType,
+    images?: File[],
+    videos?: File[],
+  ) => {
+    const hashtags: string[] = [];
+
+    let textBlocks: { type: PostContentType; content: string }[] = [];
+
+    if (content.trim() !== "") {
+      const regex = /#([\p{L}\p{N}_]+)/gu;
+
+      const matches = [...content.matchAll(regex)];
+      const uniqueHashtags = [...new Set(matches.map((m) => `${m[1]}`))];
+      hashtags.push(...uniqueHashtags);
+
+      const linesArr = content
+        .split("\n")
+        .map((line) => line.replace(regex, "").trim())
+        .filter((line) => line !== "");
+
+      if (linesArr.length > 0) {
+        const formattedContent = linesArr.length > 1 ? linesArr : linesArr[0];
+
+        textBlocks =
+          typeof formattedContent === "string"
+            ? [{ type: PostContentTypeEnum.text, content: formattedContent }]
+            : formattedContent.map((line) => ({
+                type: PostContentTypeEnum.text,
+                content: line,
+              }));
+      }
+    }
+
+    let imageFiles: CreatePostImageDto[] = [];
+
+    let videoFiles: CreatePostVideoDto[] = [];
+
+    if (images?.length || videos?.length) {
+      if (images?.length) {
+        const response = await uploadMedia(images);
+
+        if (response && response?.media) {
+          imageFiles = response?.media.map((rm) => ({
+            image_url: rm.fileUrl,
+          })) as CreatePostImageDto[];
+        }
+      }
+
+      if (videos?.length) {
+        const response = await uploadMedia(videos);
+
+        if (response && response?.media)
+          videoFiles = response?.media.map((rm) => ({
+            video_url: rm.fileUrl,
+          })) as CreatePostVideoDto[];
+      }
+    }
+
+    const updatePostDto: UpdatePostDto = {
+      privacy,
+      ...(imageFiles?.length !== 0 && { images: imageFiles }),
+      ...(videoFiles?.length !== 0 && { videos: videoFiles }),
+      ...(deletedMediaFiles?.length !== 0 && {
+        deletedMediaDto: deletedMediaFiles.map((dm) => ({
+          type: dm.type,
+          url: dm.url,
+        })),
+      }),
+      contents: textBlocks,
+      ...(hashtags?.length !== 0 && { hashtags }),
+    };
+
+    mutateUpdatePost({
+      updatePostDto,
+      postId: post.id,
+    });
+  };
 
   return (
     <>
       {user && (
         <>
           <div className="bg-white border border-black/10 rounded-xl mb-6 p-4">
-            <div className="flex flex-col">
+            <div className="flex flex-col md:gap-2 gap-1">
               <div className="flex items-start justify-between">
                 <div className="flex items-center mb-3 gap-2">
                   <Avatar
-                    src={post.avatar}
-                    alt={post.author}
+                    src={post.user.profile.avatar_url}
+                    alt={
+                      post.user.profile.first_name +
+                      " " +
+                      post.user.profile.last_name
+                    }
                     className="object-cover cursor-pointer select-none"
                   />
 
                   <div className="flex flex-col relative">
-                    <h4 className="font-semibold">{post.author}</h4>
+                    <h4 className="font-semibold">
+                      {post.user.profile.first_name +
+                        " " +
+                        post.user.profile.last_name}
+                    </h4>
 
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm text-gray-500">{post.time}</span>
-                      <GlobalIcon width={20} height={20} />
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <span className="leading-none">
+                        {formatDateTime(new Date(post.created_at))}
+                      </span>
+
+                      {post.privacy === PostPrivaciesEnum.only_friend ? (
+                        <Users
+                          width={16}
+                          height={16}
+                          className="inline-block align-middle"
+                        />
+                      ) : post.privacy === PostPrivaciesEnum.only_me ? (
+                        <Lock
+                          width={16}
+                          height={16}
+                          className="inline-block align-middle"
+                        />
+                      ) : (
+                        <GlobalIcon width={16} height={16} />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -94,11 +293,26 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                         className="cursor-pointer focus:outline-none"
                       />
                     </DropdownTrigger>
-                    <DropdownMenu aria-label="" variant="flat">
-                      <DropdownItem key="hide-post" startContent={<EyeOff />}>
+                    <DropdownMenu aria-label="Post options" variant="flat">
+                      <DropdownItem
+                        key="hide-post"
+                        startContent={<EyeOff />}
+                        onClick={() => handleHidePost(post.id)}
+                      >
                         Hide post
                       </DropdownItem>
-                      <DropdownItem key="delete-post" startContent={<Trash />}>
+                      <DropdownItem
+                        key="update-post"
+                        onClick={() => setOpenUpdateModal(true)}
+                        startContent={<SquarePen />}
+                      >
+                        Update post
+                      </DropdownItem>
+                      <DropdownItem
+                        key="delete-post"
+                        startContent={<Trash />}
+                        onClick={() => setIsOpen(true)}
+                      >
                         Delete post
                       </DropdownItem>
                     </DropdownMenu>
@@ -106,62 +320,60 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 </div>
               </div>
 
-              <p className="text-sm whitespace-pre-wrap mb-3">{post.content}</p>
-
-              {post.isShared && post.originalPost && (
-                <div className="border border-gray-200 rounded-lg p-3 mb-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Avatar
-                      src={post.originalPost.avatar}
-                      alt={post.originalPost.author}
-                      size="sm"
-                    />
-
-                    <div className="flex flex-col relative">
-                      <h4 className="font-semibold">
-                        {post.originalPost.author}
-                      </h4>
-
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-gray-500">
-                          {post.originalPost.time}
-                        </span>
-                        <GlobalIcon width={20} height={20} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-gray-700 mb-3">
-                    {post.originalPost.content}
-                  </p>
-
-                  {post.originalPost.image && (
-                    <div className="relative w-full min-h-[400px] max-h-[600px]">
-                      <Image
-                        src={post.originalPost.image}
-                        alt="post"
-                        fill
-                        priority
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover rounded-md mb-3 select-none"
-                      />
+              {(post?.contents?.length !== 0 ||
+                post?.hashtags?.length !== 0) && (
+                <section className="flex flex-col md:gap-2 gap-1 relative">
+                  {post?.contents?.length !== 0 && (
+                    <div className="flex flex-col relative md:gap-2 gap-1 text-black/80">
+                      {post.contents.map((ct) => (
+                        <p className="text-sm whitespace-pre-wrap" key={ct.id}>
+                          {ct.content}
+                        </p>
+                      ))}
                     </div>
                   )}
-                </div>
+
+                  {post?.hashtags?.length !== 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {post.hashtags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="text-xs cursor-pointer text-blue-500 bg-blue-100 
+                          px-2 py-0.5 rounded-full"
+                        >
+                          #{tag.hashtag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </section>
               )}
 
-              {post.image && !post.isShared && (
-                <div className="relative w-full min-h-[400px] max-h-[600px]">
-                  <Image
-                    src={post.image}
-                    alt="post"
-                    fill
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover rounded-md mb-3 select-none"
-                  />
-                </div>
-              )}
+              <div
+                className={`grid gap-3 ${
+                  post.images.length === 1
+                    ? "grid-cols-1"
+                    : post.images.length === 2
+                      ? "grid-cols-2"
+                      : "grid-cols-3"
+                }`}
+              >
+                {post.images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="relative w-full aspect-[4/3] overflow-hidden rounded-md"
+                  >
+                    <Image
+                      src={image.image_url}
+                      alt="post"
+                      fill
+                      priority
+                      sizes="100vw"
+                      className="select-none"
+                    />
+                  </div>
+                ))}
+              </div>
 
               <PostOptions />
 
@@ -193,6 +405,37 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
               </div>
             </div>
           </div>
+
+          {isOpen && (
+            <ConfirmModal
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              onCancel={() => setIsOpen(false)}
+              isLoading={isPending}
+              onConfirm={() => handleConfirmClick(post.id)}
+              textHeader="Confirm Post Delete"
+              title="Are you sure you want to delete this post?"
+              description="This post will be permanently removed."
+              confirmText="Delete Post"
+              cancelText="No, go back"
+            />
+          )}
+
+          {openUpdateModal && (
+            <UpdatePostModal
+              open={openUpdateModal}
+              onOpenChange={(isOpen) => {
+                setOpenUpdateModal(isOpen);
+                clearMediaFiles();
+                clearDeletedMediaFiles();
+                clearNewMediaFiles();
+              }}
+              post={post}
+              onUpdate={async ({ content, images, videos, privacy }) =>
+                handleUpdate(content, privacy, images, videos)
+              }
+            />
+          )}
         </>
       )}
     </>

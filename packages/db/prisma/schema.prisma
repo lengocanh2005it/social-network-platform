@@ -143,7 +143,7 @@ model UserSessions {
 
 model HashTags {
   id    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name  String         @db.VarChar(255)
+  name  String         @unique @db.VarChar(255)
   posts PostHashTags[]
 }
 
@@ -201,9 +201,9 @@ model PostContents {
 model PostVideos {
   id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   video_url      String
-  total_likes    Int
-  total_comments Int
-  total_shares   Int
+  total_likes    Int               @default(0)
+  total_comments Int               @default(0)
+  total_shares   Int               @default(0)
   post_id        String            @db.Uuid
   comments       Comments[]
   likes          PostVideoLikes[]
@@ -234,9 +234,9 @@ model PostVideoShares {
 model PostImages {
   id             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   image_url      String
-  total_likes    Int
-  total_comments Int
-  total_shares   Int
+  total_likes    Int               @default(0)
+  total_comments Int               @default(0)
+  total_shares   Int               @default(0)
   post_id        String            @db.Uuid
   comments       Comments[]
   likes          PostImageLikes[]
@@ -558,9 +558,4 @@ enum SessionStatus {
   active
   inactive
   expired
-}
-
-enum Helloworld {
-  test1
-  test2
 }

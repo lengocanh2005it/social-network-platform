@@ -7,9 +7,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
+import { PostsModule } from './modules/posts/posts.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, CommonModule, UploadsModule],
+  imports: [AuthModule, UsersModule, CommonModule, UploadsModule, PostsModule],
   providers: [
     {
       provide: APP_GUARD,

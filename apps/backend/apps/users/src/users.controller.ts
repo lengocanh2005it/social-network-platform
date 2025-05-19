@@ -6,10 +6,11 @@ import {
   UpdateUserSessionDto,
   UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
+import { Verify2FaActions } from '@app/common/utils';
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { Verify2FaActions } from '@app/common/utils';
+import { GetPostQueryDto } from '@app/common/dtos/posts';
 
 @Controller()
 export class UsersController {
@@ -123,5 +124,19 @@ export class UsersController {
       uploadUserImageQueryDto,
       fileUrl,
     );
+  }
+
+  @MessagePattern('get-my-feed')
+  async getMyFeed(
+    @Payload('email') email: string,
+    @Payload('getPostQueryDto')
+    getPostQueryDto: GetPostQueryDto,
+  ) {
+    return this.usersService.getMyFeed(email, getPostQueryDto);
+  }
+
+  @MessagePattern('get-friends')
+  async getFriendsOfUser(@Payload('user_id') user_id: string) {
+    return this.usersService.getFriends(user_id);
   }
 }

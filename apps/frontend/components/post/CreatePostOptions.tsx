@@ -1,3 +1,4 @@
+import UploadMediaButton from "@/components/button/UploadMediaButton";
 import {
   Dropdown,
   DropdownItem,
@@ -8,8 +9,6 @@ import {
 import {
   Ellipsis,
   Flag,
-  ImageIcon,
-  MapPin,
   SmileIcon,
   UserPlus,
   Video,
@@ -20,7 +19,7 @@ import React from "react";
 const options = [
   {
     key: 1,
-    icon: <ImageIcon className="focus:outline-none" />,
+    icon: <UploadMediaButton />,
     content: "Photo/video",
   },
   {
@@ -35,8 +34,8 @@ const options = [
   },
   {
     key: 4,
-    icon: <MapPin className="focus:outline-none" />,
-    content: "Check in",
+    icon: <Video className="focus:outline-none" />,
+    content: "Video",
   },
   {
     key: 5,

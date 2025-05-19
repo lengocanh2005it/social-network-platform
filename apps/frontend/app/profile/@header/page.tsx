@@ -25,6 +25,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 
 const headersOptions = [
   {
@@ -105,16 +107,22 @@ const ProfileHeaderSection = () => {
       {user && (
         <>
           <div className="w-full h-full shadow pb-2 px-2 rounded-b-lg">
-            <div
-              className="h-60 w-full bg-gray-300 relative rounded-b-md cursor-pointer"
-              style={{
-                backgroundImage: `url(${user.profile.cover_photo_url})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            >
-              <EditImageButton type="cover_photo" />
-            </div>
+            <PhotoProvider>
+              <PhotoView src={user.profile.cover_photo_url}>
+                <div
+                  className="h-60 w-full bg-gray-300 relative rounded-b-md cursor-pointer"
+                  style={{
+                    backgroundImage: `url(${user.profile.cover_photo_url})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <EditImageButton type="cover_photo" />
+                  </div>
+                </div>
+              </PhotoView>
+            </PhotoProvider>
 
             <div
               className="absolute bottom-4 h-1 bg-blue-500 transition-all duration-200 
@@ -128,20 +136,24 @@ const ProfileHeaderSection = () => {
 
             <div className="px-4 relative flex flex-col md:gap-3 gap-2 mt-4">
               <div className="flex items-start md:gap-3 gap-2">
-                <div className="relative -mt-24">
-                  <Image
-                    src={user.profile.avatar_url}
-                    alt="Avatar"
-                    width={180}
-                    height={180}
-                    priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="rounded-full border-4 border-white object-cover 
+                <PhotoProvider>
+                  <div className="relative -mt-24">
+                    <PhotoView src={user.profile.avatar_url}>
+                      <Image
+                        src={user.profile.avatar_url}
+                        alt="Avatar"
+                        width={180}
+                        height={180}
+                        priority
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="rounded-full border-4 border-white object-cover 
                     select-none cursor-pointer"
-                  />
+                      />
+                    </PhotoView>
 
-                  <EditImageButton type="avatar" />
-                </div>
+                    <EditImageButton type="avatar" />
+                  </div>
+                </PhotoProvider>
 
                 <div className="flex-1">
                   <div className="flex flex-col gap-1">

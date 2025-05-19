@@ -1,9 +1,17 @@
 "use client";
+import CreatePostHeader from "@/components/post/CreatePostHeader";
 import CreatePostOptions from "@/components/post/CreatePostOptions";
-import GlobalIcon from "@/components/ui/icons/global";
-import { useUserStore } from "@/store";
+import SelectedMedia from "@/components/SelectedMedia";
+import { useCreatePost } from "@/hooks";
+import { uploadMedia } from "@/lib/api/uploads";
+import { useMediaStore, useUserStore } from "@/store";
 import {
-  Avatar,
+  CreatePostDto,
+  CreatePostImageDto,
+  CreatePostVideoDto,
+  extractHashtags,
+} from "@/utils";
+import {
   Button,
   Divider,
   Modal,
@@ -11,12 +19,15 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  Select,
-  SelectItem,
-  Selection,
+  ScrollShadow,
   Textarea,
 } from "@heroui/react";
-import { Lock, Users } from "lucide-react";
+import {
+  PostContentType,
+  PostContentTypeEnum,
+  PostPrivaciesEnum,
+  PostPrivaciesType,
+} from "@repo/db";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 interface CreatePostModalProps {
@@ -24,47 +35,99 @@ interface CreatePostModalProps {
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-const privacies = [
-  { key: "only-me", label: "Only me", icon: <Lock className="w-4 h-4" /> },
-  {
-    key: "only-friend",
-    label: "Only friends",
-    icon: <Users className="w-4 h-4" />,
-  },
-  {
-    key: "public",
-    label: "Public",
-    icon: <GlobalIcon width={29} height={20} />,
-  },
-];
-
 const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isOpen,
   setIsOpen,
 }) => {
-  const [selectedKey, setSelectedKey] = useState<Set<string>>(
-    new Set(["public"]),
-  );
+  const [privacy, setPrivacy] = useState<PostPrivaciesType | null>(null);
+  const { mediaFiles, clearMediaFiles } = useMediaStore();
   const { user } = useUserStore();
-
+  const { mutate: mutateCreatePost, isSuccess, isPending } = useCreatePost();
   const [content, setContent] = useState("");
-
-  const handlePost = () => {
-    if (!content.trim()) return;
-    setContent("");
-  };
-
-  const handleSelectionChange = (keys: Selection) => {
-    if (keys === "all") return;
-
-    setSelectedKey(new Set(keys as Set<string>));
-  };
+  const [isUploadingMedia, setIsUploadingMedia] = useState<boolean>(false);
 
   useEffect(() => {
-    if (selectedKey.size === 0) {
-      setSelectedKey(new Set(["public"]));
+    if (!privacy) setPrivacy(PostPrivaciesEnum.public);
+  }, [privacy, setPrivacy]);
+
+  useEffect(() => {
+    if (isSuccess) {
+      setIsOpen(false);
+      setContent("");
+      clearMediaFiles();
     }
-  }, [selectedKey]);
+  }, [isSuccess, setIsOpen, setContent, clearMediaFiles]);
+
+  const handlePost = async () => {
+    if (!privacy) return;
+
+    let hashtags: string[] = [];
+
+    if (content.trim() !== "") hashtags = extractHashtags(content);
+
+    let images: CreatePostImageDto[] = [];
+
+    let videos: CreatePostVideoDto[] = [];
+
+    if (mediaFiles?.length) {
+      try {
+        setIsUploadingMedia(true);
+
+        const response = await uploadMedia(mediaFiles.map((mf) => mf.file));
+
+        if (response && response?.media) {
+          images = response.media
+            .filter((rm) => rm.type === "image")
+            .map((rm) => ({
+              image_url: rm.fileUrl,
+            })) as CreatePostImageDto[];
+
+          videos = response.media
+            .filter((rm) => rm.type === "video")
+            .map((rm) => ({
+              video_url: rm.fileUrl,
+            })) as CreatePostVideoDto[];
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsUploadingMedia(false);
+      }
+    }
+
+    let textBlocks: { type: PostContentType; content: string }[] = [];
+
+    if (content.trim() !== "") {
+      const regex = /#([\p{L}\p{N}_]+)/gu;
+
+      const linesArr = content
+        .split("\n")
+        .map((line) => line.replace(regex, "").trim())
+        .filter((line) => line !== "");
+
+      if (linesArr.length > 0) {
+        const formattedContent = linesArr.length > 1 ? linesArr : linesArr[0];
+
+        textBlocks =
+          typeof formattedContent === "string"
+            ? [{ type: PostContentTypeEnum.text, content: formattedContent }]
+            : formattedContent.map((line) => ({
+                type: PostContentTypeEnum.text,
+                content: line,
+              }));
+      }
+    }
+
+    const createPostDto: CreatePostDto = {
+      privacy,
+      ...(hashtags?.length !== 0 && { hashtags }),
+      ...(images?.length !== 0 && { images }),
+      ...(videos?.length !== 0 && { videos }),
+      ...(textBlocks?.length !== 0 && { contents: textBlocks }),
+    };
+
+    mutateCreatePost(createPostDto);
+  };
 
   return (
     <>
@@ -75,6 +138,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
             onOpenChange={() => setIsOpen(!isOpen)}
             backdrop="opaque"
             placement="center"
+            isDismissable={false}
+            isKeyboardDismissDisabled={false}
             shouldBlockScroll={false}
             size="lg"
             motionProps={{
@@ -108,69 +173,47 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   <Divider />
 
                   <ModalBody>
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={user.profile.avatar_url}
-                        className="select-none"
-                      />
-
-                      <div className="flex flex-col gap-1 w-[170px]">
-                        <h3 className="text-sm text-gray-900">
-                          {user.profile.first_name +
-                            " " +
-                            user.profile.last_name}
-                        </h3>
-
-                        <Select
-                          size="sm"
-                          defaultSelectedKeys={["public"]}
-                          aria-labelledby="privacies"
-                          aria-label="privacies"
-                          className="text-sm"
-                          selectedKeys={selectedKey}
-                          onSelectionChange={handleSelectionChange}
-                          renderValue={(selected) => {
-                            const selectedItem = Array.from(selected)[0];
-
-                            const key = selectedItem.key;
-
-                            const selectedPrivacy = privacies.find(
-                              (a) => a.key === key,
-                            );
-
-                            if (!selectedPrivacy) return null;
-
-                            return (
-                              <div className="flex items-center gap-2 text-sm">
-                                {selectedPrivacy.icon}
-                                {selectedPrivacy.label}
-                              </div>
-                            );
-                          }}
-                        >
-                          {privacies.map((animal) => (
-                            <SelectItem
-                              startContent={animal.icon}
-                              key={animal.key}
-                            >
-                              {animal.label}
-                            </SelectItem>
-                          ))}
-                        </Select>
-                      </div>
-                    </div>
+                    <CreatePostHeader
+                      privacy={PostPrivaciesEnum.public}
+                      onChange={(key) => setPrivacy(key)}
+                    />
 
                     <Textarea
                       variant="bordered"
                       placeholder={`What's on your mind, ${user.profile.last_name}?`}
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
                     />
+
+                    {mediaFiles?.length !== 0 && (
+                      <ScrollShadow
+                        className="max-h-[150px]"
+                        offset={0}
+                        size={0}
+                        hideScrollBar
+                      >
+                        <SelectedMedia />
+                      </ScrollShadow>
+                    )}
 
                     <CreatePostOptions />
                   </ModalBody>
                   <ModalFooter className="flex flex-col">
-                    <Button color="primary" onPress={handlePost}>
-                      Post
-                    </Button>
+                    {!isPending && !isUploadingMedia ? (
+                      <Button
+                        color="primary"
+                        onPress={handlePost}
+                        isDisabled={
+                          !(content.trim() !== "" || mediaFiles?.length !== 0)
+                        }
+                      >
+                        Post
+                      </Button>
+                    ) : (
+                      <Button color="primary" isLoading>
+                        Please wait...
+                      </Button>
+                    )}
                   </ModalFooter>
                 </>
               )}

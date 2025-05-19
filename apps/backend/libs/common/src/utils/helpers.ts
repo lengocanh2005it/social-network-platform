@@ -232,3 +232,15 @@ export function formatFileSize(sizeInBytes: number): string {
     return `${sizeInBytes} bytes`;
   }
 }
+
+export const encodeCursor = (curror: any) => {
+  return Buffer.from(JSON.stringify(curror)).toString('base64');
+};
+
+export const decodeCursor = (encoded: string) => {
+  try {
+    return JSON.parse(Buffer.from(encoded, 'base64').toString('utf-8'));
+  } catch {
+    return null;
+  }
+};

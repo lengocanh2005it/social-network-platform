@@ -53,6 +53,29 @@ export class UploadsService implements OnModuleInit {
     };
   };
 
+  public uploadMedia = async (files: Express.Multer.File[]) => {
+    const uploadResults = await Promise.all(
+      files.map(async (file) => {
+        const result = await this.uploadImage(file);
+
+        const mimetype = file.mimetype;
+
+        const type = mimetype.startsWith('image/')
+          ? 'image'
+          : mimetype.startsWith('video/')
+            ? 'video'
+            : 'other';
+
+        return {
+          ...result,
+          type,
+        };
+      }),
+    );
+
+    return { media: uploadResults };
+  };
+
   private uploadImage = async (file: Express.Multer.File) => {
     if (!(file.buffer instanceof Buffer)) {
       file.buffer = Buffer.from((file.buffer as any).data);

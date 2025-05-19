@@ -1,5 +1,5 @@
 import axios from "@/lib/axios";
-import { UploadUserImageType } from "@/utils";
+import { MediaUploadResponseType, UploadUserImageType } from "@/utils";
 
 export const uploadUserImage = async (
   uploadUserImageDto: UploadUserImageType,
@@ -19,6 +19,26 @@ export const uploadUserImage = async (
     },
     withCredentials: true,
   });
+
+  return response.data;
+};
+
+export const uploadMedia = async (files: File[]) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const response = await axios.post<MediaUploadResponseType>(
+    "/uploads/media",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
 
   return response.data;
 };

@@ -6,9 +6,10 @@ import {
   Post,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { KeycloakUser } from 'nest-keycloak-connect';
 import { UploadsService } from './uploads.service';
 
@@ -36,5 +37,11 @@ export class UploadsController {
       uploadUserImageQueryDto,
       file,
     );
+  }
+
+  @Post('media')
+  @UseInterceptors(FilesInterceptor('files', 10))
+  async uploadMedia(@UploadedFiles() files: Express.Multer.File[]) {
+    return this.uploadsService.uploadMedia(files);
   }
 }

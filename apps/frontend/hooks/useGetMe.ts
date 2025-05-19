@@ -7,5 +7,5 @@ export const useGetMe = (getUserQueryDto?: GetUserQueryDto) =>
     queryKey: ["users/me"],
     queryFn: () => getMe(getUserQueryDto),
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
   });

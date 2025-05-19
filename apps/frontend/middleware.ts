@@ -1,7 +1,7 @@
 import { generateUUID } from "@/utils";
+import axios from "axios";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import axios from "axios";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
@@ -39,9 +39,7 @@ export async function middleware(request: NextRequest) {
 
   if (
     (!loggedIn || loggedIn === "false") &&
-    (pathname.startsWith("/home") ||
-      pathname.startsWith("/profile") ||
-      pathname.startsWith("/settings"))
+    (pathname.startsWith("/home") || pathname.startsWith("/settings"))
   ) {
     return NextResponse.redirect(new URL("/auth/sign-in", request.url));
   }

@@ -11,6 +11,7 @@ import {
 import { RoleEnum } from '@repo/db';
 import { KeycloakUser, Roles } from 'nest-keycloak-connect';
 import { UsersService } from './users.service';
+import { GetPostQueryDto } from '@app/common/dtos/posts';
 
 @Controller('users')
 export class UsersController {
@@ -48,5 +49,21 @@ export class UsersController {
       );
 
     return this.usersService.updateUserProfile(updateUserProfileDto, email);
+  }
+
+  @Get('me/feed')
+  async getMyFeed(
+    @Query() getPostQueryDto: GetPostQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.getMyFeed(getPostQueryDto, email);
   }
 }
