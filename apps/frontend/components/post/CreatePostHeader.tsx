@@ -35,7 +35,7 @@ const CreatePostHeader: React.FC<CreatePostHeaderProps> = ({
 }) => {
   const { user } = useUserStore();
   const [selectedKey, setSelectedKey] = useState<Set<PostPrivaciesType>>(
-    new Set([privacy])
+    new Set([privacy]),
   );
 
   const handleSelectionChange = (keys: Selection) => {
@@ -82,7 +82,7 @@ const CreatePostHeader: React.FC<CreatePostHeaderProps> = ({
                   typeof item === "string" ? item : (item?.key ?? "");
 
                 const selectedPrivacy = privacies.find(
-                  (p) => p.key === selectedKey
+                  (p) => p.key === selectedKey,
                 );
 
                 if (!selectedPrivacy) return null;
