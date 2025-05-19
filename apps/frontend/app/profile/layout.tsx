@@ -19,6 +19,7 @@ export default function ProfileLayout({
   intro: React.ReactNode;
   posts: React.ReactNode;
   photos: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <main className="flex w-full flex-col min-h-screen text-black scroll-smooth">

@@ -14,3 +14,8 @@ export * from "./useSendOtp";
 export * from "./useGenerate2Fa";
 export * from "./useVerify2Fa";
 export * from "./useUploadImage";
+export * from "./useGetFeed";
+export * from "./useCreatePost";
+export * from "./useInfiniteScroll";
+export * from "./useDeletePost";
+export * from "./useUpdatePost";

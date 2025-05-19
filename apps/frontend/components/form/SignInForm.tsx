@@ -30,8 +30,7 @@ const SignInForm = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [fingerprint, setFingerprint] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mutate: mutateSignIn } = useSignIn();
+  const { mutate: mutateSignIn, isPending } = useSignIn();
   const { setAuthMethod } = useAppStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -43,18 +42,12 @@ const SignInForm = () => {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
+    const signInDto: SignInDto = {
+      ...values,
+      fingerprint,
+    };
 
-    setTimeout(() => {
-      setIsLoading(false);
-
-      const signInDto: SignInDto = {
-        ...values,
-        fingerprint,
-      };
-
-      mutateSignIn(signInDto);
-    }, 2500);
+    mutateSignIn(signInDto);
   }
 
   useEffect(() => {
@@ -139,7 +132,7 @@ const SignInForm = () => {
           </Checkbox>
         </div>
 
-        {isLoading ? (
+        {isPending ? (
           <>
             <Button isLoading className="w-fit mx-auto" color="primary">
               Please wait...

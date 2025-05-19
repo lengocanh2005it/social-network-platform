@@ -1,6 +1,12 @@
 import { AuthMethod } from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
-import { GenderType, UserEducationsType, UserWorkPlacesType } from "@repo/db";
+import {
+  GenderType,
+  PostContentType,
+  PostPrivaciesType,
+  UserEducationsType,
+  UserWorkPlacesType,
+} from "@repo/db";
 
 export type DeviceDetails = {
   device_name: string;
@@ -100,22 +106,22 @@ export type FriendType = {
   id: string;
 };
 
-export interface Post {
-  id: number;
-  author: string;
-  content: string;
-  time: string;
-  avatar: string;
-  image?: string;
-  isShared?: boolean;
-  originalPost?: {
-    author: string;
-    content: string;
-    time: string;
-    avatar: string;
-    image?: string;
-  };
-}
+// export interface Post {
+//   id: number;
+//   author: string;
+//   content: string;
+//   time: string;
+//   avatar: string;
+//   image?: string;
+//   isShared?: boolean;
+//   originalPost?: {
+//     author: string;
+//     content: string;
+//     time: string;
+//     avatar: string;
+//     image?: string;
+//   };
+// }
 
 export type GetUserQueryDto = {
   includeProfile?: boolean;
@@ -216,4 +222,106 @@ export enum UploadUserImageTypeEnum {
 export type UploadUserImageType = {
   type: UploadUserImageTypeEnum;
   file: File;
+};
+
+export type GetFeedQueryDto = {
+  limit?: number;
+  after?: string;
+};
+
+export type CreatePostImageDto = {
+  image_url: string;
+};
+
+export type CreatePostContentDto = {
+  content: string;
+  type: PostContentType;
+};
+
+export type CreatePostVideoDto = {
+  video_url: string;
+};
+
+export type DeleteMediaDto = {
+  url: string;
+  type: "image" | "video";
+};
+
+export type CreatePostDto = {
+  privacy: PostPrivaciesType;
+  group_id?: string;
+  hashtags?: string[];
+  tags?: string[];
+  images?: CreatePostImageDto[];
+  contents?: CreatePostContentDto[];
+  videos?: CreatePostVideoDto[];
+};
+
+export type UpdatePostDto = {
+  privacy: PostPrivaciesType;
+  hashtags?: string[];
+  tags?: string[];
+  images?: CreatePostImageDto[];
+  contents?: CreatePostContentDto[];
+  videos?: CreatePostVideoDto[];
+  deletedMediaDto?: DeleteMediaDto[];
+};
+
+export type UpdatePostType = {
+  postId: string;
+  updatePostDto: UpdatePostDto;
+};
+
+export interface Post {
+  id: string;
+  user: {
+    id: string;
+    email: string;
+    profile: {
+      avatar_url: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
+  privacy: PostPrivaciesType;
+  total_likes: number;
+  total_comments: number;
+  total_shares: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  images: {
+    id: string;
+    image_url: string;
+    total_likes: number;
+    total_shares: number;
+    total_comments: number;
+  }[];
+  videos: {
+    id: string;
+    video_url: string;
+    total_likes: number;
+    total_shares: number;
+    total_comments: number;
+  }[];
+  tags: any[];
+  contents: {
+    id: string;
+    content: string;
+    type: PostContentType;
+  }[];
+  hashtags: {
+    id: string;
+    hashtag: string;
+  }[];
+}
+
+export type MediaUploadResponseType = {
+  media: {
+    type: string;
+    message: string;
+    fileUrl: string;
+    fileName: string;
+    fileSize: string;
+  }[];
 };

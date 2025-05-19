@@ -15,3 +15,4 @@ export enum Provider {
 }
 
 export const OTP_RESEND_INTERVAL = 120;
+export const HIDE_DURATION = 5000;

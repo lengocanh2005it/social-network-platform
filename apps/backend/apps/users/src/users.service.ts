@@ -1,4 +1,5 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
+import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
   GetUserQueryDto,
@@ -20,14 +21,26 @@ import {
   Verify2FaActions,
   verifyPassword,
 } from '@app/common/utils';
-import { HttpStatus, Injectable } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { SessionStatusEnum, UserProfilesType, UsersType } from '@repo/db';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
+import { FriendShipEnum, SessionStatusEnum } from '@repo/db';
 import { omit } from 'lodash';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class UsersService {
-  constructor(private readonly prismaService: PrismaService) {}
+export class UsersService implements OnModuleInit {
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject('POSTS_SERVICE') private readonly postsClient: ClientKafka,
+  ) {}
+
+  onModuleInit() {
+    const postPatterns = ['get-profile-posts'];
+
+    postPatterns.forEach((pattern) =>
+      this.postsClient.subscribeToResponseOf(pattern),
+    );
+  }
 
   public updatePassword = async (updatePasswordDto: UpdatePasswordDto) => {
     const { password, email } = updatePasswordDto;
@@ -610,5 +623,51 @@ export class UsersService {
             }),
       },
     });
+  };
+
+  public getMyFeed = async (
+    email: string,
+    getPostQueryDto: GetPostQueryDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    return firstValueFrom(
+      this.postsClient.send('get-profile-posts', {
+        user_id: user.id,
+        getPostQueryDto,
+      }),
+    );
+  };
+
+  public getFriends = async (user_id: string) => {
+    const friends = await this.prismaService.friends.findMany({
+      where: {
+        friendship_status: FriendShipEnum.appcepted,
+        OR: [
+          {
+            initiator_id: user_id,
+            target_id: user_id,
+          },
+        ],
+      },
+      select: {
+        initiator_id: true,
+        target_id: true,
+      },
+    });
+
+    return friends.map((friend) =>
+      friend.initiator_id === user_id ? friend.target_id : friend.initiator_id,
+    );
   };
 }

@@ -118,7 +118,7 @@ export default function EditImageButton({
           startContent={<CameraIcon />}
           onPress={() => fileInputRef.current?.click()}
           className="absolute bottom-4 right-4 bg-white
-               text-black px-3 py-1 rounded-md flex items-center gap-1 transition"
+         text-black px-3 py-1 rounded-md flex items-center gap-1 transition"
         >
           Edit cover photo
         </Button>

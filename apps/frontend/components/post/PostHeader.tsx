@@ -3,13 +3,13 @@ import GlobalIcon from "@/components/ui/icons/global";
 import {
   Avatar,
   Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
   DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
 } from "@heroui/react";
 import {
-  Ellipsis,
   CircleX,
+  Ellipsis,
   MessageSquareWarning,
   UserX,
   XIcon,

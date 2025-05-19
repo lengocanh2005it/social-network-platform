@@ -2,11 +2,17 @@ import { SimpleDate } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
 import { AxiosError } from "axios";
-import { format } from "date-fns";
 import Cookies from "js-cookie";
 import jwt from "jsonwebtoken";
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
+import {
+  format,
+  isToday,
+  isYesterday,
+  differenceInMinutes,
+  differenceInHours,
+} from "date-fns";
 
 export const formatDateToString = (date: SimpleDate): string => {
   const jsDate = new Date(date.year, date.month - 1, date.day);
@@ -171,4 +177,29 @@ function createImage(url: string): Promise<HTMLImageElement> {
     img.setAttribute("crossOrigin", "anonymous");
     img.src = url;
   });
+}
+
+export function extractHashtags(text: string): string[] {
+  const regex = /#([\p{L}\p{N}_]+)/gu;
+  const matches = [...text.matchAll(regex)];
+  return matches.map((match) => match[1]);
+}
+
+export function formatDateTime(date: Date | string) {
+  const d = new Date(date);
+  const now = new Date();
+
+  const minutes = differenceInMinutes(now, d);
+  const hours = differenceInHours(now, d);
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} minutes ago`;
+  if (hours < 24 && isToday(d)) return `${hours} hours ago`;
+  if (isYesterday(d)) return `Yesterday at ${format(d, "HH:mm")}`;
+
+  const sameYear = now.getFullYear() === d.getFullYear();
+
+  return sameYear
+    ? format(d, "d MMM 'at' HH:mm")
+    : format(d, "d MMM, yyyy 'at' HH:mm");
 }

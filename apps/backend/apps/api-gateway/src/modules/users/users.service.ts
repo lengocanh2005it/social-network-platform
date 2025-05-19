@@ -1,3 +1,4 @@
+import { GetPostQueryDto } from '@app/common/dtos/posts';
 import { GetUserQueryDto, UpdateUserProfileDto } from '@app/common/dtos/users';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
@@ -16,6 +17,7 @@ export class UsersService implements OnModuleInit {
       'verify-password',
       'get-user-device',
       'get-user-session',
+      'get-my-feed',
     ];
 
     patterns.forEach((pattern) => {
@@ -40,6 +42,15 @@ export class UsersService implements OnModuleInit {
       this.userClient.send('update-profile', {
         updateUserProfileDto,
         email,
+      }),
+    );
+  }
+
+  async getMyFeed(getPostQueryDto: GetPostQueryDto, email: string) {
+    return firstValueFrom(
+      this.userClient.send('get-my-feed', {
+        email,
+        getPostQueryDto,
       }),
     );
   }

@@ -92,6 +92,11 @@ export const KAFKA_SERVICES = [
     clientId: 'sms',
     groupId: 'sms-group',
   },
+  {
+    serviceName: 'POSTS_SERVICE',
+    clientId: 'posts',
+    groupId: 'posts-group',
+  },
 ] as const;
 
 export enum AuthMethod {
@@ -115,6 +120,12 @@ export const publicPaths = [
   '/auth/sign-up',
   '/auth/token/refresh',
   '/auth/forgot-password',
+  '/auth/verify-otp',
+  '/auth/oauth/callback',
+  '/auth/oauth/callback/get-info',
+  '/auth/generate-token',
+  '/auth/verify-token',
+  '/auth/token/refresh',
 ];
 
 export enum VerifyOwnershipOtpMethodEnum {

@@ -3,21 +3,27 @@ export { PrismaClient } from "@prisma/client";
 export type {
   Gender as GenderType,
   GroupMemberRole as GroupMemberRoleType,
+  PostPrivacies as PostPrivaciesType,
   Role as RoleType,
+  SessionStatus as SessionStatusType,
+  UserDevices as UserDevicesType,
   UserEducations as UserEducationsType,
   UserProfiles as UserProfilesType,
+  UserSessions as UserSesstionsType,
   UserSocials as UserSocialsType,
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
-  UserDevices as UserDevicesType,
-  UserSessions as UserSesstionsType,
-  SessionStatus as SessionStatusType,
+  PostContentType as PostContentType,
+  FriendShipStatus as FriendShipStatusType,
 } from "@prisma/client";
 
 export {
   Gender as GenderEnum,
   GroupMemberRole as GroupMemberRoleEnum,
   OAuthProvider as OAuthProviderEnum,
+  PostPrivacies as PostPrivaciesEnum,
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
+  PostContentType as PostContentTypeEnum,
+  FriendShipStatus as FriendShipEnum,
 } from "@prisma/client";
