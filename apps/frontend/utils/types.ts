@@ -26,6 +26,7 @@ export type SignUpDto = {
   last_name: string;
   finger_print: string;
   deviceDetailsDto: DeviceDetails;
+  captchaToken: string;
 };
 
 export type SignInDto = {
@@ -40,9 +41,16 @@ export type SimpleDate = {
   day: number;
 };
 
+export enum VerifyEmailActionEnum {
+  SIGN_IN = "sign-in",
+  SIGN_UP = "sign-up",
+  OTHER = "other",
+}
+
 export type VerifyEmailDto = {
   email: string;
   otp: string;
+  action: VerifyEmailActionEnum;
 };
 
 export type ForgotPasswordDto = {
@@ -205,13 +213,18 @@ export type TempUserUpdateType = {
 };
 
 export enum Verify2FaActionEnum {
-  DISABLE = "disable",
-  ENABLE = "enable",
+  DISABLE_2FA = "disable-2fa",
+  ENABLE_2FA = "enable-2fa",
+  SIGN_IN = "sign-in",
+  OTHER = "other",
 }
 
 export type Verify2FaType = {
   otp: string;
   action: Verify2FaActionEnum;
+  password?: string;
+  token?: string;
+  email: string;
 };
 
 export enum UploadUserImageTypeEnum {

@@ -126,6 +126,7 @@ export const publicPaths = [
   '/auth/generate-token',
   '/auth/verify-token',
   '/auth/token/refresh',
+  '/auth/2fa/verify',
 ];
 
 export enum VerifyOwnershipOtpMethodEnum {
@@ -140,11 +141,24 @@ export type SmsContentType = {
 };
 
 export enum Verify2FaActions {
-  ENABLE = 'enable',
-  DISABLE = 'disable',
+  ENABLE_2FA = 'enable-2fa',
+  DISABLE_2FA = 'disable-2fa',
+  SIGN_IN = 'sign-in',
+  OTHER = 'other',
+}
+
+export enum VerifyOtpActions {
+  SIGN_IN = 'sign-in',
+  SIGN_UP = 'sign-up',
+  OTHER = 'other',
 }
 
 export enum UploadUserImageTypeEnum {
   AVATAR = 'avatar',
   COVER_PHOTO = 'cover_photo',
 }
+
+export type TwoFaToken = {
+  sub: string;
+  type: string;
+};

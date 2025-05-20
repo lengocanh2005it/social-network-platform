@@ -1,6 +1,8 @@
 "use client";
 import SocialsAuthForm from "@/components/form/SocialsAuthForm";
 import PasswordToggleInput from "@/components/input/PasswordToggleInput";
+import OTPVerification2FaModal from "@/components/modal/OTPVerification2FaModal";
+import VerifyOTPModal from "@/components/modal/VerifyOTPModal";
 import {
   Form,
   FormControl,
@@ -9,9 +11,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useSignIn } from "@/hooks";
+import { useSignIn, useVerify2Fa, useVerifyEmail } from "@/hooks";
 import { useAppStore } from "@/store";
-import { AuthMethod, SignInDto } from "@/utils";
+import {
+  AuthMethod,
+  SignInDto,
+  Verify2FaActionEnum,
+  Verify2FaType,
+  VerifyEmailActionEnum,
+} from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { Button, Checkbox, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,8 +38,21 @@ const SignInForm = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [fingerprint, setFingerprint] = useState<string>("");
-  const { mutate: mutateSignIn, isPending } = useSignIn();
-  const { setAuthMethod } = useAppStore();
+  const { mutate: mutateSignIn, isPending, data } = useSignIn();
+  const {
+    setAuthMethod,
+    is2FAModalOpen,
+    setIs2FAModalOpen,
+    isModalOTPOpen,
+    setIsModalOTPOpen,
+  } = useAppStore();
+  const {
+    mutate: mutateVerify2Fa,
+    isPending: isVerify2FaPending,
+    isSuccess,
+  } = useVerify2Fa();
+  const { mutate: mutateVerifyEmail, isPending: isPendingVerifyEmail } =
+    useVerifyEmail();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,6 +90,30 @@ const SignInForm = () => {
   const handleSignUp = () => router.push("/auth/sign-up");
 
   const hanldeForgetPassword = () => router.push("/auth/forgot-password");
+
+  const handleSign2Fa = async (
+    action: Verify2FaActionEnum,
+    otp: string,
+    email: string,
+  ) => {
+    if (!data) return;
+
+    const verify2FaDto: Verify2FaType = {
+      otp,
+      action,
+      password: form.getValues("password"),
+      token: data?.["2faToken"],
+      email,
+    };
+
+    mutateVerify2Fa(verify2FaDto);
+  };
+
+  useEffect(() => {
+    if (isSuccess) {
+      setIs2FAModalOpen(false);
+    }
+  }, [isSuccess, setIs2FAModalOpen]);
 
   return (
     <Form {...form}>
@@ -150,7 +195,7 @@ const SignInForm = () => {
       <SocialsAuthForm method={AuthMethod.SIGN_IN} />
 
       <div className="text-sm text-center text-black/60">
-        Don’t have an account?{" "}
+        Don&apos;t have an account?{" "}
         <a
           onClick={handleSignUp}
           className="hover:text-blue-600 text-black hover:underline font-medium cursor-pointer"
@@ -158,6 +203,52 @@ const SignInForm = () => {
           Sign up
         </a>
       </div>
+
+      {is2FAModalOpen && (
+        <OTPVerification2FaModal
+          open={is2FAModalOpen}
+          onClose={() => setIs2FAModalOpen(false)}
+          onVerify={handleSign2Fa}
+          isLoading={isVerify2FaPending}
+          action={Verify2FaActionEnum.SIGN_IN}
+          actionDescription="continue your sign in process"
+          email={form.getValues("email")}
+        />
+      )}
+
+      {isModalOTPOpen && (
+        <VerifyOTPModal
+          isOpen={isModalOTPOpen}
+          setIsOpen={setIsModalOTPOpen}
+          isPending={isPendingVerifyEmail}
+          email={form.getValues("email")}
+          action={VerifyEmailActionEnum.SIGN_IN}
+          onVerify={(dto) => {
+            mutateVerifyEmail(dto, {
+              onSuccess: async (data) => {
+                if (data && data?.is_verified && data?.message) {
+                  setIsModalOTPOpen(false);
+
+                  const signInDto: SignInDto = {
+                    email: form.getValues("email"),
+                    password: form.getValues("password"),
+                    fingerprint,
+                  };
+
+                  mutateSignIn(signInDto);
+                }
+              },
+            });
+          }}
+          onRequestOtp={() =>
+            mutateSignIn({
+              email: form.getValues("email"),
+              password: form.getValues("password"),
+              fingerprint,
+            })
+          }
+        />
+      )}
     </Form>
   );
 };

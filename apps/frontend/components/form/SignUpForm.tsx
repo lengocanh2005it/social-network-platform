@@ -1,12 +1,13 @@
 "use client";
 import VerifyOTPModal from "@/components/modal/VerifyOTPModal";
-import { useSignUp } from "@/hooks";
+import { useSignIn, useSignUp, useVerifyEmail } from "@/hooks";
 import { useAppStore } from "@/store";
 import {
   AuthMethod,
   DeviceDetails,
   formatDateToString,
   SignUpDto,
+  VerifyEmailActionEnum,
 } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +15,7 @@ import { now, ZonedDateTime } from "@internationalized/date";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
 import { z } from "zod";
 import CredentialsForm from "./CredentialsForm";
 import DetailsForm from "./DetailsForm";
@@ -86,9 +88,13 @@ const SignUpForm = () => {
     null,
   );
   const [fingerprint, setFingerprint] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mutate: mutateSignUp } = useSignUp();
-  const { isModalOTPOpen, setIsModalOTPOpen, setAuthMethod } = useAppStore();
+  const { mutate: mutateSignUp, isPending } = useSignUp();
+  const { isModalOTPOpen, setIsModalOTPOpen, setAuthMethod, cloudfareToken } =
+    useAppStore();
+  const [signUpData, setSignUpData] = useState<SignUpDto | null>(null);
+  const { mutate: mutateVerifyEmail, isPending: isPendingVerifyEmail } =
+    useVerifyEmail();
+  const { mutate: mutateSignIn } = useSignIn();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -114,20 +120,21 @@ const SignUpForm = () => {
   };
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    if (deviceDetails) {
-      setIsLoading(true);
+    if (!cloudfareToken || cloudfareToken?.trim() === "")
+      toast.error("Please complete the CAPTCHA to continue.");
 
+    if (deviceDetails && cloudfareToken) {
       const signUpDto: SignUpDto = {
         ...values,
         finger_print: fingerprint,
         deviceDetailsDto: deviceDetails,
         dob: formatDateToString(values.dob),
+        captchaToken: cloudfareToken,
       };
 
-      setTimeout(() => {
-        mutateSignUp(signUpDto);
-        setIsLoading(false);
-      }, 2500);
+      setSignUpData(signUpDto);
+
+      mutateSignUp(signUpDto);
     }
   };
 
@@ -168,15 +175,25 @@ const SignUpForm = () => {
         )}
 
         {step === "details" && (
-          <DetailsForm form={form} onBack={handleBack} isLoading={isLoading} />
+          <DetailsForm form={form} onBack={handleBack} isLoading={isPending} />
         )}
       </form>
 
-      {isModalOTPOpen && (
+      {isModalOTPOpen && signUpData && (
         <VerifyOTPModal
           isOpen={isModalOTPOpen}
           setIsOpen={setIsModalOTPOpen}
+          action={VerifyEmailActionEnum.SIGN_UP}
           email={form.getValues("email")}
+          isPending={isPendingVerifyEmail}
+          onVerify={(dto) => mutateVerifyEmail(dto)}
+          onRequestOtp={() =>
+            mutateSignIn({
+              email: signUpData.email,
+              password: signUpData.password,
+              fingerprint: signUpData.finger_print,
+            })
+          }
         />
       )}
     </FormProvider>

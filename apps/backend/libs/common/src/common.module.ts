@@ -2,6 +2,7 @@ import configuration from '@app/common/configs/configuration';
 import { JwtGuard, RoleGuard } from '@app/common/guards';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
+  CloudfareProvider,
   InfisicalProvider,
   KeycloakProvider,
   TwoFactorAuthProvider,
@@ -73,6 +74,7 @@ import { CommonService } from './common.service';
     JwtGuard,
     RoleGuard,
     TwoFactorAuthProvider,
+    CloudfareProvider,
   ],
   exports: [
     ConfigModule,
@@ -88,6 +90,7 @@ import { CommonService } from './common.service';
     JwtGuard,
     TwilioModule,
     TwoFactorAuthProvider,
+    CloudfareProvider,
   ],
 })
 export class CommonModule {}

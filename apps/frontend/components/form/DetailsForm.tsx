@@ -7,6 +7,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAppStore } from "@/store";
 import { genders } from "@/utils";
 import {
   Button,
@@ -19,6 +20,7 @@ import {
 import { MapPinHouse, MoveLeft } from "lucide-react";
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
+import Turnstile from "react-turnstile";
 
 type DetailsFormProps = {
   form: UseFormReturn<FormSchemaType>;
@@ -28,6 +30,11 @@ type DetailsFormProps = {
 
 const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
   const [loading, setLoading] = useState<boolean>(false);
+  const { setCloudfareToken } = useAppStore();
+
+  const onVerify = (token: string) => {
+    setCloudfareToken(token);
+  };
 
   const getLocation = () => {
     setLoading(true);
@@ -193,7 +200,14 @@ const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
         )}
       />
 
-      <div className="flex w-fit mx-auto md:gap-6 gap-4">
+      <div className="flex items-center justify-center">
+        <Turnstile
+          sitekey={process.env.NEXT_PUBLIC_CLOUDFARE_SITE_KEY || ""}
+          onVerify={onVerify}
+        />
+      </div>
+
+      <div className="flex w-fit mx-auto md:gap-4 gap-2">
         <Button
           type="button"
           className="bg-black text-white"

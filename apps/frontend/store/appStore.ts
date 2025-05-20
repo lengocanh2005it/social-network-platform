@@ -41,6 +41,8 @@ interface AppState {
   setIsDisable2FaClick: (isDisable2Fa: boolean) => void;
   isConfirmDisable2Fa: boolean;
   setIsConfirmDisable2Fa: (isConfirmDisable2Fa: boolean) => void;
+  cloudfareToken: string | null;
+  setCloudfareToken: (cloudfareToken: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -93,6 +95,8 @@ export const useAppStore = create<AppState>()(
       isConfirmDisable2Fa: false,
       setIsConfirmDisable2Fa: (isConfirmDisable2Fa) =>
         set({ isConfirmDisable2Fa }),
+      cloudfareToken: null,
+      setCloudfareToken: (cloudfareToken) => set({ cloudfareToken }),
     }),
     {
       name: "app-storage",

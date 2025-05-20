@@ -74,4 +74,8 @@ export class SignUpDto {
   @Type(() => DeviceDetailsDto)
   @IsNotEmpty()
   readonly deviceDetailsDto!: DeviceDetailsDto;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly captchaToken!: string;
 }

@@ -33,6 +33,7 @@
     "react-hook-form": "^7.56.1",
     "react-hot-toast": "^2.5.2",
     "react-photo-view": "^1.2.7",
+    "react-turnstile": "^1.1.4",
     "swiper": "^11.2.6",
     "tailwind-merge": "^3.2.0",
     "uuid": "^11.1.0",

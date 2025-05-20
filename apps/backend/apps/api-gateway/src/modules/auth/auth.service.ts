@@ -54,8 +54,13 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(this.authClient.send('sign-in', signInDto));
   };
 
-  public signUp = async (signUpDto: SignUpDto) => {
-    return firstValueFrom(this.authClient.send('sign-up', signUpDto));
+  public signUp = async (signUpDto: SignUpDto, userIp?: string) => {
+    return firstValueFrom(
+      this.authClient.send('sign-up', {
+        signUpDto,
+        userIp,
+      }),
+    );
   };
 
   public verifyOtp = async (verifyOtpDto: VerifyOtpDto) => {
@@ -141,11 +146,14 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(this.authClient.send('generate-2fa', email));
   };
 
-  public verify2FA = async (verify2FaDto: Verify2FaDto, email: string) => {
+  public verify2FA = async (
+    verify2FaDto: Verify2FaDto,
+    fingerprint: string,
+  ) => {
     return firstValueFrom(
       this.authClient.send('verify-2fa', {
         verify2FaDto,
-        email,
+        fingerprint,
       }),
     );
   };

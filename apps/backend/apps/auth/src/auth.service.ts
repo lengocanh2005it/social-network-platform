@@ -23,6 +23,7 @@ import {
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
+  CloudfareProvider,
   InfisicalProvider,
   KeycloakProvider,
   TwoFactorAuthProvider,
@@ -36,8 +37,10 @@ import {
   REFRESH_TOKEN_LIFE,
   SignInResponse,
   TokensReponse,
+  TwoFaToken,
   UserGoogleKeycloakData,
   Verify2FaActions,
+  VerifyOtpActions,
   VerifyOwnershipOtpMethodEnum,
   generateOtp,
   generateSmsOTPMessage,
@@ -81,6 +84,7 @@ export class AuthService implements OnModuleInit {
     @Inject('SMS_SERVICE') private readonly smsClient: ClientKafka,
     private readonly twoFactorAuthProvider: TwoFactorAuthProvider,
     private readonly infisicalProvider: InfisicalProvider,
+    private readonly cloudfareProvider: CloudfareProvider,
   ) {
     this.clientId = configService.get<string>('keycloak.client_id', '');
     this.avatarUrl = configService.get<string>('default_avatar_url', '');
@@ -130,7 +134,8 @@ export class AuthService implements OnModuleInit {
     if (existingUser.oauth_account?.provider !== OAuthProviderEnum.local)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `This email is registered using a different sign-in method and cannot be used for standard login.`,
+        message: `This email is registered using a different sign-in method and cannot be 
+        used for standard login.`,
       });
 
     if (
@@ -148,8 +153,8 @@ export class AuthService implements OnModuleInit {
       this.processVerifyEmail(email, first_name, last_name);
 
       return {
-        success: true,
-        message: 'Open email and enter OTP now.',
+        is_verified: false,
+        message: `We've sent you a verification code. Please check your email inbox.`,
       };
     }
 
@@ -159,53 +164,59 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    if (!findDevice) {
-      return;
+    if (!findDevice)
+      throw new RpcException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: `We couldn't recognize your device. Please verify your identity to continue.`,
+      });
+
+    if (existingUser.two_factor_enabled) {
+      const payload: TwoFaToken = {
+        sub: existingUser.id,
+        type: '2fa',
+      };
+
+      const token = this.jwtService.sign(payload, {
+        expiresIn: '5m',
+      });
+
+      return {
+        requires2FA: true,
+        message: 'Two-factor authentication required',
+        '2faToken': token,
+      };
     }
 
-    await this.prismaService.userDevices.update({
-      where: {
-        finger_print_user_id: {
-          finger_print: fingerprint,
-          user_id: existingUser.id,
-        },
-      },
-      data: {
-        is_trusted: true,
-      },
-    });
-
-    // if (existingUser.two_factor_enabled) {
-    //   return;
-    // }
-
-    const data = await this.keyCloakProvider.signInByKeycloak(email, password);
-
-    const createUserSessionDto: CreateUserSessionDto = {
-      refresh_token: hashPassword(data?.refresh_token),
-      finger_print: fingerprint,
-      device_name: findDevice.device_name,
-      user_agent: findDevice.user_agent,
-      ip_address: findDevice.ip_address,
-      user_id: existingUser.id,
-      expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
-    };
-
-    this.usersClient.emit(
-      'create-user-session',
-      JSON.stringify(createUserSessionDto),
+    return this.createSessionAndIssueTokens(
+      email,
+      password,
+      fingerprint,
+      findDevice,
+      existingUser.id,
     );
-
-    return {
-      access_token: data?.access_token,
-      refresh_token: data?.refresh_token,
-      role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
-    };
   };
 
-  public signUp = async (signUpDto: SignUpDto) => {
-    const { email, password, finger_print, deviceDetailsDto, ...res } =
-      signUpDto;
+  public signUp = async (signUpDto: SignUpDto, userIp?: string) => {
+    const {
+      email,
+      password,
+      finger_print,
+      deviceDetailsDto,
+      captchaToken,
+      ...res
+    } = signUpDto;
+
+    const isValid = await this.cloudfareProvider.verifyToken(
+      captchaToken,
+      userIp,
+    );
+
+    if (!isValid)
+      throw new RpcException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message:
+          'Verification failed. Please try again to prove you are not a bot.',
+      });
 
     const existingUser = await this.prismaService.users.findUnique({
       where: {
@@ -213,10 +224,10 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    if (existingUser && existingUser.is_email_verified)
+    if (existingUser)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `The email '${email}' has already been registered.`,
+        message: `Your email has already been registered.`,
       });
 
     const existingPhoneNumber =
@@ -226,20 +237,11 @@ export class AuthService implements OnModuleInit {
         },
       });
 
-    if (existingPhoneNumber && existingUser?.is_email_verified)
+    if (existingPhoneNumber)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `The phone number '${res.phone_number}' has already been registered.`,
+        message: `Your phone number has already been registered.`,
       });
-
-    if (existingUser && !existingUser.is_email_verified) {
-      this.processVerifyEmail(email, signUpDto.first_name, signUpDto.last_name);
-
-      return {
-        success: true,
-        message: 'Please check your email and enter the OTP.',
-      };
-    }
 
     const newUser = await this.prismaService.users.create({
       data: {
@@ -277,7 +279,7 @@ export class AuthService implements OnModuleInit {
   };
 
   public verifyOtp = async (verifyOtpDto: VerifyOtpDto) => {
-    const { email, otp } = verifyOtpDto;
+    const { email, otp, action } = verifyOtpDto;
 
     const existingEmail = await this.prismaService.users.findUnique({
       where: {
@@ -330,8 +332,8 @@ export class AuthService implements OnModuleInit {
     );
 
     return {
-      success: true,
-      authorization_code,
+      is_verified: true,
+      ...(action === VerifyOtpActions.SIGN_UP && { authorization_code }),
       message: 'Your email has been verified successfully.',
     };
   };
@@ -511,6 +513,7 @@ export class AuthService implements OnModuleInit {
         await this.verifyOtp({
           otp,
           email,
+          action: VerifyOtpActions.SIGN_UP,
         });
       }
 
@@ -1166,8 +1169,22 @@ export class AuthService implements OnModuleInit {
     };
   };
 
-  public verify2Fa = async (verify2FaDto: Verify2FaDto, email: string) => {
-    const { otp, action } = verify2FaDto;
+  public verify2Fa = async (
+    verify2FaDto: Verify2FaDto,
+    fingerprint: string,
+  ) => {
+    const { otp, action, token, password, email } = verify2FaDto;
+
+    if (
+      token?.trim() === '' &&
+      password?.trim() === '' &&
+      action === Verify2FaActions.SIGN_IN
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          'Please provide the verification token and password to continue signing in.',
+      });
 
     const secret = await this.infisicalProvider.getSecret(
       `TOTP_SECRET_${email}`,
@@ -1187,21 +1204,125 @@ export class AuthService implements OnModuleInit {
         message: `The verification code you entered is invalid. Please try again.`,
       });
 
-    this.usersClient.emit(
-      'update-status-2fa',
-      JSON.stringify({
+    if (action === Verify2FaActions.OTHER) {
+      return {
+        is_verified: true,
+        message: 'Two-step verification completed. You can now continue.',
+      };
+    }
+
+    if (
+      action === Verify2FaActions.ENABLE_2FA ||
+      action === Verify2FaActions.DISABLE_2FA
+    ) {
+      this.usersClient.emit(
+        'update-status-2fa',
+        JSON.stringify({
+          email,
+          action,
+        }),
+      );
+
+      return {
+        success: true,
+        message:
+          action === Verify2FaActions.ENABLE_2FA
+            ? 'Two-factor authentication has been enabled successfully.'
+            : 'Two-factor authentication has been disabled successfully.',
+        is2FAEnabled: action === Verify2FaActions.ENABLE_2FA ? true : false,
+      };
+    }
+
+    if (!token)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `2FA token is required for 2fa sign in.`,
+      });
+
+    try {
+      const { sub } = this.jwtService.verify<TwoFaToken>(token);
+
+      const user = await firstValueFrom<UsersType>(
+        this.usersClient.send(
+          'get-user-by-field',
+          JSON.stringify({
+            field: 'id',
+            value: sub,
+          }),
+        ),
+      );
+
+      if (
+        !user.password ||
+        user.password.trim() === '' ||
+        !password ||
+        password.trim() === ''
+      )
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `This account was created using a social login. Please use that option to sign in.`,
+        });
+
+      const device = await firstValueFrom<UserDevicesType>(
+        this.usersClient.send('get-user-device', {
+          user_id: sub,
+          finger_print: fingerprint,
+        }),
+      );
+
+      return this.createSessionAndIssueTokens(
         email,
-        action,
-      }),
+        password,
+        fingerprint,
+        device,
+        sub,
+      );
+    } catch (error) {
+      console.error(error);
+
+      if (error.name === 'TokenExpiredError') {
+        throw new RpcException({
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: 'Your verification token has expired. Please sign in again.',
+        });
+      }
+
+      throw new RpcException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message:
+          'The verification code is invalid or has expired. Please sign in again.',
+      });
+    }
+  };
+
+  private createSessionAndIssueTokens = async (
+    email: string,
+    password: string,
+    fingerprint: string,
+    device: UserDevicesType,
+    user_id: string,
+  ) => {
+    const data = await this.keyCloakProvider.signInByKeycloak(email, password);
+
+    const createUserSessionDto: CreateUserSessionDto = {
+      refresh_token: hashPassword(data.refresh_token),
+      finger_print: fingerprint,
+      device_name: device.device_name,
+      user_agent: device.user_agent,
+      ip_address: device.ip_address,
+      user_id,
+      expires_at: new Date(Date.now() + REFRESH_TOKEN_LIFE),
+    };
+
+    this.usersClient.emit(
+      'create-user-session',
+      JSON.stringify(createUserSessionDto),
     );
 
     return {
-      success: true,
-      message:
-        action === Verify2FaActions.ENABLE
-          ? 'Two-factor authentication has been enabled successfully.'
-          : 'Two-factor authentication has been disabled successfully.',
-      is2FAEnabled: action === Verify2FaActions.ENABLE ? true : false,
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
     };
   };
 }
