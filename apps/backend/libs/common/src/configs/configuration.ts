@@ -48,4 +48,8 @@ export default () => ({
     secret_key: process.env.CLOUDFARE_SECRET_KEY,
     url: process.env.CLOUDFARE_URL,
   },
+  hugging_face: {
+    api_token: process.env.HUGGING_FACE_API_TOKEN,
+    api_url: process.env.HUGGING_FACE_API_URL,
+  },
 });
