@@ -43,4 +43,9 @@ export default () => ({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
   },
+  cloudfare: {
+    site_key: process.env.CLOUDFARE_SITE_KEY,
+    secret_key: process.env.CLOUDFARE_SECRET_KEY,
+    url: process.env.CLOUDFARE_URL,
+  },
 });

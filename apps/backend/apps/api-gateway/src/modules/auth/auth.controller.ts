@@ -50,8 +50,10 @@ export class AuthController {
 
   @Public()
   @Post('sign-up')
-  async signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
+  async signUp(@Body() signUpDto: SignUpDto, @Req() req: Request) {
+    const userIp = req.ip;
+
+    return this.authService.signUp(signUpDto, userIp);
   }
 
   @Public()
@@ -145,7 +147,7 @@ export class AuthController {
 
     if (!finger_print)
       throw new HttpException(
-        'Finger print is missing.',
+        `We couldn't verify your device. Please try again.`,
         HttpStatus.UNAUTHORIZED,
       );
 
@@ -169,7 +171,7 @@ export class AuthController {
 
     if (!finger_print)
       throw new HttpException(
-        'Finger print is missing.',
+        `We couldn't verify your device. Please try again.`,
         HttpStatus.UNAUTHORIZED,
       );
 
@@ -275,19 +277,32 @@ export class AuthController {
   }
 
   @Post('2fa/verify')
-  @Roles(RoleEnum.admin, RoleEnum.user)
+  @Public()
   async verify2FA(
     @Body() verify2FaDto: Verify2FaDto,
-    @KeycloakUser() user: any,
+    @Headers() headers: Record<string, any>,
+    @Res() response: Response,
   ) {
-    const { email } = user;
+    const finger_print = headers['x-fingerprint'];
 
-    if (!email || typeof email !== 'string')
+    if (!finger_print)
       throw new HttpException(
-        'Email not found in the access token.',
-        HttpStatus.NOT_FOUND,
+        `We couldn't verify your device. Please try again.`,
+        HttpStatus.UNAUTHORIZED,
       );
 
-    return this.authService.verify2FA(verify2FaDto, email);
+    const data = await this.authService.verify2FA(verify2FaDto, finger_print);
+
+    if (data?.access_token && data?.refresh_token && data?.role) {
+      const { access_token, refresh_token, role } = data;
+
+      initializeCookies(response, {
+        access_token,
+        refresh_token,
+        role,
+      });
+    }
+
+    return response.status(HttpStatus.CREATED).json(data);
   }
 }

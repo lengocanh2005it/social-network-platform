@@ -6,8 +6,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { verify2Fa } from "@/lib/api/auth";
-import { handleAxiosError, Verify2FaActionEnum, Verify2FaType } from "@/utils";
+import { Verify2FaActionEnum } from "@/utils";
 import {
   Button,
   InputOtp,
@@ -17,7 +16,7 @@ import {
   ModalHeader,
 } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -30,15 +29,25 @@ const formSchema = z.object({
 interface OtpVerification2FaModalProps {
   open: boolean;
   onClose: () => void;
-  onVerifySuccess?: () => void;
+  action: Verify2FaActionEnum;
+  email: string;
   actionDescription?: string;
+  onVerify: (
+    asction: Verify2FaActionEnum,
+    otp: string,
+    email: string,
+  ) => Promise<void>;
+  isLoading: boolean;
 }
 
 const OTPVerification2FaModal: React.FC<OtpVerification2FaModalProps> = ({
   open,
   onClose,
-  onVerifySuccess,
   actionDescription,
+  action,
+  email,
+  onVerify,
+  isLoading,
 }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,34 +55,12 @@ const OTPVerification2FaModal: React.FC<OtpVerification2FaModalProps> = ({
       otp: "",
     },
   });
-  const [isVerifying, setIsVerifying] = useState<boolean>(false);
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const { otp } = values;
 
-    handleVerify(otp);
+    await onVerify(action, otp, email);
   }
-
-  const handleVerify = async (otp: string) => {
-    setIsVerifying(true);
-
-    try {
-      const verify2FaDto: Verify2FaType = {
-        otp,
-        action: Verify2FaActionEnum.DISABLE,
-      };
-
-      await verify2Fa(verify2FaDto);
-
-      if (onVerifySuccess) onVerifySuccess();
-
-      onClose();
-    } catch (error) {
-      handleAxiosError(error);
-    } finally {
-      setIsVerifying(false);
-    }
-  };
 
   return (
     <Modal
@@ -141,12 +128,12 @@ const OTPVerification2FaModal: React.FC<OtpVerification2FaModalProps> = ({
                     </Button>
 
                     <Button
-                      isLoading={isVerifying}
-                      isDisabled={isVerifying}
+                      isLoading={isLoading}
+                      isDisabled={isLoading}
                       color="primary"
                       type="submit"
                     >
-                      {!isVerifying ? "Submit" : "Please wait"}
+                      {!isLoading ? "Submit" : "Please wait"}
                     </Button>
                   </div>
                 </form>

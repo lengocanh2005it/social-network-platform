@@ -28,8 +28,11 @@ export class AuthController {
   }
 
   @MessagePattern('sign-up')
-  async signUp(@Payload() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
+  async signUp(
+    @Payload('signUpDto') signUpDto: SignUpDto,
+    @Payload('userIp') userIp?: string,
+  ) {
+    return this.authService.signUp(signUpDto, userIp);
   }
 
   @MessagePattern('verify-otp')
@@ -109,10 +112,10 @@ export class AuthController {
 
   @MessagePattern('verify-2fa')
   async verify2Fa(
-    @Payload('email') email: string,
     @Payload('verify2FaDto') verif2FaDto: Verify2FaDto,
+    @Payload('fingerprint') fingerprint: string,
   ) {
-    return this.authService.verify2Fa(verif2FaDto, email);
+    return this.authService.verify2Fa(verif2FaDto, fingerprint);
   }
 
   @MessagePattern('generate-2fa')

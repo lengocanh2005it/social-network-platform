@@ -7,7 +7,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useVerify2Fa } from "@/hooks";
-import { useAppStore } from "@/store";
+import { useAppStore, useUserStore } from "@/store";
 import { Verify2FaActionEnum, Verify2FaType } from "@/utils";
 import { Button, InputOtp } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,7 @@ const formSchema = z.object({
 });
 
 const TwoFAQrCode: React.FC<TwoFAQrCodeProps> = ({ qrCodeUrl }) => {
+  const { user } = useUserStore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,11 +39,14 @@ const TwoFAQrCode: React.FC<TwoFAQrCodeProps> = ({ qrCodeUrl }) => {
   const { mutate: mutateVerify2Fa } = useVerify2Fa();
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !user.email) return;
+
     const { otp } = values;
 
     const verify2FaDto: Verify2FaType = {
       otp,
-      action: Verify2FaActionEnum.ENABLE,
+      action: Verify2FaActionEnum.ENABLE_2FA,
+      email: user.email,
     };
 
     mutateVerify2Fa(verify2FaDto);

@@ -1,6 +1,6 @@
 "use client";
-import { useVerifyEmail } from "@/hooks";
-import { VerifyEmailDto } from "@/utils";
+import RequestOtpButton from "@/components/button/RequestOtpButton";
+import { VerifyEmailActionEnum, VerifyEmailDto } from "@/utils";
 import {
   Button,
   InputOtp,
@@ -10,26 +10,32 @@ import {
   ModalHeader,
   useDraggable,
 } from "@heroui/react";
-import React, { useState } from "react";
+import React from "react";
 import { Controller, useForm } from "react-hook-form";
 
 interface VerifyOTPModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   email: string;
+  onVerify: (dto: VerifyEmailDto) => void;
+  action: VerifyEmailActionEnum;
+  onRequestOtp?: () => void;
+  isPending: boolean;
 }
 
 const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
   isOpen,
   setIsOpen,
   email,
+  onVerify,
+  onRequestOtp,
+  action,
+  isPending,
 }) => {
   const targetRef = React.useRef<HTMLElement>(
     null,
   ) as React.RefObject<HTMLElement>;
   const { moveProps } = useDraggable({ targetRef, isDisabled: !isOpen });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { mutate: mutateVerifyEmail } = useVerifyEmail();
 
   const {
     handleSubmit,
@@ -45,14 +51,16 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
     const verifyEmailDto: VerifyEmailDto = {
       otp: data.otp,
       email,
+      action,
     };
 
-    setIsLoading(true);
+    onVerify(verifyEmailDto);
+  };
 
-    setTimeout(() => {
-      setIsLoading(false);
-      mutateVerifyEmail(verifyEmailDto);
-    }, 2500);
+  const handleRequestNewOtp = () => {
+    if (onRequestOtp) {
+      onRequestOtp();
+    }
   };
 
   return (
@@ -89,7 +97,10 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
       <ModalContent className="text-black">
         {(onClose) => (
           <>
-            <ModalHeader {...moveProps} className="flex flex-col gap-1">
+            <ModalHeader
+              {...moveProps}
+              className="flex flex-col gap-1 text-center"
+            >
               Verify Email OTP
             </ModalHeader>
             <ModalBody className="flex flex-col md:gap-2 mx-auto gap-1 items-center justify-center">
@@ -122,12 +133,16 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
                   }}
                 />
 
-                <div className="flex items-center justify-center md:gap-4 gap-3">
+                <div className="flex items-center justify-center">
+                  <RequestOtpButton onRequest={handleRequestNewOtp} />
+                </div>
+
+                <div className="flex items-center justify-center md:gap-2 gap-1">
                   <Button color="primary" onPress={onClose}>
                     Cancel
                   </Button>
 
-                  {isLoading ? (
+                  {isPending ? (
                     <>
                       <Button
                         isLoading

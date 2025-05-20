@@ -41,7 +41,7 @@ const AccountVerification = () => {
       toast.success(
         `We have sent a verification code to your ${
           selectedMethod === "phone_number" ? "phone number" : "email"
-        }. Please check your messages.`,
+        }. Please check your ${selectedMethod === "email" ? "email" : "messages"}.`,
       );
 
       setMethod(selectedMethod);

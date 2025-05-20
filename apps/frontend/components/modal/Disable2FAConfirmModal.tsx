@@ -55,7 +55,7 @@ const Disable2FAConfirmModal = () => {
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex flex-col gap-1">
+            <ModalHeader className="flex flex-col gap-1 text-center">
               Confirm Disable 2FA
             </ModalHeader>
             <ModalBody className="text-center">
@@ -68,7 +68,7 @@ const Disable2FAConfirmModal = () => {
                 We recommend keeping it on to help protect your account.
               </p>
             </ModalBody>
-            <ModalFooter>
+            <ModalFooter className="flex items-center justify-center">
               <Button color="primary" onPress={handleClickCancel}>
                 Cancel
               </Button>

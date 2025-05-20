@@ -572,7 +572,7 @@ export class UsersService implements OnModuleInit {
         message: `This ${field === 'email' ? 'email' : 'phone number'} has not been registered.`,
       });
 
-    return omit(findUser, ['password']);
+    return findUser;
   };
 
   public updateStatus2Fa = async (email: string, action: Verify2FaActions) => {
@@ -583,7 +583,8 @@ export class UsersService implements OnModuleInit {
         email,
       },
       data: {
-        two_factor_enabled: action === Verify2FaActions.ENABLE ? true : false,
+        two_factor_enabled:
+          action === Verify2FaActions.ENABLE_2FA ? true : false,
       },
     });
   };
