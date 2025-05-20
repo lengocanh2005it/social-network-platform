@@ -6,7 +6,8 @@ import {
   UpdatePostDto,
 } from '@app/common/dtos/posts';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { decodeCursor, encodeCursor } from '@app/common/utils';
+import { HuggingFaceProvider } from '@app/common/providers';
+import { decodeCursor, encodeCursor, isToxic } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import { PostPrivaciesEnum, UsersType } from '@repo/db';
@@ -20,6 +21,7 @@ export class PostsService implements OnModuleInit {
     private readonly prismaService: PrismaService,
     @Inject('USERS_SERVICE')
     private readonly usersClient: ClientKafka,
+    private readonly huggingFaceProvider: HuggingFaceProvider,
   ) {}
 
   onModuleInit() {
@@ -128,6 +130,16 @@ export class PostsService implements OnModuleInit {
     );
 
     const { images, videos, contents, tags, hashtags, ...res } = createPostDto;
+
+    if (contents?.length) {
+      for (const content of contents.map((c) => c.content)) {
+        if (isToxic(await this.huggingFaceProvider.analyzeText(content)))
+          throw new RpcException({
+            statusCode: HttpStatus.FORBIDDEN,
+            message: `Please review your post. It contains content that may not be appropriate.`,
+          });
+      }
+    }
 
     const newPost = await this.prismaService.posts.create({
       data: {

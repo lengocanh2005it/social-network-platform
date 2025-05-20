@@ -244,3 +244,15 @@ export const decodeCursor = (encoded: string) => {
     return null;
   }
 };
+
+export function isToxic(
+  predictions: { label: string; score: number }[][],
+): boolean {
+  const scores = predictions[0];
+
+  const toxicLabel = scores.find((s) => s.label === 'toxic');
+
+  if (!toxicLabel) return false;
+
+  return toxicLabel.score > 0.7;
+}
