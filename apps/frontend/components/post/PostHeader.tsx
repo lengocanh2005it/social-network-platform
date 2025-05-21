@@ -1,5 +1,8 @@
 "use client";
 import GlobalIcon from "@/components/ui/icons/global";
+import UndoPostToast from "@/components/UndoPostToast";
+import { usePostStore } from "@/store";
+import { formatDateTime, HIDE_DURATION, Post } from "@/utils";
 import {
   Avatar,
   Dropdown,
@@ -15,33 +18,89 @@ import {
   XIcon,
 } from "lucide-react";
 import React from "react";
+import toast from "react-hot-toast";
 
 interface PostHeaderProps {
-  avatar: string;
-  author: string;
-  time: string;
+  homePost: Post;
   shouldHiddenXCloseIcon?: boolean;
 }
 
 const PostHeader: React.FC<PostHeaderProps> = ({
-  avatar,
-  author,
-  time,
+  homePost,
   shouldHiddenXCloseIcon,
 }) => {
+  const { hideHomePosts, homePosts, restoreHomePostAtIndex } = usePostStore();
+
+  const handleHidePost = (postId: string) => {
+    const index = homePosts.findIndex((p) => p.id === postId);
+
+    const post = homePosts[index];
+
+    if (index === -1 || !post) return;
+
+    hideHomePosts(postId);
+
+    let toastId: string = "";
+
+    const intervalId: NodeJS.Timeout = setInterval(() => {
+      remaining -= 1;
+
+      if (remaining <= 0) {
+        clearInterval(intervalId);
+        return;
+      }
+
+      toast.custom(
+        () => <UndoPostToast onUndo={undo} remaining={remaining} />,
+        { id: toastId, duration: HIDE_DURATION },
+      );
+    }, 1000);
+
+    let remaining = HIDE_DURATION / 1000;
+
+    const undo = () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+      toast.dismiss(toastId);
+      restoreHomePostAtIndex(post, index);
+    };
+
+    const timeoutId = setTimeout(() => {
+      toast.dismiss(toastId);
+    }, HIDE_DURATION);
+
+    toastId = toast.custom(
+      () => <UndoPostToast onUndo={undo} remaining={remaining} />,
+      {
+        duration: HIDE_DURATION + 500,
+        position: "bottom-right",
+      },
+    );
+  };
+
   return (
     <div className="flex items-start justify-between">
       <div className="flex items-center mb-3 gap-2">
         <Avatar
-          src={avatar}
-          alt={author}
+          src={homePost.user.profile.avatar_url}
+          alt={
+            homePost.user.profile.first_name +
+            " " +
+            homePost.user.profile.last_name
+          }
           className="object-cover cursor-pointer select-none"
         />
 
-        <div>
-          <h4 className="font-semibold">{author}</h4>
+        <div className="flex flex-col relative">
+          <h4 className="font-semibold">
+            {homePost.user.profile.first_name +
+              " " +
+              homePost.user.profile.last_name}
+          </h4>
           <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-500">{time}</span>
+            <span className="text-sm text-gray-500">
+              {formatDateTime(homePost.created_at)}
+            </span>
             <GlobalIcon width={20} height={20} />
           </div>
         </div>
@@ -61,12 +120,14 @@ const PostHeader: React.FC<PostHeaderProps> = ({
               description="See fewer posts like this."
               key="hide-post"
               startContent={<CircleX />}
+              onClick={() => handleHidePost(homePost.id)}
             >
               Hide post
             </DropdownItem>
 
             <DropdownItem
-              description="We won't let Lana Nguyen know who reported this."
+              description={`We won't let ${homePost.user.profile.first_name + " " + homePost.user.profile.last_name} 
+              know who reported this.`}
               key="report-post"
               startContent={<MessageSquareWarning />}
             >
@@ -78,13 +139,21 @@ const PostHeader: React.FC<PostHeaderProps> = ({
               key="block-user"
               startContent={<UserX />}
             >
-              Block Lana Nguyen&apos;s profile
+              Block{" "}
+              {homePost.user.profile.first_name +
+                " " +
+                homePost.user.profile.last_name}
+              &apos;s profile
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
 
         {!shouldHiddenXCloseIcon && (
-          <XIcon size={30} className="cursor-pointer" />
+          <XIcon
+            size={30}
+            className="cursor-pointer"
+            onClick={() => handleHidePost(homePost.id)}
+          />
         )}
       </div>
     </div>

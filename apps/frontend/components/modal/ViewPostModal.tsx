@@ -4,6 +4,7 @@ import PostContent from "@/components/post/PostContent";
 import PostHeader from "@/components/post/PostHeader";
 import PostOptions from "@/components/post/PostOptions";
 import { useUserStore } from "@/store";
+import { Post } from "@/utils";
 import {
   Avatar,
   Divider,
@@ -24,11 +25,7 @@ import {
 import React, { Dispatch, SetStateAction } from "react";
 
 interface ViewPostModalProps {
-  author: string;
-  content: string;
-  time: string;
-  avatar: string;
-  image: string;
+  homePost: Post;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }
@@ -90,11 +87,7 @@ const comments: CommentType[] = [
 ];
 
 const ViewPostModal: React.FC<ViewPostModalProps> = ({
-  author,
-  content,
-  time,
-  avatar,
-  image,
+  homePost,
   isOpen,
   setIsOpen,
 }) => {
@@ -149,12 +142,10 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                     >
                       <div className="flex flex-col">
                         <PostHeader
-                          time={time}
-                          avatar={avatar}
-                          author={author}
+                          homePost={homePost}
                           shouldHiddenXCloseIcon
                         />
-                        <PostContent content={content} image={image} />
+                        <PostContent homePost={homePost} />
                         <PostOptions />
                       </div>
 

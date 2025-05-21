@@ -25,7 +25,7 @@ export class PostsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const postPatterns = ['get-friends', 'get-me'];
+    const postPatterns = ['get-me', 'get-user-by-field'];
 
     postPatterns.forEach((pp) => this.usersClient.subscribeToResponseOf(pp));
   }
@@ -73,10 +73,22 @@ export class PostsService implements OnModuleInit {
   };
 
   public getHomePosts = async (
-    user_id: string,
+    email: string,
     friendIds: string[],
     getPostQueryDto?: GetPostQueryDto,
   ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const user_id = user.id;
+
     const limit = getPostQueryDto?.limit ?? 1;
 
     const decodedCursor = getPostQueryDto?.after

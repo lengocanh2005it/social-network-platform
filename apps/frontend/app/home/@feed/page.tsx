@@ -1,41 +1,34 @@
 "use client";
-import React from "react";
-import { ScrollShadow } from "@heroui/react";
-import PostCard from "@/components/post/PostCard";
 import CreatePost from "@/components/post/CreatePost";
+import PostCard from "@/components/post/PostCard";
 import StorySlider from "@/components/sliders/StoriesSlider";
-
-const posts = [
-  {
-    id: 1,
-    author: "Lana Nguyen",
-    content: "The weather is beautiful today! ☀️",
-    time: "2 hours ago",
-    avatar: "https://i.pravatar.cc/40?u=lan",
-    image:
-      "https://i.pinimg.com/736x/fc/d1/50/fcd15099c68fa9895e151ad2ec141f30.jpg",
-  },
-  {
-    id: 2,
-    author: "Mike Tran",
-    content: "Just had some pho, it was amazing 😋",
-    time: "4 hours ago",
-    avatar: "https://i.pravatar.cc/40?u=minh",
-    image:
-      "https://i.pinimg.com/736x/fc/d1/50/fcd15099c68fa9895e151ad2ec141f30.jpg",
-  },
-  {
-    id: 3,
-    author: "Harry Do",
-    content: "Anyone up for coffee this afternoon? ☕️",
-    time: "1 day ago",
-    avatar: "https://i.pravatar.cc/40?u=hai",
-    image:
-      "https://i.pinimg.com/736x/fc/d1/50/fcd15099c68fa9895e151ad2ec141f30.jpg",
-  },
-];
+import { useGetPosts } from "@/hooks";
+import { usePostStore } from "@/store";
+import { ScrollShadow, Spinner } from "@heroui/react";
+import { useEffect } from "react";
 
 const FeedPage = () => {
+  const { data, isLoading, isError } = useGetPosts();
+  const { homePosts, setHomePosts } = usePostStore();
+
+  useEffect(() => {
+    if (data && data?.data) setHomePosts(data?.data, data?.nextCursor);
+  }, [data, setHomePosts]);
+
+  if (isLoading)
+    return (
+      <div
+        className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
+        flex-col items-center justify-center text-center"
+      >
+        <Spinner />
+
+        <p>Loading...</p>
+      </div>
+    );
+
+  if (isError) return <div>Error...</div>;
+
   return (
     <ScrollShadow
       className="h-screen flex flex-col md:gap-3 gap-2 pr-2"
@@ -47,11 +40,30 @@ const FeedPage = () => {
 
       <StorySlider />
 
-      <section className="flex flex-col md:gap-2 gap-1">
-        {posts.map((post) => (
-          <PostCard key={post.id} {...post} />
-        ))}
-      </section>
+      {homePosts?.length !== 0 ? (
+        <>
+          <section className="flex flex-col md:gap-2 gap-1">
+            {homePosts.map((post) => (
+              <PostCard key={post.id} homePost={post} />
+            ))}
+          </section>
+        </>
+      ) : (
+        <>
+          {!isLoading && (
+            <div
+              className="flex flex-col items-center justify-center text-center md:gap-2 gap-1
+            md:mt-6 mt-4"
+            >
+              <h1 className="text-center text-gray-600">No Activity Yet</h1>
+
+              <p className="text-center text-sm text-gray-500">
+                Your friend hasn&apos;t posted anything yet.
+              </p>
+            </div>
+          )}
+        </>
+      )}
     </ScrollShadow>
   );
 };
