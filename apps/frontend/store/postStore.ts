@@ -11,11 +11,27 @@ interface PostStore {
   updatePost: (postId: string, update: Partial<Post>) => void;
   restorePostAtIndex: (post: Post, index: number) => void;
   clearPosts: () => void;
+  homePosts: Post[];
+  nextHomeCursor: string | null;
+  setHomePosts: (posts: Post[], nextHomeCursor: string | null) => void;
+  hideHomePosts: (postId: string) => void;
+  restoreHomePostAtIndex: (post: Post, index: number) => void;
 }
 
 export const usePostStore = create<PostStore>((set) => ({
   posts: [],
   nextCursor: null,
+  homePosts: [],
+  nextHomeCursor: null,
+  setHomePosts: (posts, nextHomeCursor) => {
+    set({
+      homePosts: posts.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      ),
+      nextHomeCursor,
+    });
+  },
   setPosts: (posts, nextCursor) =>
     set({
       posts: posts.sort(
@@ -50,4 +66,14 @@ export const usePostStore = create<PostStore>((set) => ({
       newPosts.splice(index, 0, post);
       return { posts: newPosts };
     }),
+  restoreHomePostAtIndex: (post, index) =>
+    set((state) => {
+      const newPosts = [...state.homePosts];
+      newPosts.splice(index, 0, post);
+      return { homePosts: newPosts };
+    }),
+  hideHomePosts: (postId) =>
+    set((state) => ({
+      homePosts: state.homePosts.filter((post) => post.id !== postId),
+    })),
 }));

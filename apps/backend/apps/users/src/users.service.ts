@@ -650,14 +650,18 @@ export class UsersService implements OnModuleInit {
     );
   };
 
-  public getFriends = async (user_id: string) => {
+  public getFriends = async (email: string) => {
+    const user = await this.handleGetMe(email);
+
     const friends = await this.prismaService.friends.findMany({
       where: {
         friendship_status: FriendShipEnum.appcepted,
         OR: [
           {
-            initiator_id: user_id,
-            target_id: user_id,
+            initiator_id: user.id,
+          },
+          {
+            target_id: user.id,
           },
         ],
       },
@@ -668,7 +672,7 @@ export class UsersService implements OnModuleInit {
     });
 
     return friends.map((friend) =>
-      friend.initiator_id === user_id ? friend.target_id : friend.initiator_id,
+      friend.initiator_id === user.id ? friend.target_id : friend.initiator_id,
     );
   };
 }

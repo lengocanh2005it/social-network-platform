@@ -1,5 +1,5 @@
 import axios from "@/lib/axios";
-import { CreatePostDto, UpdatePostType } from "@/utils";
+import { CreatePostDto, GetFeedQueryDto, UpdatePostType } from "@/utils";
 
 export const createPost = async (createPostDto: CreatePostDto) => {
   const response = await axios.post("/posts", createPostDto);
@@ -17,6 +17,14 @@ export const updatePost = async (updatePostType: UpdatePostType) => {
   const { postId, updatePostDto } = updatePostType;
 
   const response = await axios.patch(`/posts/${postId}`, updatePostDto);
+
+  return response.data;
+};
+
+export const getHomePosts = async (getFeedQueryDto?: GetFeedQueryDto) => {
+  const response = await axios.get("/posts", {
+    params: getFeedQueryDto,
+  });
 
   return response.data;
 };

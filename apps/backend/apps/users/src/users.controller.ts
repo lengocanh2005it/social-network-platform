@@ -136,7 +136,7 @@ export class UsersController {
   }
 
   @MessagePattern('get-friends')
-  async getFriendsOfUser(@Payload('user_id') user_id: string) {
-    return this.usersService.getFriends(user_id);
+  async getFriendsOfUser(@Payload('email') email: string) {
+    return this.usersService.getFriends(email);
   }
 }

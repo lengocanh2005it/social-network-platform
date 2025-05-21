@@ -19,3 +19,4 @@ export * from "./useCreatePost";
 export * from "./useInfiniteScroll";
 export * from "./useDeletePost";
 export * from "./useUpdatePost";
+export * from "./useGetPosts";

@@ -29,11 +29,11 @@ export class PostsController {
 
   @MessagePattern('get-home-posts')
   async getHomePosts(
-    @Payload('user_id') user_id: string,
+    @Payload('email') email: string,
     @Payload('friendIds') friendIds: string[],
     @Payload('getPostQueryDto') getPostQueryDto?: GetPostQueryDto,
   ) {
-    return this.postsService.getHomePosts(user_id, friendIds, getPostQueryDto);
+    return this.postsService.getHomePosts(email, friendIds, getPostQueryDto);
   }
 
   @MessagePattern('delete-post')
