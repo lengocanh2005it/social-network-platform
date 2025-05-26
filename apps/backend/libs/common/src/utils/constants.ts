@@ -63,11 +63,15 @@ export const KAFKA_METADATA_MAX_AGE = 60000;
 export enum EmailTemplateNameEnum {
   EMAIL_OTP_VERIFICATION = 'email-otp-verification',
   EMAIL_RESET_PASSWORD = 'email-reset-password',
+  EMAIL_VERIFY_DEVICE = 'email-verify-device',
+  EMAIL_IDENTITY_VERIFICATION = 'email-identity-verification',
 }
 
 export const SUBJECT_EMAIL_MAP = {
   'email-otp-verification': 'Verify Your Email Address',
   'email-reset-password': 'Reset Your Password',
+  'email-verify-device': 'Verify New Device',
+  'email-identity-verification': 'Verify Account Ownership',
 };
 
 export const KAFKA_SERVICES = [
@@ -127,6 +131,7 @@ export const publicPaths = [
   '/auth/verify-token',
   '/auth/token/refresh',
   '/auth/2fa/verify',
+  '/auth/trust-device',
 ];
 
 export enum VerifyOwnershipOtpMethodEnum {
@@ -144,12 +149,14 @@ export enum Verify2FaActions {
   ENABLE_2FA = 'enable-2fa',
   DISABLE_2FA = 'disable-2fa',
   SIGN_IN = 'sign-in',
+  VERIFY_DEVICE = 'verify-device',
   OTHER = 'other',
 }
 
 export enum VerifyOtpActions {
   SIGN_IN = 'sign-in',
   SIGN_UP = 'sign-up',
+  VERIFY_DEVICE = 'verify-device',
   OTHER = 'other',
 }
 
@@ -161,4 +168,25 @@ export enum UploadUserImageTypeEnum {
 export type TwoFaToken = {
   sub: string;
   type: string;
+};
+
+export enum CreateCommentTargetType {
+  POST = 'post',
+  VIDEO = 'video',
+  IMAGE = 'image',
+}
+
+export type CreateCommentForPost = {
+  post_id?: string;
+  post_video_id?: string;
+  post_image_id?: string;
+  parent_comment_id?: string;
+  content: string;
+  user_id: string;
+};
+
+export type CreateCommentMedia = {
+  type: 'video' | 'image';
+  url: string;
+  post_id: string;
 };

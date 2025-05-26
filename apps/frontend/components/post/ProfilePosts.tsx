@@ -1,18 +1,23 @@
 "use client";
 import ConfirmModal from "@/components/modal/ConfirmModal";
 import UpdatePostModal from "@/components/modal/UpdatePostModal";
+import ViewPostModal from "@/components/modal/ViewPostModal";
 import PostOptions from "@/components/post/PostOptions";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
 import { useDeletePost, useUpdatePost } from "@/hooks";
 import { uploadMedia } from "@/lib/api/uploads";
-import { useMediaStore, usePostStore, useUserStore } from "@/store";
+import {
+  PostDetails,
+  useMediaStore,
+  usePostStore,
+  useUserStore,
+} from "@/store";
 import {
   CreatePostImageDto,
   CreatePostVideoDto,
   formatDateTime,
   HIDE_DURATION,
-  Post,
   UpdatePostDto,
 } from "@/utils";
 import {
@@ -28,54 +33,14 @@ import {
   PostPrivaciesEnum,
   PostPrivaciesType,
 } from "@repo/db";
-import {
-  Camera,
-  Ellipsis,
-  EyeOff,
-  Lock,
-  SmileIcon,
-  SquarePen,
-  Star,
-  Sticker,
-  Trash,
-  Users,
-  WandSparkles,
-} from "lucide-react";
+import { Ellipsis, EyeOff, Lock, SquarePen, Trash, Users } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 interface ProfilePostsProps {
-  post: Post;
+  post: PostDetails;
 }
-
-const icons = [
-  {
-    key: 1,
-    icon: <Star className="w-5 h-5" />,
-    label: "",
-  },
-  {
-    key: 2,
-    icon: <SmileIcon className="w-5 h-5" />,
-    label: "",
-  },
-  {
-    key: 3,
-    icon: <Camera className="w-5 h-5" />,
-    label: "",
-  },
-  {
-    key: 4,
-    icon: <WandSparkles className="w-5 h-5" />,
-    label: "",
-  },
-  {
-    key: 5,
-    icon: <Sticker className="w-5 h-5" />,
-    label: "",
-  },
-];
 
 const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
   const { user } = useUserStore();
@@ -95,6 +60,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     deletedMediaFiles,
   } = useMediaStore();
   const { mutate: mutateUpdatePost } = useUpdatePost();
+  const [isShowPostModal, setIsShowPostModal] = useState<boolean>(false);
 
   const handleConfirmClick = async (postId: string) => {
     mutateDeletePost(postId);
@@ -350,7 +316,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
               )}
 
               <div
-                className={`grid gap-3 ${
+                className={`grid gap-3 md:mt-3 mt-2 ${
                   post.images.length === 1
                     ? "grid-cols-1"
                     : post.images.length === 2
@@ -375,34 +341,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 ))}
               </div>
 
-              <PostOptions />
-
-              <div className="flex items-center justify-between md:gap-2 gap-1 mt-2">
-                <Avatar
-                  src={user.profile.avatar_url}
-                  alt={user.profile.first_name + " " + user.profile.last_name}
-                  className="object-cover cursor-pointer select-none"
-                />
-
-                <div className="flex justify-between w-full bg-gray-100 rounded-xl p-3">
-                  <textarea
-                    rows={1}
-                    placeholder="Write a comment..."
-                    className="w-full bg-transparent resize-none focus:outline-none text-sm"
-                  />
-
-                  <div className="flex items-center gap-2">
-                    {icons.map((icon) => (
-                      <button
-                        className="text-gray-500 hover:text-gray-700 transition-all cursor-pointer"
-                        key={icon.key}
-                      >
-                        {icon.icon}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <PostOptions post={post} setIsOpen={setIsShowPostModal} />
             </div>
           </div>
 
@@ -434,6 +373,14 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
               onUpdate={async ({ content, images, videos, privacy }) =>
                 handleUpdate(content, privacy, images, videos)
               }
+            />
+          )}
+
+          {isShowPostModal && (
+            <ViewPostModal
+              homePost={post}
+              isOpen={isShowPostModal}
+              setIsOpen={setIsShowPostModal}
             />
           )}
         </>

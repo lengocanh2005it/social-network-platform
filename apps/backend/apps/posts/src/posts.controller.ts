@@ -1,7 +1,12 @@
 import {
+  CreateCommentDto,
+  CreateCommentReplyDto,
   CreatePostDto,
+  GetCommentQueryDto,
   GetPostQueryDto,
+  GetUserLikesQueryDto,
   UpdatePostDto,
+  GetCommentLikeQueryDto,
 } from '@app/common/dtos/posts';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
@@ -51,5 +56,121 @@ export class PostsController {
     @Payload('updatePostDto') updatePostDto: UpdatePostDto,
   ) {
     return this.postsService.updatePost(email, postId, updatePostDto);
+  }
+
+  @MessagePattern('like-post')
+  async likePost(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+  ) {
+    return this.postsService.likePost(email, postId);
+  }
+
+  @MessagePattern('unlike-post')
+  async unlikePost(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+  ) {
+    return this.postsService.unlikePost(email, postId);
+  }
+
+  @MessagePattern('get-likes')
+  async getLikes(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+    @Payload('getUserLikesQueryDto')
+    getUserLikesQueryDto?: GetUserLikesQueryDto,
+  ) {
+    return this.postsService.getLikes(email, postId, getUserLikesQueryDto);
+  }
+
+  @MessagePattern('create-comment')
+  async createComment(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+    @Payload('createCommentDto') createCommentDto: CreateCommentDto,
+  ) {
+    return this.postsService.createComment(email, postId, createCommentDto);
+  }
+
+  @MessagePattern('get-comments')
+  async getComments(
+    @Payload('postId') postId: string,
+    @Payload('email') email: string,
+    @Payload('getCommentQueryDto') getCommentQueryDto?: GetCommentQueryDto,
+  ) {
+    return this.postsService.getComments(postId, email, getCommentQueryDto);
+  }
+
+  @MessagePattern('delete-comment')
+  async deleteComment(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+  ) {
+    return this.postsService.deleteComment(postId, commentId, email);
+  }
+
+  @MessagePattern('create-comment-reply')
+  async createCommentReply(
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+    @Payload('createCommentReplyDto')
+    createCommentReplyDto: CreateCommentReplyDto,
+    @Payload('email') email: string,
+  ) {
+    return this.postsService.createCommentReply(
+      postId,
+      commentId,
+      createCommentReplyDto,
+      email,
+    );
+  }
+
+  @MessagePattern('get-comment-replies')
+  async getCommentReplies(
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+    @Payload('email') email: string,
+    @Payload('getCommentQueryDto') getCommentQueryDto?: GetCommentQueryDto,
+  ) {
+    return this.postsService.getCommentReplies(
+      postId,
+      commentId,
+      email,
+      getCommentQueryDto,
+    );
+  }
+
+  @MessagePattern('like-comment')
+  async likeComment(
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+    @Payload('email') email: string,
+  ) {
+    return this.postsService.likeComment(postId, commentId, email);
+  }
+
+  @MessagePattern('unlike-comment')
+  async unlikeComment(
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+    @Payload('email') email: string,
+  ) {
+    return this.postsService.unlikeComment(postId, commentId, email);
+  }
+
+  @MessagePattern('get-likes-comment')
+  async getLikesOfComment(
+    @Payload('postId') postId: string,
+    @Payload('commentId') commentId: string,
+    @Payload('getCommentLikeQueryDto')
+    getCommentLikeQueryDto?: GetCommentLikeQueryDto,
+  ) {
+    return this.postsService.getLikesOfComment(
+      postId,
+      commentId,
+      getCommentLikeQueryDto,
+    );
   }
 }

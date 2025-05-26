@@ -2,7 +2,7 @@
 import { useMediaStore } from "@/store";
 import { Tooltip } from "@heroui/react";
 import { XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 
@@ -15,22 +15,29 @@ interface MediaWithUrl {
 export default function SelectedMedia() {
   const { mediaFiles, removeMediaFile } = useMediaStore();
   const [mediaWithUrls, setMediaWithUrls] = useState<MediaWithUrl[]>([]);
+  const prevUrlsRef = useRef<string[]>([]);
 
   const handleRemove = (index: number) => {
     removeMediaFile(index);
   };
 
   useEffect(() => {
+    prevUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+
     const newMediaWithUrls = mediaFiles.map(({ file, type }) => ({
       file,
       type,
       url: URL.createObjectURL(file),
     }));
 
-    mediaWithUrls.forEach((media) => URL.revokeObjectURL(media.url));
+    prevUrlsRef.current = newMediaWithUrls.map((m) => m.url);
 
     setMediaWithUrls(newMediaWithUrls);
-  }, [mediaFiles, mediaWithUrls]);
+
+    return () => {
+      prevUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [mediaFiles]);
 
   return (
     <PhotoProvider>

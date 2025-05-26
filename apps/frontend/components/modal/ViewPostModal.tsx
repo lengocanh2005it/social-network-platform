@@ -1,10 +1,21 @@
 "use client";
-import CommentItem, { CommentType } from "@/components/post/CommentItem";
+import CommentItem from "@/components/post/CommentItem";
 import PostContent from "@/components/post/PostContent";
 import PostHeader from "@/components/post/PostHeader";
 import PostOptions from "@/components/post/PostOptions";
-import { useUserStore } from "@/store";
-import { Post } from "@/utils";
+import { useCreateComment, useGetComments } from "@/hooks";
+import { getComments } from "@/lib/api/posts";
+import {
+  PostDetails,
+  useCommentStore,
+  usePostStore,
+  useUserStore,
+} from "@/store";
+import {
+  CreateCommentDto,
+  CreateCommentTargetType,
+  GroupedComment,
+} from "@/utils";
 import {
   Avatar,
   Divider,
@@ -13,7 +24,9 @@ import {
   ModalContent,
   ModalHeader,
   ScrollShadow,
+  Spinner,
 } from "@heroui/react";
+import { PostContentType, PostContentTypeEnum } from "@repo/db";
 import {
   Camera,
   SendHorizontal,
@@ -22,10 +35,16 @@ import {
   Sticker,
   WandSparkles,
 } from "lucide-react";
-import React, { Dispatch, SetStateAction } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface ViewPostModalProps {
-  homePost: Post;
+  homePost: PostDetails;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }
@@ -58,40 +77,105 @@ const icons = [
   },
 ];
 
-const comments: CommentType[] = [
-  {
-    id: "1",
-    author: "Alice",
-    avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    content: "Nice post!",
-    time: "2h ago",
-    replies: [
-      {
-        id: "2",
-        author: "Bob",
-        avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-        content: "Thanks Alice!",
-        time: "1h ago",
-        replies: [
-          {
-            id: "3",
-            author: "Charlie",
-            avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-            content: "Agree with Bob",
-            time: "30m ago",
-          },
-        ],
-      },
-    ],
-  },
-];
-
 const ViewPostModal: React.FC<ViewPostModalProps> = ({
   homePost,
   isOpen,
   setIsOpen,
 }) => {
   const { user } = useUserStore();
+  const [comment, setComment] = useState<string>("");
+  const { mutate: mutateCreateComment } = useCreateComment();
+  const { data, isLoading } = useGetComments(homePost.id);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const {
+    setComments,
+    commentsByPostId,
+    addNewComments,
+    addOldComments,
+    setReplies,
+  } = useCommentStore();
+  const { updatePost } = usePostStore();
+  const [isFetching, setIsFetching] = useState<boolean>(false);
+  const hasFetchedComments = useRef(false);
+
+  useEffect(() => {
+    if (!hasFetchedComments.current && data?.data) {
+      setComments(homePost.id, data.data);
+      setNextCursor(data.nextCursor ?? null);
+      hasFetchedComments.current = true;
+    }
+  }, [data, homePost.id, setComments]);
+
+  const handleGetNewComments = async () => {
+    if (!nextCursor) return;
+
+    setIsFetching(true);
+
+    try {
+      const res = await getComments(homePost.id, { after: nextCursor });
+
+      if (res && res?.data) {
+        if (res?.data?.length) {
+          addOldComments(homePost.id, res?.data);
+        }
+
+        setNextCursor(res?.nextCursor ? res.nextCursor : null);
+      }
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (comment?.trim() === "") return;
+
+    let textBlocks: { type: PostContentType; content: string }[] = [];
+
+    if (comment.trim() !== "") {
+      const regex = /#([\p{L}\p{N}_]+)/gu;
+
+      const linesArr = comment
+        .split("\n")
+        .map((line) => line.replace(regex, "").trim())
+        .filter((line) => line !== "");
+
+      if (linesArr.length > 0) {
+        const formattedContent = linesArr.length > 1 ? linesArr : linesArr[0];
+
+        textBlocks =
+          typeof formattedContent === "string"
+            ? [{ type: PostContentTypeEnum.text, content: formattedContent }]
+            : formattedContent.map((line) => ({
+                type: PostContentTypeEnum.text,
+                content: line,
+              }));
+      }
+    }
+
+    const createCommentDto: CreateCommentDto = {
+      targetType: CreateCommentTargetType.POST,
+      contents: textBlocks,
+      post_id: homePost.id,
+    };
+
+    mutateCreateComment(createCommentDto, {
+      onSuccess: (data: { post: PostDetails; comments: GroupedComment[] }) => {
+        if (data) {
+          if (data?.post) {
+            updatePost(homePost.id, data?.post);
+          }
+
+          if (data?.comments) {
+            data?.comments.forEach((comment) =>
+              addNewComments(homePost.id, comment),
+            );
+          }
+        }
+
+        setComment("");
+      },
+    });
+  };
 
   return (
     <>
@@ -103,6 +187,8 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
             size="2xl"
             placement="center"
             shouldBlockScroll={false}
+            isKeyboardDismissDisabled={false}
+            isDismissable={false}
             motionProps={{
               variants: {
                 enter: {
@@ -123,13 +209,24 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                 },
               },
             }}
-            onOpenChange={() => setIsOpen(!isOpen)}
+            onOpenChange={() => {
+              setIsOpen(!isOpen);
+
+              if (commentsByPostId[homePost.id]?.length) {
+                commentsByPostId[homePost.id]?.forEach((c) =>
+                  setReplies(c.id, []),
+                );
+              }
+            }}
           >
             <ModalContent className="md:py-3 py-2">
               {() => (
                 <>
                   <ModalHeader className="flex flex-col gap-1 text-center">
-                    John Doe&apos;s Post
+                    {homePost.user.profile.first_name +
+                      " " +
+                      homePost.user.profile.last_name}
+                    &apos;s Post
                   </ModalHeader>
 
                   <Divider />
@@ -146,16 +243,78 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                           shouldHiddenXCloseIcon
                         />
                         <PostContent homePost={homePost} />
-                        <PostOptions />
+                        <PostOptions post={homePost} />
                       </div>
 
                       <Divider />
 
-                      <div className="mt-6">
-                        {comments.map((comment) => (
-                          <CommentItem key={comment.id} comment={comment} />
-                        ))}
-                      </div>
+                      {isLoading ? (
+                        <>
+                          <div
+                            className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
+        flex-col items-center justify-center text-center"
+                          >
+                            <Spinner />
+
+                            <p>Loading...</p>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col md:gap-3 gap-2">
+                          {commentsByPostId[homePost.id]?.length > 0 ? (
+                            <>
+                              <div className="mt-6 flex flex-col md:gap-2 gap-1">
+                                {commentsByPostId[`${homePost.id}`]?.map(
+                                  (comment) => (
+                                    <CommentItem
+                                      post={homePost}
+                                      key={comment.id}
+                                      comment={comment}
+                                    />
+                                  ),
+                                )}
+
+                                {isFetching && (
+                                  <div
+                                    className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
+                                  flex-col items-center justify-center text-center"
+                                  >
+                                    <Spinner />
+
+                                    <p>Loading...</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {nextCursor && !isFetching && (
+                                <p
+                                  className="text-xs text-end hover:underline 
+                                  hover:text-blue-600 cursor-pointer transition-all"
+                                  onClick={handleGetNewComments}
+                                >
+                                  See more comments
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div
+                                className="flex flex-col md:gap-1 md:mt-6 md:mb-3
+                              mt-3 mb-2 text-center items-center"
+                              >
+                                <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
+                                  No comments yet
+                                </h1>
+
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  Be the first to share your thoughts and start
+                                  the conversation.
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </ScrollShadow>
 
                     <div className="flex md:gap-3 gap-2">
@@ -169,6 +328,14 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                           rows={1}
                           placeholder="Write a comment..."
                           className="w-full bg-transparent resize-none focus:outline-none text-sm"
+                          onChange={(e) => setComment(e.target.value)}
+                          value={comment}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSubmit();
+                            }
+                          }}
                         />
 
                         <div className="flex items-center justify-between mt-2">
@@ -183,9 +350,14 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                             ))}
                           </div>
 
-                          <button className="text-gray-500 hover:text-gray-700">
-                            <SendHorizontal className="w-5 h-5" />
-                          </button>
+                          {comment?.trim() !== "" && (
+                            <button className="text-gray-500 hover:text-gray-700">
+                              <SendHorizontal
+                                className="w-5 h-5"
+                                onClick={handleSubmit}
+                              />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -40,7 +40,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   setIsOpen,
 }) => {
   const [privacy, setPrivacy] = useState<PostPrivaciesType | null>(null);
-  const { mediaFiles, clearMediaFiles } = useMediaStore();
+  const { mediaFiles, clearMediaFiles, clearNewMediaFiles } = useMediaStore();
   const { user } = useUserStore();
   const { mutate: mutateCreatePost, isSuccess, isPending } = useCreatePost();
   const [content, setContent] = useState("");
@@ -55,8 +55,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       setIsOpen(false);
       setContent("");
       clearMediaFiles();
+      clearNewMediaFiles();
     }
-  }, [isSuccess, setIsOpen, setContent, clearMediaFiles]);
+  }, [isSuccess, setIsOpen, setContent, clearMediaFiles, clearNewMediaFiles]);
 
   const handlePost = async () => {
     if (!privacy) return;
@@ -135,7 +136,14 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
         <>
           <Modal
             isOpen={isOpen}
-            onOpenChange={() => setIsOpen(!isOpen)}
+            onOpenChange={() => {
+              setIsOpen(!isOpen);
+              setTimeout(() => {
+                setContent("");
+                clearMediaFiles();
+                clearNewMediaFiles();
+              }, 1000);
+            }}
             backdrop="opaque"
             placement="center"
             isDismissable={false}

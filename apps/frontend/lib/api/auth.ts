@@ -1,6 +1,7 @@
 import axios from "@/lib/axios";
 import {
   ChangePasswordDto,
+  CreateTrustDeviceDto,
   ForgotPasswordDto,
   GenerateToken,
   GetInfoOAuthCallbackDto,
@@ -111,6 +112,14 @@ export const generate2Fa = async () => {
 
 export const verify2Fa = async (verify2FaDto: Verify2FaType) => {
   const response = await axios.post("/auth/2fa/verify", verify2FaDto);
+
+  return response.data;
+};
+
+export const createTrustDevice = async (
+  createTrustDeviceDto: CreateTrustDeviceDto,
+) => {
+  const response = await axios.post("/auth/trust-device", createTrustDeviceDto);
 
   return response.data;
 };

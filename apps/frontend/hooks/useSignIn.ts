@@ -38,6 +38,14 @@ export const useSignIn = () => {
         return;
       }
 
+      if (
+        data &&
+        !data?.is_verified &&
+        data?.verification_method &&
+        data?.message
+      )
+        return;
+
       const response = await getMe({
         includeProfile: true,
         includeEducations: true,

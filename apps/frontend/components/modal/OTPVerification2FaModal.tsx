@@ -33,7 +33,7 @@ interface OtpVerification2FaModalProps {
   email: string;
   actionDescription?: string;
   onVerify: (
-    asction: Verify2FaActionEnum,
+    action: Verify2FaActionEnum,
     otp: string,
     email: string,
   ) => Promise<void>;

@@ -3,10 +3,10 @@ import ViewPostModal from "@/components/modal/ViewPostModal";
 import PostContent from "@/components/post/PostContent";
 import PostHeader from "@/components/post/PostHeader";
 import PostOptions from "@/components/post/PostOptions";
-import { Post } from "@/utils";
+import { PostDetails } from "@/store";
 import { useState } from "react";
 
-export default function PostCard({ homePost }: { homePost: Post }) {
+export default function PostCard({ homePost }: { homePost: PostDetails }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -15,7 +15,7 @@ export default function PostCard({ homePost }: { homePost: Post }) {
 
       <PostContent homePost={homePost} />
 
-      <PostOptions setIsOpen={setIsOpen} />
+      <PostOptions setIsOpen={setIsOpen} post={homePost} />
 
       {isOpen && (
         <ViewPostModal

@@ -1,16 +1,15 @@
 "use client";
-import PostStats from "@/components/post/PostStats";
-import { Post } from "@/utils";
+import { PostDetails } from "@/store";
 import Image from "next/image";
 import React from "react";
 
 interface PostContentProps {
-  homePost: Post;
+  homePost: PostDetails;
 }
 
 const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
   return (
-    <>
+    <section className="flex flex-col relative md:pb-2 pb-1">
       {(homePost?.contents?.length !== 0 ||
         homePost?.hashtags?.length !== 0) && (
         <section className="flex flex-col md:gap-2 gap-1 relative">
@@ -41,7 +40,7 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
       )}
 
       <div
-        className={`grid gap-3 ${
+        className={`grid gap-3 md:mt-3 mt-2 ${
           homePost.images.length === 1
             ? "grid-cols-1"
             : homePost.images.length === 2
@@ -65,9 +64,7 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
           </div>
         ))}
       </div>
-
-      <PostStats homePost={homePost} />
-    </>
+    </section>
   );
 };
 

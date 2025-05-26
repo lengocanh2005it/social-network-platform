@@ -177,6 +177,7 @@ model PostLikes {
   user     Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([post_id, user_id])
+  @@unique([post_id, user_id])
 }
 
 model PostShares {
@@ -284,7 +285,7 @@ model PostTags {
 
 model Comments {
   id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content           String
+  content           String?
   created_at        DateTime       @default(now())
   updated_at        DateTime       @default(now())
   deleted_at        DateTime?
@@ -309,6 +310,8 @@ model CommentLikes {
   comment_id String   @db.Uuid
   comment    Comments @relation(fields: [comment_id], references: [id], onDelete: Cascade)
   user       Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, comment_id])
 }
 
 model Groups {

@@ -13,3 +13,4 @@ export * from './sign-out.dto';
 export * from './send-otp.dto';
 export * from './verify-ownership-otp.dto';
 export * from './verify-2fa.dto';
+export * from './trust-device.dto';

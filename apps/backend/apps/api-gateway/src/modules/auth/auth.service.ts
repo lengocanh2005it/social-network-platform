@@ -9,6 +9,7 @@ import {
   SignInDto,
   SignOutDto,
   SignUpDto,
+  TrustDeviceDto,
   Verify2FaDto,
   VerifyOtpDto,
   VerifyOwnershipOtpDto,
@@ -154,6 +155,19 @@ export class AuthService implements OnModuleInit {
       this.authClient.send('verify-2fa', {
         verify2FaDto,
         fingerprint,
+      }),
+    );
+  };
+
+  public trustDevice = (
+    finger_print: string,
+    trustDeviceDto: TrustDeviceDto,
+  ) => {
+    this.authClient.emit(
+      'create-trust-device',
+      JSON.stringify({
+        finger_print,
+        trustDeviceDto,
       }),
     );
   };
