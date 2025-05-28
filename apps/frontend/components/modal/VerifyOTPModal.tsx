@@ -21,6 +21,8 @@ interface VerifyOTPModalProps {
   action: VerifyEmailActionEnum;
   onRequestOtp?: () => void;
   isPending: boolean;
+  textHeaders: string;
+  description?: string;
 }
 
 const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
@@ -31,6 +33,8 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
   onRequestOtp,
   action,
   isPending,
+  textHeaders,
+  description,
 }) => {
   const targetRef = React.useRef<HTMLElement>(
     null,
@@ -101,12 +105,11 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
               {...moveProps}
               className="flex flex-col gap-1 text-center"
             >
-              Verify Email OTP
+              {textHeaders}
             </ModalHeader>
             <ModalBody className="flex flex-col md:gap-2 mx-auto gap-1 items-center justify-center">
               <p className="font-normal text-black/80 md:text-medium text-[14px] text-center">
-                We have sent an OTP code to your email. Please check your inbox
-                and enter the code in the verification field below.
+                {description}
               </p>
 
               <form

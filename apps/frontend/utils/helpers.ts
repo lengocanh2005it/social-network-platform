@@ -120,14 +120,16 @@ export function handleAxiosError(error: any) {
 
 export const getFingerprint = async (): Promise<string | null> => {
   try {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
     const fp = await FingerprintJS.load();
 
     const result = await fp.get();
 
     return result.visitorId;
   } catch (error) {
-    console.error("Error while getting fingerprint:", error);
-
     return null;
   }
 };

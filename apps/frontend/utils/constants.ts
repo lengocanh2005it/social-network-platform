@@ -14,5 +14,11 @@ export enum Provider {
   GOOGLE = "google",
 }
 
+export enum CreateCommentTargetType {
+  POST = "post",
+  VIDEO = "video",
+  IMAGE = "image",
+}
+
 export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;

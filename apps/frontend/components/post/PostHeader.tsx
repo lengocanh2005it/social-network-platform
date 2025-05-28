@@ -1,8 +1,8 @@
 "use client";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
-import { usePostStore } from "@/store";
-import { formatDateTime, HIDE_DURATION, Post } from "@/utils";
+import { PostDetails, usePostStore, useUserStore } from "@/store";
+import { formatDateTime, HIDE_DURATION } from "@/utils";
 import {
   Avatar,
   Dropdown,
@@ -21,7 +21,7 @@ import React from "react";
 import toast from "react-hot-toast";
 
 interface PostHeaderProps {
-  homePost: Post;
+  homePost: PostDetails;
   shouldHiddenXCloseIcon?: boolean;
 }
 
@@ -30,6 +30,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   shouldHiddenXCloseIcon,
 }) => {
   const { hideHomePosts, homePosts, restoreHomePostAtIndex } = usePostStore();
+  const { user } = useUserStore();
 
   const handleHidePost = (postId: string) => {
     const index = homePosts.findIndex((p) => p.id === postId);
@@ -106,56 +107,65 @@ const PostHeader: React.FC<PostHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center md:gap-3 gap-2">
-        <Dropdown
-          placement="bottom-end"
-          className="text-black"
-          shouldBlockScroll={false}
-        >
-          <DropdownTrigger>
-            <Ellipsis size={30} className="cursor-pointer focus:outline-none" />
-          </DropdownTrigger>
-          <DropdownMenu aria-label="Profile Actions" variant="flat">
-            <DropdownItem
-              description="See fewer posts like this."
-              key="hide-post"
-              startContent={<CircleX />}
-              onClick={() => handleHidePost(homePost.id)}
-            >
-              Hide post
-            </DropdownItem>
+      {user?.id !== homePost.user.id && (
+        <div className="flex items-center md:gap-3 gap-2">
+          <Dropdown
+            placement="bottom-end"
+            className="text-black"
+            shouldBlockScroll={false}
+          >
+            <DropdownTrigger>
+              <Ellipsis
+                size={30}
+                className="cursor-pointer focus:outline-none"
+              />
+            </DropdownTrigger>
+            <DropdownMenu aria-label="Post Actions" variant="flat">
+              <DropdownItem
+                description="See fewer posts like this."
+                key="hide-post"
+                startContent={<CircleX />}
+                onClick={() => handleHidePost(homePost.id)}
+              >
+                Hide post
+              </DropdownItem>
 
-            <DropdownItem
-              description={`We won't let ${homePost.user.profile.first_name + " " + homePost.user.profile.last_name} 
+              <DropdownItem
+                description={`We won't let ${
+                  homePost.user.profile.first_name +
+                  " " +
+                  homePost.user.profile.last_name
+                } 
               know who reported this.`}
-              key="report-post"
-              startContent={<MessageSquareWarning />}
-            >
-              Report post
-            </DropdownItem>
+                key="report-post"
+                startContent={<MessageSquareWarning />}
+              >
+                Report post
+              </DropdownItem>
 
-            <DropdownItem
-              description="You won't be able to see or contact each other."
-              key="block-user"
-              startContent={<UserX />}
-            >
-              Block{" "}
-              {homePost.user.profile.first_name +
-                " " +
-                homePost.user.profile.last_name}
-              &apos;s profile
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+              <DropdownItem
+                description="You won't be able to see or contact each other."
+                key="block-user"
+                startContent={<UserX />}
+              >
+                Block{" "}
+                {homePost.user.profile.first_name +
+                  " " +
+                  homePost.user.profile.last_name}
+                &apos;s profile
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
 
-        {!shouldHiddenXCloseIcon && (
-          <XIcon
-            size={30}
-            className="cursor-pointer"
-            onClick={() => handleHidePost(homePost.id)}
-          />
-        )}
-      </div>
+          {!shouldHiddenXCloseIcon && (
+            <XIcon
+              size={30}
+              className="cursor-pointer"
+              onClick={() => handleHidePost(homePost.id)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

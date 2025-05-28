@@ -15,7 +15,13 @@ export type {
   UserWorkPlaces as UserWorkPlacesType,
   PostContentType as PostContentType,
   FriendShipStatus as FriendShipStatusType,
+  Posts as PostsType,
+  Comments as CommentsType,
 } from "@prisma/client";
+
+import type { Prisma } from "@prisma/client";
+
+export type { Prisma };
 
 export {
   Gender as GenderEnum,

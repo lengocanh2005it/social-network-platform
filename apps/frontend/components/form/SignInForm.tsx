@@ -12,15 +12,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useSignIn, useVerify2Fa, useVerifyEmail } from "@/hooks";
+import { createTrustDevice } from "@/lib/api/auth";
 import { useAppStore } from "@/store";
 import {
   AuthMethod,
+  CreateTrustDeviceDto,
+  DeviceDetails,
+  getFingerprint,
   SignInDto,
   Verify2FaActionEnum,
   Verify2FaType,
   VerifyEmailActionEnum,
 } from "@/utils";
-import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { Button, Checkbox, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Mail } from "lucide-react";
@@ -53,6 +56,25 @@ const SignInForm = () => {
   } = useVerify2Fa();
   const { mutate: mutateVerifyEmail, isPending: isPendingVerifyEmail } =
     useVerifyEmail();
+  const [verifyDeviceMethod, setVerifyDeviceMethod] = useState<
+    "2fa" | "email" | null
+  >(null);
+  const [isShowVerifyDevice, setIsShowVerifyDevice] = useState<boolean>(false);
+  const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const fetchDeviceDetails = async () => {
+      const response = await fetch("/api/device-details");
+
+      const data = await response.json();
+
+      setDeviceDetails(data);
+    };
+
+    fetchDeviceDetails();
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,12 +94,25 @@ const SignInForm = () => {
   }
 
   useEffect(() => {
+    if (
+      data &&
+      !data?.is_verified &&
+      data?.verification_method &&
+      data?.message
+    ) {
+      setIsShowVerifyDevice(true);
+
+      setVerifyDeviceMethod(
+        data.verification_method === "email" ? "email" : "2fa",
+      );
+    }
+  }, [data, setIsShowVerifyDevice, setVerifyDeviceMethod]);
+
+  useEffect(() => {
     const loadFingerprint = async () => {
-      const fp = await FingerprintJS.load();
+      const fp = await getFingerprint();
 
-      const result = await fp.get();
-
-      setFingerprint(result.visitorId);
+      if (fp) setFingerprint(fp);
     };
 
     loadFingerprint();
@@ -101,12 +136,44 @@ const SignInForm = () => {
     const verify2FaDto: Verify2FaType = {
       otp,
       action,
-      password: form.getValues("password"),
       token: data?.["2faToken"],
       email,
+      ...(action === Verify2FaActionEnum.SIGN_IN && {
+        password: form.getValues("password"),
+      }),
     };
 
-    mutateVerify2Fa(verify2FaDto);
+    if (action === Verify2FaActionEnum.VERIFY_DEVICE) {
+      if (!deviceDetails || Object.keys(deviceDetails)?.length === 0) return;
+
+      const createTrustDeviceDto: CreateTrustDeviceDto = {
+        ...deviceDetails,
+        email: form.getValues("email"),
+      };
+
+      mutateVerify2Fa(verify2FaDto, {
+        onSuccess: async (data: Record<string, string | number | boolean>) => {
+          if (
+            data?.is_verified &&
+            data?.message &&
+            createTrustDeviceDto &&
+            Object?.keys(createTrustDeviceDto)?.length
+          ) {
+            setIsShowVerifyDevice(false);
+
+            await createTrustDevice(createTrustDeviceDto);
+
+            const signInDto: SignInDto = {
+              email: form.getValues("email"),
+              password: form.getValues("password"),
+              fingerprint,
+            };
+
+            mutateSignIn(signInDto);
+          }
+        },
+      });
+    } else mutateVerify2Fa(verify2FaDto);
   };
 
   useEffect(() => {
@@ -222,6 +289,8 @@ const SignInForm = () => {
           setIsOpen={setIsModalOTPOpen}
           isPending={isPendingVerifyEmail}
           email={form.getValues("email")}
+          textHeaders="Verify Your Email"
+          description="Your email has not been verified by the system. Please enter the OTP sent to your email below to verify your email address."
           action={VerifyEmailActionEnum.SIGN_IN}
           onVerify={(dto) => {
             mutateVerifyEmail(dto, {
@@ -248,6 +317,62 @@ const SignInForm = () => {
             })
           }
         />
+      )}
+
+      {isShowVerifyDevice && (
+        <>
+          {verifyDeviceMethod === "2fa" && (
+            <OTPVerification2FaModal
+              open={isShowVerifyDevice}
+              onClose={() => setIsShowVerifyDevice(false)}
+              email={form.getValues("email")}
+              onVerify={handleSign2Fa}
+              isLoading={isVerify2FaPending}
+              actionDescription="to verify a new device login"
+              action={Verify2FaActionEnum.VERIFY_DEVICE}
+            />
+          )}
+
+          {verifyDeviceMethod === "email" && (
+            <VerifyOTPModal
+              isOpen={isShowVerifyDevice}
+              setIsOpen={setIsShowVerifyDevice}
+              email={form.getValues("email")}
+              action={VerifyEmailActionEnum.VERIFY_DEVICE}
+              isPending={isPendingVerifyEmail}
+              textHeaders="Verify New Device"
+              description="You have logged into your account from a new device. We have sent a verification OTP to your email. Please check your email and enter the code below to verify the device."
+              onVerify={(dto) => {
+                mutateVerifyEmail(dto, {
+                  onSuccess: async (data) => {
+                    if (
+                      !deviceDetails ||
+                      Object.keys(deviceDetails)?.length === 0
+                    )
+                      return;
+
+                    if (data && data?.is_verified && data?.message) {
+                      setIsShowVerifyDevice(false);
+
+                      await createTrustDevice({
+                        ...deviceDetails,
+                        email: form.getValues("email"),
+                      });
+
+                      const signInDto: SignInDto = {
+                        email: form.getValues("email"),
+                        password: form.getValues("password"),
+                        fingerprint,
+                      };
+
+                      mutateSignIn(signInDto);
+                    }
+                  },
+                });
+              }}
+            />
+          )}
+        </>
       )}
     </Form>
   );

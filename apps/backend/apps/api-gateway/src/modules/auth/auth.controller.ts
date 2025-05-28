@@ -9,6 +9,7 @@ import {
   SignInDto,
   SignOutDto,
   SignUpDto,
+  TrustDeviceDto,
   Verify2FaDto,
   VerifyOtpDto,
   VerifyOwnershipOtpDto,
@@ -304,5 +305,22 @@ export class AuthController {
     }
 
     return response.status(HttpStatus.CREATED).json(data);
+  }
+
+  @Public()
+  @Post('trust-device')
+  trustDevice(
+    @Body() trustDeviceDto: TrustDeviceDto,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const finger_print = headers['x-fingerprint'];
+
+    if (!finger_print)
+      throw new HttpException(
+        `We couldn't verify your device. Please try again.`,
+        HttpStatus.UNAUTHORIZED,
+      );
+
+    return this.authService.trustDevice(finger_print, trustDeviceDto);
   }
 }

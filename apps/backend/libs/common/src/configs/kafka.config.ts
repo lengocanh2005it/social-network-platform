@@ -38,7 +38,6 @@ export function createKafkaOptions(
       },
       consumer: {
         groupId: newGroupId,
-        allowAutoTopicCreation: true,
       },
       producer: {
         createPartitioner: Partitioners.LegacyPartitioner,

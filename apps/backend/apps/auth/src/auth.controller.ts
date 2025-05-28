@@ -9,13 +9,14 @@ import {
   SignInDto,
   SignOutDto,
   SignUpDto,
+  TrustDeviceDto,
   Verify2FaDto,
   VerifyOtpDto,
   VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
 import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { AuthService } from './auth.service';
 
 @Controller()
@@ -121,5 +122,13 @@ export class AuthController {
   @MessagePattern('generate-2fa')
   async generate2Fa(@Payload() email: string) {
     return this.authService.generate2Fa(email);
+  }
+
+  @EventPattern('create-trust-device')
+  async createTrustDevice(
+    @Payload('finger_print') finger_print: string,
+    @Payload('trustDeviceDto') trustDeviceDto: TrustDeviceDto,
+  ) {
+    return this.authService.createTrustDevice(finger_print, trustDeviceDto);
   }
 }

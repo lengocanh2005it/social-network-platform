@@ -12,9 +12,4 @@ export class GetPostQueryDto {
   @IsString()
   @IsNotEmpty()
   readonly after?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  readonly before?: string;
 }

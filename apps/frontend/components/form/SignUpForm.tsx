@@ -181,8 +181,10 @@ const SignUpForm = () => {
 
       {isModalOTPOpen && signUpData && (
         <VerifyOTPModal
+          textHeaders="Verify Your Email"
           isOpen={isModalOTPOpen}
           setIsOpen={setIsModalOTPOpen}
+          description="You need to verify your email before creating a new account. Please check your email for the OTP and enter it to complete the verification."
           action={VerifyEmailActionEnum.SIGN_UP}
           email={form.getValues("email")}
           isPending={isPendingVerifyEmail}

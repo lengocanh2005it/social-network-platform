@@ -10,6 +10,7 @@ import {
   SignInDto,
   SignOutDto,
   SignUpDto,
+  TrustDeviceDto,
   Verify2FaDto,
   VerifyOtpDto,
   VerifyOwnershipOtpDto,
@@ -134,8 +135,7 @@ export class AuthService implements OnModuleInit {
     if (existingUser.oauth_account?.provider !== OAuthProviderEnum.local)
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
-        message: `This email is registered using a different sign-in method and cannot be 
-        used for standard login.`,
+        message: `This email is registered using a different sign-in method and cannot be used for standard login.`,
       });
 
     if (
@@ -150,7 +150,12 @@ export class AuthService implements OnModuleInit {
     if (!existingUser.is_email_verified && existingUser.profile) {
       const { first_name, last_name } = existingUser.profile;
 
-      this.processVerifyEmail(email, first_name, last_name);
+      this.processVerifyEmail(
+        email,
+        first_name,
+        last_name,
+        EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+      );
 
       return {
         is_verified: false,
@@ -164,11 +169,39 @@ export class AuthService implements OnModuleInit {
       },
     });
 
-    if (!findDevice)
-      throw new RpcException({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        message: `We couldn't recognize your device. Please verify your identity to continue.`,
-      });
+    if (!findDevice) {
+      let token: string | null = null;
+
+      const method = existingUser?.two_factor_enabled ? '2fa' : 'email';
+
+      if (method == 'email' && existingUser?.email && existingUser?.profile) {
+        this.processVerifyEmail(
+          email,
+          existingUser?.profile?.first_name,
+          existingUser?.profile?.last_name,
+          EmailTemplateNameEnum.EMAIL_VERIFY_DEVICE,
+        );
+      } else if (existingUser?.two_factor_enabled) {
+        const payload: TwoFaToken = {
+          sub: existingUser.id,
+          type: '2fa',
+        };
+
+        token = this.jwtService.sign(payload, {
+          expiresIn: '5m',
+        });
+      }
+
+      return {
+        is_verified: false,
+        verification_method: method,
+        message:
+          method === '2fa'
+            ? `We've detected a new device. Please open your authenticator app and enter the 2FA code to verify.`
+            : `A one-time code has been sent to your email. Please enter it below to verify this device.`,
+        ...(token && token?.trim() !== '' && { '2faToken': token }),
+      };
+    }
 
     if (existingUser.two_factor_enabled) {
       const payload: TwoFaToken = {
@@ -262,7 +295,12 @@ export class AuthService implements OnModuleInit {
 
     await this.createNewOAuthAcccount(OAuthProviderEnum.local, newUser.id);
 
-    this.processVerifyEmail(email, signUpDto.first_name, signUpDto.last_name);
+    this.processVerifyEmail(
+      email,
+      signUpDto.first_name,
+      signUpDto.last_name,
+      EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+    );
 
     await this.keyCloakProvider.signUpByKeycloak({
       username: email,
@@ -741,7 +779,12 @@ export class AuthService implements OnModuleInit {
       await this.keyCloakProvider.verifyToken(access_token);
 
     if (identity_provider === 'facebook' && email && given_name && family_name)
-      this.processVerifyEmail(email, family_name, given_name);
+      this.processVerifyEmail(
+        email,
+        family_name,
+        given_name,
+        EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+      );
 
     const userInfoUrl = `${iss}/protocol/openid-connect/userinfo`;
 
@@ -804,6 +847,7 @@ export class AuthService implements OnModuleInit {
     email: string,
     firstName: string,
     lastName: string,
+    templateName: EmailTemplateNameEnum,
   ) => {
     const otp = generateOtp();
 
@@ -818,7 +862,7 @@ export class AuthService implements OnModuleInit {
 
     this.emailsClient.emit('send-email', {
       email,
-      templateName: EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+      templateName,
       context: {
         otp,
         full_name: firstName + ' ' + lastName,
@@ -1096,11 +1140,10 @@ export class AuthService implements OnModuleInit {
 
       this.emailsClient.emit('send-email', {
         email,
-        templateName: EmailTemplateNameEnum.EMAIL_OTP_VERIFICATION,
+        templateName: EmailTemplateNameEnum.EMAIL_IDENTITY_VERIFICATION,
         context: {
           otp,
-          full_name:
-            user?.profile?.first_name + ' ' + user?.profile?.first_name,
+          full_name: user?.profile?.first_name + ' ' + user?.profile?.last_name,
         },
       });
 
@@ -1204,7 +1247,10 @@ export class AuthService implements OnModuleInit {
         message: `The verification code you entered is invalid. Please try again.`,
       });
 
-    if (action === Verify2FaActions.OTHER) {
+    if (
+      action === Verify2FaActions.OTHER ||
+      action === Verify2FaActions.VERIFY_DEVICE
+    ) {
       return {
         is_verified: true,
         message: 'Two-step verification completed. You can now continue.',
@@ -1324,5 +1370,23 @@ export class AuthService implements OnModuleInit {
       refresh_token: data.refresh_token,
       role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
     };
+  };
+
+  public createTrustDevice = async (
+    finger_print: string,
+    trustDeviceDto: TrustDeviceDto,
+  ) => {
+    const { email, ...res } = trustDeviceDto;
+
+    const payload = {
+      field: 'email',
+      value: email,
+    };
+
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send('get-user-by-field', JSON.stringify(payload)),
+    );
+
+    return this.createNewUserDevice(finger_print, res, user.id, true);
   };
 }

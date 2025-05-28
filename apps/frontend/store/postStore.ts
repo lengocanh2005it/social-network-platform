@@ -1,21 +1,28 @@
-import { Post } from "@/utils";
+import { Post, TopLikedUserType } from "@/utils";
 import { create } from "zustand";
 
+export interface PostDetails extends Post {
+  likedByCurrentUser: boolean;
+  topLikedUsers: TopLikedUserType[];
+  parent_post_id?: string;
+  parent_post?: PostDetails;
+}
+
 interface PostStore {
-  posts: Post[];
+  posts: PostDetails[];
   nextCursor: string | null;
-  setPosts: (posts: Post[], nextCursor: string | null) => void;
-  addNewPost: (post: Post) => void;
-  appendOldPosts: (posts: Post[], nextCursor: string | null) => void;
+  setPosts: (posts: PostDetails[], nextCursor: string | null) => void;
+  addNewPost: (post: PostDetails) => void;
+  appendOldPosts: (posts: PostDetails[], nextCursor: string | null) => void;
   hidePost: (postId: string) => void;
-  updatePost: (postId: string, update: Partial<Post>) => void;
-  restorePostAtIndex: (post: Post, index: number) => void;
+  updatePost: (postId: string, update: Partial<PostDetails>) => void;
+  restorePostAtIndex: (post: PostDetails, index: number) => void;
   clearPosts: () => void;
-  homePosts: Post[];
+  homePosts: PostDetails[];
   nextHomeCursor: string | null;
-  setHomePosts: (posts: Post[], nextHomeCursor: string | null) => void;
+  setHomePosts: (posts: PostDetails[], nextHomeCursor: string | null) => void;
   hideHomePosts: (postId: string) => void;
-  restoreHomePostAtIndex: (post: Post, index: number) => void;
+  restoreHomePostAtIndex: (post: PostDetails, index: number) => void;
 }
 
 export const usePostStore = create<PostStore>((set) => ({

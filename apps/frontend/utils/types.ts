@@ -1,4 +1,4 @@
-import { AuthMethod } from "@/utils/constants";
+import { AuthMethod, CreateCommentTargetType } from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
 import {
   GenderType,
@@ -44,6 +44,7 @@ export type SimpleDate = {
 export enum VerifyEmailActionEnum {
   SIGN_IN = "sign-in",
   SIGN_UP = "sign-up",
+  VERIFY_DEVICE = "verify-device",
   OTHER = "other",
 }
 
@@ -113,23 +114,6 @@ export type FriendType = {
   name: string;
   id: string;
 };
-
-// export interface Post {
-//   id: number;
-//   author: string;
-//   content: string;
-//   time: string;
-//   avatar: string;
-//   image?: string;
-//   isShared?: boolean;
-//   originalPost?: {
-//     author: string;
-//     content: string;
-//     time: string;
-//     avatar: string;
-//     image?: string;
-//   };
-// }
 
 export type GetUserQueryDto = {
   includeProfile?: boolean;
@@ -216,6 +200,7 @@ export enum Verify2FaActionEnum {
   DISABLE_2FA = "disable-2fa",
   ENABLE_2FA = "enable-2fa",
   SIGN_IN = "sign-in",
+  VERIFY_DEVICE = "verify-device",
   OTHER = "other",
 }
 
@@ -337,4 +322,118 @@ export type MediaUploadResponseType = {
     fileName: string;
     fileSize: string;
   }[];
+};
+
+export type TopLikedUserType = {
+  id: string;
+  full_name: string;
+};
+
+export type LikedUserType = {
+  id: string;
+  email: string;
+  avatar_url: string;
+  full_name: string;
+  liked_at: string;
+};
+
+export type CreateCommentDto = {
+  media_id?: string;
+  targetType: CreateCommentTargetType;
+  parent_comment_id?: string;
+  contents: CreatePostContentDto[];
+  post_id: string;
+};
+
+export type CreateTrustDeviceDto = DeviceDetails & {
+  email: string;
+};
+
+export type GroupedComment = {
+  id: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  content: string;
+  created_at: string;
+  total_replies: number;
+  total_likes: number;
+  likedByCurrentUser: boolean;
+  type: CreateCommentTargetType;
+  parent_id?: string | null;
+};
+
+export type GetCommentQueryDto = GetFeedQueryDto;
+
+export type GetCommentRepliesQueryDto = GetFeedQueryDto;
+
+export type GetCommentLikeQueryDto = GetFeedQueryDto;
+
+export type DeleteCommentDto = {
+  commentId: string;
+  postId: string;
+};
+
+export type CommentLikedType = {
+  id: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  liked_at: string;
+};
+
+export type CreatePostShare = {
+  privacy: PostPrivaciesType;
+  group_id?: string;
+  hashtags?: string[];
+  contents: CreatePostContentDto[];
+  post_id: string;
+};
+
+export type MediaDetails = {
+  id: string;
+  post_id: string;
+  image_url?: string;
+  video_url?: string;
+  total_comments: number;
+  total_likes: number;
+  total_shares: number;
+  likedByCurrentUser: boolean;
+};
+
+export type GetCommentMediaQueryDto = GetFeedQueryDto & {
+  type: "image" | "video";
+};
+
+export type MediaCommentType = {
+  id: string;
+  content: string;
+  created_at: string;
+  total_likes: number;
+  updated_at: string;
+  user: {
+    id: string;
+    avatar_url: string;
+    full_name: string;
+  };
+};
+
+export type LikeMediaPostDto = {
+  type: "video" | "image";
+};
+
+export type LikeMediaPostPayload = {
+  postId: string;
+  mediaId: string;
+  likeMediaPostDto: LikeMediaPostDto;
+};
+
+export type UnlikeMediaPostPayload = {
+  postId: string;
+  mediaId: string;
+  unlikeMediaPostQueryDto: LikeMediaPostDto;
 };
