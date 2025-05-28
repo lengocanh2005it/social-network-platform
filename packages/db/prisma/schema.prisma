@@ -32,7 +32,6 @@ model Users {
   post_image_likes          PostImageLikes[]
   post_image_shares         PostImageShares[]
   post_likes                PostLikes[]
-  post_shares               PostShares[]
   post_tags                 PostTags[]
   post_video_likes          PostVideoLikes[]
   post_video_shares         PostVideoShares[]
@@ -158,15 +157,17 @@ model Posts {
   deleted_at     DateTime?
   user_id        String         @db.Uuid
   group_id       String?        @db.Uuid
+  parent_post_id String?        @db.Uuid
   comments       Comments[]
   contents       PostContents[]
   hashtags       PostHashTags[]
   images         PostImages[]
   likes          PostLikes[]
-  shares         PostShares[]
   tags           PostTags[]
   videos         PostVideos[]
   user           Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  parent         Posts?         @relation("PostShares", fields: [parent_post_id], references: [id])
+  shares         Posts[]        @relation("PostShares")
 }
 
 model PostLikes {
@@ -178,16 +179,6 @@ model PostLikes {
 
   @@id([post_id, user_id])
   @@unique([post_id, user_id])
-}
-
-model PostShares {
-  post_id   String   @db.Uuid
-  user_id   String   @db.Uuid
-  shared_at DateTime @default(now())
-  post      Posts    @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  user      Users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@id([post_id, user_id])
 }
 
 model PostContents {

@@ -10,8 +10,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class CreateCommentContentDto extends CreatePostContentDto {}
-
 export class CreateCommentDto {
   @IsOptional()
   @IsUUID('4')
@@ -26,7 +24,7 @@ export class CreateCommentDto {
 
   @IsArray()
   @ArrayNotEmpty()
-  @Type(() => CreateCommentContentDto)
+  @Type(() => CreatePostContentDto)
   @ValidateNested({ each: true })
-  readonly contents: CreateCommentContentDto[];
+  readonly contents: CreatePostContentDto[];
 }

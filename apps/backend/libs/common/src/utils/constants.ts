@@ -190,3 +190,8 @@ export type CreateCommentMedia = {
   url: string;
   post_id: string;
 };
+
+export enum PostMediaEnum {
+  VIDEO = 'video',
+  IMAGE = 'image',
+}

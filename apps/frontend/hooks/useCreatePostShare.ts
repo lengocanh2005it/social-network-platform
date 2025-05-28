@@ -1,10 +1,10 @@
-import { createComment } from "@/lib/api/posts";
+import { createPostShare } from "@/lib/api/posts";
 import { handleAxiosError } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 
-export const useCreateComment = () => {
+export const useCreatePostShare = () => {
   return useMutation({
-    mutationFn: createComment,
+    mutationFn: createPostShare,
     onError: (error) => handleAxiosError(error),
   });
 };

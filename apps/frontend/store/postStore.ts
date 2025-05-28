@@ -4,6 +4,8 @@ import { create } from "zustand";
 export interface PostDetails extends Post {
   likedByCurrentUser: boolean;
   topLikedUsers: TopLikedUserType[];
+  parent_post_id?: string;
+  parent_post?: PostDetails;
 }
 
 interface PostStore {

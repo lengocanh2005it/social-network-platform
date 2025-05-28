@@ -1,8 +1,9 @@
 "use client";
+import PostSharedModal from "@/components/modal/PostSharedModal";
 import ViewLikedUsersDetaiModal from "@/components/modal/ViewLikedUsersDetaiModal";
 import { useLikePost, useUnlikePost } from "@/hooks";
 import { PostDetails, usePostStore } from "@/store";
-import { MessageCircle, Share2, ThumbsUpIcon } from "lucide-react";
+import { MessageCircle, ThumbsUpIcon } from "lucide-react";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 interface PostOptionsProps {
@@ -134,13 +135,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({ setIsOpen, post }) => {
             </div>
           )}
 
-          <div
-            className="flex justify-center cursor-pointer items-center gap-2 
-      p-3 rounded-lg hover:bg-gray-100 transition-all duration-250 ease-in select-none"
-          >
-            <Share2 size={20} />
-            <p className="text-md">Share</p>
-          </div>
+          <PostSharedModal post={post} />
         </div>
       </div>
 

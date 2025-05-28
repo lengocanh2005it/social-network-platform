@@ -2,11 +2,15 @@ import axios from "@/lib/axios";
 import {
   CreateCommentDto,
   CreatePostDto,
+  CreatePostShare,
   DeleteCommentDto,
   GetCommentLikeQueryDto,
+  GetCommentMediaQueryDto,
   GetCommentQueryDto,
   GetCommentRepliesQueryDto,
   GetFeedQueryDto,
+  LikeMediaPostPayload,
+  UnlikeMediaPostPayload,
   UpdatePostType,
 } from "@/utils";
 
@@ -138,6 +142,71 @@ export const getLikesOfComment = async (
     `/posts/${postId}/comments/${commentId}/likes`,
     {
       params: getCommentLikeQueryDto,
+    },
+  );
+
+  return response.data;
+};
+
+export const createPostShare = async (createPostShareDto: CreatePostShare) => {
+  const { post_id, ...res } = createPostShareDto;
+
+  const response = await axios.post(`/posts/${post_id}/share`, res);
+
+  return response.data;
+};
+
+export const getMediaOfPost = async (
+  postId: string,
+  mediaId: string,
+  type: "video" | "image",
+) => {
+  const response = await axios.get(`/posts/${postId}/media/${mediaId}`, {
+    params: {
+      type,
+    },
+  });
+
+  return response.data;
+};
+
+export const getCommentsOfMedia = async (
+  postId: string,
+  mediaId: string,
+  getCommentMediaQueryDto: GetCommentMediaQueryDto,
+) => {
+  const response = await axios.get(
+    `/posts/${postId}/media/${mediaId}/comments`,
+    {
+      params: getCommentMediaQueryDto,
+    },
+  );
+
+  return response.data;
+};
+
+export const likeMediaOfPost = async (
+  likeMediaPostPayload: LikeMediaPostPayload,
+) => {
+  const { postId, mediaId, likeMediaPostDto } = likeMediaPostPayload;
+
+  const response = await axios.post(
+    `/posts/${postId}/media/${mediaId}/like`,
+    likeMediaPostDto,
+  );
+
+  return response.data;
+};
+
+export const unlikeMediaOfPost = async (
+  unlikeMediaOfPost: UnlikeMediaPostPayload,
+) => {
+  const { postId, mediaId, unlikeMediaPostQueryDto } = unlikeMediaOfPost;
+
+  const response = await axios.delete(
+    `/posts/${postId}/media/${mediaId}/like`,
+    {
+      params: unlikeMediaPostQueryDto,
     },
   );
 

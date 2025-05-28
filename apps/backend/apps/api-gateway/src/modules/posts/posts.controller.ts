@@ -2,12 +2,14 @@ import {
   CreateCommentDto,
   CreateCommentReplyDto,
   CreatePostDto,
-  GetCommentQueryDto,
-  GetCommentReplyQueryDto,
+  CreatePostShareDto,
+  GetCommentsMediaQueryDto,
+  GetMediaPostQueryDto,
   GetPostQueryDto,
   GetUserLikesQueryDto,
+  LikePostMediaDto,
+  UnlikeMediaPostQueryDto,
   UpdatePostDto,
-  GetCommentLikeQueryDto,
 } from '@app/common/dtos/posts';
 import {
   Body,
@@ -171,7 +173,7 @@ export class PostsController {
   async getComments(
     @Param('id', ParseUUIDPipe) postId: string,
     @KeycloakUser() user: any,
-    @Query() getCommentQueryDto?: GetCommentQueryDto,
+    @Query() getCommentQueryDto?: GetPostQueryDto,
   ) {
     const { email } = user;
 
@@ -232,7 +234,7 @@ export class PostsController {
     @Param('id') postId: string,
     @Param('commentId') commentId: string,
     @KeycloakUser() user: any,
-    @Query() getCommentReplyQueryDto?: GetCommentReplyQueryDto,
+    @Query() getCommentReplyQueryDto?: GetPostQueryDto,
   ) {
     const { email } = user;
 
@@ -291,12 +293,123 @@ export class PostsController {
   async getLikesOfComment(
     @Param('id') postId: string,
     @Param('commentId') commentId: string,
-    @Query() getCommentLikeQueryDto?: GetCommentLikeQueryDto,
+    @Query() getCommentLikeQueryDto?: GetPostQueryDto,
   ) {
     return this.postsService.getLikesOfComment(
       postId,
       commentId,
       getCommentLikeQueryDto,
+    );
+  }
+
+  @Post(':id/share')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async createPostShare(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Body() createPostShareDto: CreatePostShareDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.createPostShare(postId, email, createPostShareDto);
+  }
+
+  @Get(':id/media/:mediaId')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getMediaOfPost(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Param('mediaId') mediaId: string,
+    @Query() getMediaPostQueryDto: GetMediaPostQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { type } = getMediaPostQueryDto;
+
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.getMediaOfPost(postId, mediaId, type, email);
+  }
+
+  @Get(':id/media/:mediaId/comments')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getCommentsOfMedia(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @KeycloakUser() user: any,
+    @Query() getCommentMediaQueryDto: GetCommentsMediaQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.getCommentsOfMedia(
+      postId,
+      mediaId,
+      email,
+      getCommentMediaQueryDto,
+    );
+  }
+
+  @Post(':id/media/:mediaId/like')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async likeMediaOfPost(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @KeycloakUser() user: any,
+    @Body() likePostMediaDto: LikePostMediaDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.likeMediaOfPost(
+      postId,
+      mediaId,
+      email,
+      likePostMediaDto,
+    );
+  }
+
+  @Delete(':id/media/:mediaId/like')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async unlikeMediaOfPost(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Param('mediaId', ParseUUIDPipe) mediaId: string,
+    @KeycloakUser() user: any,
+    @Query() unlikePostMediaQueryDto: UnlikeMediaPostQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.unlikeMediaOfPost(
+      postId,
+      mediaId,
+      email,
+      unlikePostMediaQueryDto,
     );
   }
 }

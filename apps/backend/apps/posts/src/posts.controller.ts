@@ -2,12 +2,15 @@ import {
   CreateCommentDto,
   CreateCommentReplyDto,
   CreatePostDto,
-  GetCommentQueryDto,
+  CreatePostShareDto,
+  GetCommentsMediaQueryDto,
   GetPostQueryDto,
   GetUserLikesQueryDto,
+  LikePostMediaDto,
+  UnlikeMediaPostQueryDto,
   UpdatePostDto,
-  GetCommentLikeQueryDto,
 } from '@app/common/dtos/posts';
+import { PostMediaEnum } from '@app/common/utils';
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PostsService } from './posts.service';
@@ -97,7 +100,7 @@ export class PostsController {
   async getComments(
     @Payload('postId') postId: string,
     @Payload('email') email: string,
-    @Payload('getCommentQueryDto') getCommentQueryDto?: GetCommentQueryDto,
+    @Payload('getCommentQueryDto') getCommentQueryDto?: GetPostQueryDto,
   ) {
     return this.postsService.getComments(postId, email, getCommentQueryDto);
   }
@@ -132,7 +135,7 @@ export class PostsController {
     @Payload('postId') postId: string,
     @Payload('commentId') commentId: string,
     @Payload('email') email: string,
-    @Payload('getCommentQueryDto') getCommentQueryDto?: GetCommentQueryDto,
+    @Payload('getCommentQueryDto') getCommentQueryDto?: GetPostQueryDto,
   ) {
     return this.postsService.getCommentReplies(
       postId,
@@ -165,12 +168,78 @@ export class PostsController {
     @Payload('postId') postId: string,
     @Payload('commentId') commentId: string,
     @Payload('getCommentLikeQueryDto')
-    getCommentLikeQueryDto?: GetCommentLikeQueryDto,
+    getCommentLikeQueryDto?: GetPostQueryDto,
   ) {
     return this.postsService.getLikesOfComment(
       postId,
       commentId,
       getCommentLikeQueryDto,
+    );
+  }
+
+  @MessagePattern('create-post-share')
+  async createPostShare(
+    @Payload('postId') postId: string,
+    @Payload('email') email: string,
+    @Payload('createPostShareDto') createPostShareDto: CreatePostShareDto,
+  ) {
+    return this.postsService.createPostShare(postId, email, createPostShareDto);
+  }
+
+  @MessagePattern('get-media-post')
+  async getMediaOfPost(
+    @Payload('postId') postId: string,
+    @Payload('mediaId') mediaId: string,
+    @Payload('type') type: PostMediaEnum,
+    @Payload('email') email: string,
+  ) {
+    return this.postsService.getMediaOfPost(postId, mediaId, type, email);
+  }
+
+  @MessagePattern('get-comments-media')
+  async getCommentsMedia(
+    @Payload('postId') postId: string,
+    @Payload('mediaId') mediaId: string,
+    @Payload('email') email: string,
+    @Payload('getCommentsMediaQueryDto')
+    getCommentsMediaQueryDto: GetCommentsMediaQueryDto,
+  ) {
+    return this.postsService.getCommentsMedia(
+      postId,
+      mediaId,
+      email,
+      getCommentsMediaQueryDto,
+    );
+  }
+
+  @MessagePattern('like-media-post')
+  async likeMediaOfPost(
+    @Payload('postId') postId: string,
+    @Payload('mediaId') mediaId: string,
+    @Payload('email') email: string,
+    @Payload('likePostMediaDto') likePostMediaDto: LikePostMediaDto,
+  ) {
+    return this.postsService.likeMediaOfPost(
+      postId,
+      mediaId,
+      email,
+      likePostMediaDto,
+    );
+  }
+
+  @MessagePattern('unlike-media-post')
+  async unlikeMediaOfPost(
+    @Payload('postId') postId: string,
+    @Payload('mediaId') mediaId: string,
+    @Payload('email') email: string,
+    @Payload('unlikeMediaPostQueryDto')
+    unlikeMediaPostQueryDto: UnlikeMediaPostQueryDto,
+  ) {
+    return this.postsService.unlikeMediaOfPost(
+      postId,
+      mediaId,
+      email,
+      unlikeMediaPostQueryDto,
     );
   }
 }

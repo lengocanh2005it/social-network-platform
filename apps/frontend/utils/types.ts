@@ -115,23 +115,6 @@ export type FriendType = {
   id: string;
 };
 
-// export interface Post {
-//   id: number;
-//   author: string;
-//   content: string;
-//   time: string;
-//   avatar: string;
-//   image?: string;
-//   isShared?: boolean;
-//   originalPost?: {
-//     author: string;
-//     content: string;
-//     time: string;
-//     avatar: string;
-//     image?: string;
-//   };
-// }
-
 export type GetUserQueryDto = {
   includeProfile?: boolean;
   includeFollowings?: boolean;
@@ -401,4 +384,56 @@ export type CommentLikedType = {
     avatar_url: string;
   };
   liked_at: string;
+};
+
+export type CreatePostShare = {
+  privacy: PostPrivaciesType;
+  group_id?: string;
+  hashtags?: string[];
+  contents: CreatePostContentDto[];
+  post_id: string;
+};
+
+export type MediaDetails = {
+  id: string;
+  post_id: string;
+  image_url?: string;
+  video_url?: string;
+  total_comments: number;
+  total_likes: number;
+  total_shares: number;
+  likedByCurrentUser: boolean;
+};
+
+export type GetCommentMediaQueryDto = GetFeedQueryDto & {
+  type: "image" | "video";
+};
+
+export type MediaCommentType = {
+  id: string;
+  content: string;
+  created_at: string;
+  total_likes: number;
+  updated_at: string;
+  user: {
+    id: string;
+    avatar_url: string;
+    full_name: string;
+  };
+};
+
+export type LikeMediaPostDto = {
+  type: "video" | "image";
+};
+
+export type LikeMediaPostPayload = {
+  postId: string;
+  mediaId: string;
+  likeMediaPostDto: LikeMediaPostDto;
+};
+
+export type UnlikeMediaPostPayload = {
+  postId: string;
+  mediaId: string;
+  unlikeMediaPostQueryDto: LikeMediaPostDto;
 };

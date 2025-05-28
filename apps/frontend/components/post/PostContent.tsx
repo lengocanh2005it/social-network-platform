@@ -1,13 +1,18 @@
 "use client";
+import ViewPostModal from "@/components/modal/ViewPostModal";
+import ParentPostDetails from "@/components/post/ParentPostDetails";
 import { PostDetails } from "@/store";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
 
 interface PostContentProps {
   homePost: PostDetails;
 }
 
 const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
+  const [isShowParentPostModal, setIsShowParentPostModal] =
+    useState<boolean>(false);
+
   return (
     <section className="flex flex-col relative md:pb-2 pb-1">
       {(homePost?.contents?.length !== 0 ||
@@ -64,6 +69,21 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
           </div>
         ))}
       </div>
+
+      {homePost?.parent_post && (
+        <ParentPostDetails
+          parentPost={homePost.parent_post}
+          onClick={() => setIsShowParentPostModal(true)}
+        />
+      )}
+
+      {isShowParentPostModal && homePost.parent_post && (
+        <ViewPostModal
+          homePost={homePost.parent_post}
+          isOpen={isShowParentPostModal}
+          setIsOpen={setIsShowParentPostModal}
+        />
+      )}
     </section>
   );
 };

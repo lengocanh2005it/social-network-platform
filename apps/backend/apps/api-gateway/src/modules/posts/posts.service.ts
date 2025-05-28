@@ -2,12 +2,15 @@ import {
   CreateCommentDto,
   CreateCommentReplyDto,
   CreatePostDto,
-  GetCommentQueryDto,
+  CreatePostShareDto,
+  GetCommentsMediaQueryDto,
   GetPostQueryDto,
   GetUserLikesQueryDto,
+  LikePostMediaDto,
+  UnlikeMediaPostQueryDto,
   UpdatePostDto,
-  GetCommentLikeQueryDto,
 } from '@app/common/dtos/posts';
+import { PostMediaEnum } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -36,6 +39,11 @@ export class PostsService implements OnModuleInit {
       'like-comment',
       'unlike-comment',
       'get-likes-comment',
+      'create-post-share',
+      'get-comments-media',
+      'get-media-post',
+      'unlike-media-post',
+      'like-media-post',
     ];
 
     patterns.forEach((pattern) =>
@@ -142,7 +150,7 @@ export class PostsService implements OnModuleInit {
   public getComments = async (
     postId: string,
     email: string,
-    getCommentQueryDto?: GetCommentQueryDto,
+    getCommentQueryDto?: GetPostQueryDto,
   ) => {
     return firstValueFrom(
       this.postsClient.send('get-comments', {
@@ -187,7 +195,7 @@ export class PostsService implements OnModuleInit {
     postId: string,
     commentId: string,
     email: string,
-    getCommentQueryDto?: GetCommentQueryDto,
+    getCommentQueryDto?: GetPostQueryDto,
   ) => {
     return firstValueFrom(
       this.postsClient.send('get-comment-replies', {
@@ -230,13 +238,91 @@ export class PostsService implements OnModuleInit {
   public getLikesOfComment = async (
     postId: string,
     commentId: string,
-    getCommentLikeQueryDto?: GetCommentLikeQueryDto,
+    getCommentLikeQueryDto?: GetPostQueryDto,
   ) => {
     return firstValueFrom(
       this.postsClient.send('get-likes-comment', {
         postId,
         commentId,
         getCommentLikeQueryDto,
+      }),
+    );
+  };
+
+  public createPostShare = async (
+    postId: string,
+    email: string,
+    createPostShareDto: CreatePostShareDto,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('create-post-share', {
+        postId,
+        email,
+        createPostShareDto,
+      }),
+    );
+  };
+
+  public getMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    type: PostMediaEnum,
+    email: string,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('get-media-post', {
+        mediaId,
+        postId,
+        type,
+        email,
+      }),
+    );
+  };
+
+  public getCommentsOfMedia = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    getCommentsMediaQueryDto: GetCommentsMediaQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('get-comments-media', {
+        postId,
+        mediaId,
+        email,
+        getCommentsMediaQueryDto,
+      }),
+    );
+  };
+
+  public likeMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    likePostMediaDto: LikePostMediaDto,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('like-media-post', {
+        postId,
+        mediaId,
+        email,
+        likePostMediaDto,
+      }),
+    );
+  };
+
+  public unlikeMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    unlikeMediaPostQueryDto: UnlikeMediaPostQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('unlike-media-post', {
+        postId,
+        mediaId,
+        email,
+        unlikeMediaPostQueryDto,
       }),
     );
   };

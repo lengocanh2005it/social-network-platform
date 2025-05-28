@@ -3,13 +3,14 @@ import {
   CreateCommentReplyDto,
   CreatePostDto,
   CreatePostImageDto,
+  CreatePostShareDto,
   CreatePostVideoDto,
-  GetCommentQueryDto,
-  GetCommentReplyQueryDto,
+  GetCommentsMediaQueryDto,
   GetPostQueryDto,
   GetUserLikesQueryDto,
+  LikePostMediaDto,
+  UnlikeMediaPostQueryDto,
   UpdatePostDto,
-  GetCommentLikeQueryDto,
 } from '@app/common/dtos/posts';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import { HuggingFaceProvider } from '@app/common/providers';
@@ -19,17 +20,17 @@ import {
   decodeCursor,
   encodeCursor,
   isToxic,
+  PostMediaEnum,
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { Prisma } from '@prisma/client';
 import {
   CommentsType,
   PostPrivaciesEnum,
   PostsType,
   UsersType,
 } from '@repo/db';
-import { pick } from 'lodash';
+import { omit, pick } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -86,7 +87,13 @@ export class PostsService implements OnModuleInit {
 
     return {
       data: await Promise.all(
-        items.map((item) => this.transformPostItem(item, user_id)),
+        items.map((item) =>
+          this.transformPostItem(
+            item,
+            user_id,
+            item?.parent_post_id ? item.parent_post_id : undefined,
+          ),
+        ),
       ),
       nextCursor: hasNextPage ? encodeCursor(items[items.length - 1].id) : null,
     };
@@ -336,7 +343,11 @@ export class PostsService implements OnModuleInit {
       );
   };
 
-  private getFormattedPost = async (postId: string, userId: string) => {
+  private getFormattedPost = async (
+    postId: string,
+    userId: string,
+    parent_post_id?: string,
+  ) => {
     const item = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
@@ -355,7 +366,7 @@ export class PostsService implements OnModuleInit {
       },
     });
 
-    return this.transformPostItem(item, userId);
+    return this.transformPostItem(item, userId, parent_post_id);
   };
 
   private verifyModifyPost = async (email: string, postId: string) => {
@@ -488,7 +499,11 @@ export class PostsService implements OnModuleInit {
     }));
   }
 
-  private async transformPostItem(item: any, userId: string) {
+  private async transformPostItem(
+    item: any,
+    userId: string,
+    parent_post_id?: string,
+  ) {
     const likedByCurrentUser = await this.checkUserLikePost(item.id, userId);
 
     return {
@@ -507,7 +522,35 @@ export class PostsService implements OnModuleInit {
       ),
       likedByCurrentUser,
       topLikedUsers: await this.getTopUsersWhoLikedPost(item.id, userId),
+      ...(parent_post_id &&
+        parent_post_id?.trim() !== '' && {
+          parent_post: await this.getTransformedParentPost(
+            parent_post_id,
+            userId,
+          ),
+        }),
     };
+  }
+
+  private async getTransformedParentPost(
+    parent_post_id: string,
+    userId: string,
+  ) {
+    const parentPost = await this.prismaService.posts.findUnique({
+      where: { id: parent_post_id },
+      include: {
+        user: { include: { profile: true } },
+        images: true,
+        videos: true,
+        tags: { include: { user: true } },
+        contents: true,
+        hashtags: { include: { hashtag: true } },
+      },
+    });
+
+    if (!parentPost) return null;
+
+    return this.transformPostItem(parentPost, userId);
   }
 
   private buildProfilePostWhereClause(user_id: string) {
@@ -601,7 +644,7 @@ export class PostsService implements OnModuleInit {
     if (!existingPost)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: `This post could not be found.`,
+        message: `The post you're interacting with has been deleted. Please try again.`,
       });
 
     return {
@@ -902,6 +945,17 @@ export class PostsService implements OnModuleInit {
           user.id,
         ),
       }),
+      ...(media_id &&
+        media_id?.trim() !== '' && {
+          post_media: await this.getMediaOfPost(
+            postId,
+            media_id,
+            targetType === CreateCommentTargetType.IMAGE
+              ? PostMediaEnum.IMAGE
+              : PostMediaEnum.VIDEO,
+            email,
+          ),
+        }),
     };
   };
 
@@ -968,6 +1022,28 @@ export class PostsService implements OnModuleInit {
           },
         },
       });
+    } else if (post_image_id) {
+      await this.prismaService.postImages.update({
+        where: {
+          id: post_image_id,
+        },
+        data: {
+          total_comments: {
+            increment: 1,
+          },
+        },
+      });
+    } else if (post_video_id) {
+      await this.prismaService.postVideos.update({
+        where: {
+          id: post_video_id,
+        },
+        data: {
+          total_comments: {
+            increment: 1,
+          },
+        },
+      });
     }
 
     return newComent;
@@ -1006,7 +1082,7 @@ export class PostsService implements OnModuleInit {
   public getComments = async (
     postId: string,
     email: string,
-    getCommentQueryDto?: GetCommentQueryDto,
+    getCommentQueryDto?: GetPostQueryDto,
   ) => {
     const user = await firstValueFrom<UsersType>(
       this.usersClient.send(
@@ -1229,7 +1305,7 @@ export class PostsService implements OnModuleInit {
     postId: string,
     commentId: string,
     email: string,
-    getCommentReplyQueryDto?: GetCommentReplyQueryDto,
+    getCommentReplyQueryDto?: GetPostQueryDto,
   ) => {
     const user = await firstValueFrom<UsersType>(
       this.usersClient.send(
@@ -1574,7 +1650,7 @@ export class PostsService implements OnModuleInit {
   public getLikesOfComment = async (
     postId: string,
     commentId: string,
-    getCommentLikeQueryDto?: GetCommentLikeQueryDto,
+    getCommentLikeQueryDto?: GetPostQueryDto,
   ) => {
     const post = await this.prismaService.posts.findUnique({
       where: {
@@ -1680,5 +1756,382 @@ export class PostsService implements OnModuleInit {
       })),
       nextCursor,
     };
+  };
+
+  public createPostShare = async (
+    postId: string,
+    email: string,
+    createPostShareDto: CreatePostShareDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The post you're interacting with has been deleted. Please try again.`,
+      });
+
+    const { contents, privacy, hashtags } = createPostShareDto;
+
+    for (const content of contents.map((c) => c.content)) {
+      if (isToxic(await this.huggingFaceProvider.analyzeText(content)))
+        throw new RpcException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `Please review your post. It contains content that may not be appropriate.`,
+        });
+    }
+
+    const newPost = await this.prismaService.posts.create({
+      data: {
+        privacy,
+        parent: {
+          connect: {
+            id: postId,
+          },
+        },
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+      },
+    });
+
+    if (contents?.length)
+      await Promise.all(
+        contents.map((content) =>
+          this.createPostRelation(
+            this.prismaService.postContents,
+            newPost.id,
+            content,
+          ),
+        ),
+      );
+
+    if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
+
+    return this.getFormattedPost(newPost.id, user.id, postId);
+  };
+
+  public getMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    type: PostMediaEnum,
+    email: string,
+  ) => {
+    const { media, post, user } = await this.verifyUserPostMedia(
+      email,
+      postId,
+      mediaId,
+      type,
+    );
+
+    if (!media)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The ${type === PostMediaEnum.IMAGE ? 'image' : 'video'} of post you're interacting with has been deleted. Please try again.`,
+      });
+
+    if (
+      (type === PostMediaEnum.IMAGE &&
+        !post.images.some((im) => im.id === media.id)) ||
+      (type === PostMediaEnum.VIDEO &&
+        !post.videos.some((vi) => vi.id === media.id))
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `The ${type === PostMediaEnum.IMAGE ? 'image' : 'video'} of post you're interacting isn't belong to this post. Please try again.`,
+      });
+
+    const likedByCurrentUser = media.likes.some(
+      (ml: any) => ml.user_id === user.id,
+    ) as boolean;
+
+    return {
+      ...omit(media, ['likes']),
+      likedByCurrentUser,
+    };
+  };
+
+  public getCommentsMedia = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    getCommentsMediaQueryDto: GetCommentsMediaQueryDto,
+  ) => {
+    const { type } = getCommentsMediaQueryDto;
+
+    await this.verifyUserPostMedia(email, postId, mediaId, type);
+
+    const whereCondition =
+      type === PostMediaEnum.IMAGE
+        ? {
+            post_image_id: mediaId,
+          }
+        : {
+            post_video_id: mediaId,
+          };
+
+    const limit = getCommentsMediaQueryDto?.limit ?? 10;
+
+    const decodedCursor = getCommentsMediaQueryDto?.after
+      ? decodeCursor(getCommentsMediaQueryDto.after)
+      : null;
+
+    const comments = await this.prismaService.comments.findMany({
+      where: whereCondition,
+      orderBy: { created_at: 'desc' },
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+        skip: 1,
+      }),
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+        ...(type === PostMediaEnum.IMAGE
+          ? {
+              post_image: true,
+            }
+          : { post_video: true }),
+        _count: {
+          select: {
+            comment_likes: true,
+          },
+        },
+      },
+    });
+
+    const hasNextPage = comments.length > limit;
+
+    const items = hasNextPage ? comments.slice(0, -1) : comments;
+
+    const lastComment = items[items.length - 1];
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({
+          id: lastComment.id,
+          created_at: lastComment.created_at,
+        })
+      : null;
+
+    return {
+      data: items.map((c: any) => ({
+        id: c.id,
+        content: c.content,
+        created_at: c.created_at,
+        updated_at: c.updated_at,
+        total_likes: c._count.comment_likes,
+        user: {
+          id: c.user.id,
+          full_name: c.user.profile.first_name + ' ' + c.user.profile.last_name,
+          avatar_url: c.user.profile.avatar_url,
+        },
+      })),
+      nextCursor,
+    };
+  };
+
+  private verifyUserPostMedia = async (
+    email: string,
+    postId: string,
+    mediaId: string,
+    type: PostMediaEnum,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        videos: true,
+        images: true,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The post you're interacting with has been deleted. Please try again.`,
+      });
+
+    let media: any = null;
+
+    if (type === PostMediaEnum.IMAGE) {
+      media = await this.prismaService.postImages.findUnique({
+        where: {
+          id: mediaId,
+        },
+        include: {
+          likes: true,
+        },
+      });
+    } else if (type === PostMediaEnum.VIDEO) {
+      media = await this.prismaService.postVideos.findUnique({
+        where: {
+          id: mediaId,
+        },
+        include: {
+          likes: true,
+        },
+      });
+    }
+
+    if (!media)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The ${type === PostMediaEnum.IMAGE ? 'image' : 'video'} of post you're interacting with has been deleted. Please try again.`,
+      });
+
+    return {
+      user,
+      post,
+      media,
+    };
+  };
+
+  public likeMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    likePostMediaDto: LikePostMediaDto,
+  ) => {
+    const { type } = likePostMediaDto;
+
+    const { media, user } = await this.verifyUserPostMedia(
+      email,
+      postId,
+      mediaId,
+      type,
+    );
+
+    if (type === PostMediaEnum.IMAGE) {
+      await this.prismaService.postImageLikes.create({
+        data: {
+          user_id: user.id,
+          post_image_id: media.id,
+        },
+      });
+
+      await this.prismaService.postImages.update({
+        where: {
+          id: media.id,
+        },
+        data: {
+          total_likes: {
+            increment: 1,
+          },
+        },
+      });
+    } else if (type === PostMediaEnum.VIDEO) {
+      await this.prismaService.postVideoLikes.create({
+        data: {
+          user_id: user.id,
+          post_video_id: media.id,
+        },
+      });
+
+      await this.prismaService.postVideos.update({
+        where: {
+          id: media.id,
+        },
+        data: {
+          total_likes: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    return this.getMediaOfPost(postId, mediaId, type, email);
+  };
+
+  public unlikeMediaOfPost = async (
+    postId: string,
+    mediaId: string,
+    email: string,
+    unlikeMediaPostDto: UnlikeMediaPostQueryDto,
+  ) => {
+    const { type } = unlikeMediaPostDto;
+
+    const { user } = await this.verifyUserPostMedia(
+      email,
+      postId,
+      mediaId,
+      type,
+    );
+
+    if (type === PostMediaEnum.IMAGE) {
+      await this.prismaService.postImageLikes.delete({
+        where: {
+          post_image_id_user_id: {
+            user_id: user.id,
+            post_image_id: mediaId,
+          },
+        },
+      });
+
+      await this.prismaService.postImages.update({
+        where: {
+          id: mediaId,
+        },
+        data: {
+          total_likes: {
+            decrement: 1,
+          },
+        },
+      });
+    } else if (type === PostMediaEnum.VIDEO) {
+      await this.prismaService.postVideoLikes.delete({
+        where: {
+          post_video_id_user_id: {
+            user_id: user.id,
+            post_video_id: mediaId,
+          },
+        },
+      });
+
+      await this.prismaService.postVideos.update({
+        where: {
+          id: mediaId,
+        },
+        data: {
+          total_likes: {
+            decrement: 1,
+          },
+        },
+      });
+    }
+
+    return this.getMediaOfPost(postId, mediaId, type, email);
   };
 }

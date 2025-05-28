@@ -2,6 +2,8 @@
 import ConfirmModal from "@/components/modal/ConfirmModal";
 import UpdatePostModal from "@/components/modal/UpdatePostModal";
 import ViewPostModal from "@/components/modal/ViewPostModal";
+import ParentPostDetails from "@/components/post/ParentPostDetails";
+import PostMediaItem from "@/components/post/PostMediaItem";
 import PostOptions from "@/components/post/PostOptions";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
@@ -34,7 +36,6 @@ import {
   PostPrivaciesType,
 } from "@repo/db";
 import { Ellipsis, EyeOff, Lock, SquarePen, Trash, Users } from "lucide-react";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -61,6 +62,8 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
   } = useMediaStore();
   const { mutate: mutateUpdatePost } = useUpdatePost();
   const [isShowPostModal, setIsShowPostModal] = useState<boolean>(false);
+  const [isShowParentPostModal, setIsShowParentPostModal] =
+    useState<boolean>(false);
 
   const handleConfirmClick = async (postId: string) => {
     mutateDeletePost(postId);
@@ -202,7 +205,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     <>
       {user && (
         <>
-          <div className="bg-white border border-black/10 rounded-xl mb-6 p-4">
+          <div className="bg-white border border-black/10 rounded-xl md:mb-6 md-4 p-4">
             <div className="flex flex-col md:gap-2 gap-1">
               <div className="flex items-start justify-between">
                 <div className="flex items-center mb-3 gap-2">
@@ -315,31 +318,30 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 </section>
               )}
 
-              <div
-                className={`grid gap-3 md:mt-3 mt-2 ${
-                  post.images.length === 1
-                    ? "grid-cols-1"
-                    : post.images.length === 2
-                      ? "grid-cols-2"
-                      : "grid-cols-3"
-                }`}
-              >
-                {post.images.map((image) => (
-                  <div
-                    key={image.id}
-                    className="relative w-full aspect-[4/3] overflow-hidden rounded-md"
-                  >
-                    <Image
-                      src={image.image_url}
-                      alt="post"
-                      fill
-                      priority
-                      sizes="100vw"
-                      className="select-none"
-                    />
-                  </div>
-                ))}
-              </div>
+              {post?.images?.length > 0 && (
+                <div
+                  className={`grid gap-3 md:mt-3 mt-2 ${
+                    post.images.length === 1
+                      ? "grid-cols-1"
+                      : post.images.length === 2
+                        ? "grid-cols-2"
+                        : "grid-cols-3"
+                  }`}
+                >
+                  {post.images.map((image) => (
+                    <PostMediaItem key={image.id} post={post} image={image} />
+                  ))}
+                </div>
+              )}
+
+              {post?.parent_post && (
+                <ParentPostDetails
+                  parentPost={post.parent_post}
+                  onClick={() => {
+                    setIsShowParentPostModal(true);
+                  }}
+                />
+              )}
 
               <PostOptions post={post} setIsOpen={setIsShowPostModal} />
             </div>
@@ -381,6 +383,14 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
               homePost={post}
               isOpen={isShowPostModal}
               setIsOpen={setIsShowPostModal}
+            />
+          )}
+
+          {isShowParentPostModal && post?.parent_post && (
+            <ViewPostModal
+              homePost={post.parent_post}
+              isOpen={isShowParentPostModal}
+              setIsOpen={setIsShowParentPostModal}
             />
           )}
         </>

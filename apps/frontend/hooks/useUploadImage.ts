@@ -6,9 +6,6 @@ export const useUploadImage = () => {
   return useMutation({
     mutationFn: (uploadUserImageDto: UploadUserImageType) =>
       uploadUserImage(uploadUserImageDto),
-    onSuccess: (data: any) => {
-      console.log(data);
-    },
     onError: (error: any) => handleAxiosError(error),
   });
 };
