@@ -251,7 +251,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             <DropdownMenu aria-label="Profile Actions" variant="flat">
               <DropdownItem
                 key="profile"
-                onPress={() => router.push("/profile")}
+                onPress={() => router.push(`/profile/${user.profile.username}`)}
               >
                 View Profile
               </DropdownItem>

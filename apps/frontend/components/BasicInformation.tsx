@@ -20,42 +20,42 @@ const genderMap = {
 };
 
 const BasicInformation = () => {
-  const { user } = useUserStore();
+  const { viewedUser } = useUserStore();
 
   const details =
-    user && user.profile
+    viewedUser && viewedUser.profile
       ? [
           {
             key: 1,
             icon: <Mail />,
-            value: user.email,
+            value: viewedUser.email,
           },
           {
             key: 2,
             icon: <Phone />,
-            value: user.profile.phone_number,
+            value: viewedUser.profile.phone_number,
           },
           {
             key: 3,
             icon:
-              user.profile.gender === GenderEnum.female ? (
+              viewedUser.profile.gender === GenderEnum.female ? (
                 <Venus />
-              ) : user.profile.gender === GenderEnum.male ? (
+              ) : viewedUser.profile.gender === GenderEnum.male ? (
                 <Mars />
               ) : (
                 <CircleHelp />
               ),
-            value: genderMap[user.profile.gender],
+            value: genderMap[viewedUser.profile.gender],
           },
           {
             key: 4,
             icon: <MapPinHouse />,
-            value: user.profile.address,
+            value: viewedUser.profile.address,
           },
           {
             key: 5,
             icon: <Calendar />,
-            value: format(new Date(user.profile.dob), "dd/MM/yyyy"),
+            value: format(new Date(viewedUser.profile.dob), "dd/MM/yyyy"),
           },
         ]
       : [];

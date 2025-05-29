@@ -1,3 +1,4 @@
+import { GetPostQueryDto } from '@app/common/dtos/posts';
 import { GetUserQueryDto, UpdateUserProfileDto } from '@app/common/dtos/users';
 import {
   Body,
@@ -5,13 +6,13 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Patch,
   Query,
 } from '@nestjs/common';
 import { RoleEnum } from '@repo/db';
 import { KeycloakUser, Roles } from 'nest-keycloak-connect';
 import { UsersService } from './users.service';
-import { GetPostQueryDto } from '@app/common/dtos/posts';
 
 @Controller('users')
 export class UsersController {
@@ -34,6 +35,24 @@ export class UsersController {
     return this.usersService.getMe(email, getUserQueryDto);
   }
 
+  @Get('/usernames/:username')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getProfile(
+    @Param('username') username: string,
+    @KeycloakUser() user: any,
+    @Query() getUserQueryDto?: GetUserQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.getProfile(username, email, getUserQueryDto);
+  }
+
   @Patch('me')
   @Roles(RoleEnum.admin, RoleEnum.user)
   async updateUserProfile(
@@ -51,19 +70,11 @@ export class UsersController {
     return this.usersService.updateUserProfile(updateUserProfileDto, email);
   }
 
-  @Get('me/feed')
-  async getMyFeed(
-    @Query() getPostQueryDto: GetPostQueryDto,
-    @KeycloakUser() user: any,
+  @Get('feed')
+  async getFeed(
+    @Query('getPostQueryDto') getPostQueryDto: GetPostQueryDto,
+    @Query('username') username: string,
   ) {
-    const { email } = user;
-
-    if (!email || typeof email !== 'string')
-      throw new HttpException(
-        'Email not found in the access token.',
-        HttpStatus.NOT_FOUND,
-      );
-
-    return this.usersService.getMyFeed(getPostQueryDto, email);
+    return this.usersService.getFeed(getPostQueryDto, username);
   }
 }

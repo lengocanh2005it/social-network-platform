@@ -1,4 +1,10 @@
-import { AuthMethod, OAuthNames, Provider, Tokens } from "@/utils";
+import {
+  AuthMethod,
+  OAuthNames,
+  Provider,
+  RelationshipType,
+  Tokens,
+} from "@/utils";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

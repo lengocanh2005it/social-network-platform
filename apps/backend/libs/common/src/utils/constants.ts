@@ -195,3 +195,8 @@ export enum PostMediaEnum {
   VIDEO = 'video',
   IMAGE = 'image',
 }
+
+export enum ResponseFriendRequestAction {
+  ACCEPT = 'accept',
+  REJECT = 'reject',
+}

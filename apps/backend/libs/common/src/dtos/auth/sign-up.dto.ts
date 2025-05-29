@@ -78,4 +78,8 @@ export class SignUpDto {
   @IsString()
   @IsNotEmpty()
   readonly captchaToken!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly username!: string;
 }

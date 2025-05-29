@@ -17,7 +17,8 @@ export class UsersService implements OnModuleInit {
       'verify-password',
       'get-user-device',
       'get-user-session',
-      'get-my-feed',
+      'get-feed',
+      'get-profile',
     ];
 
     patterns.forEach((pattern) => {
@@ -46,12 +47,26 @@ export class UsersService implements OnModuleInit {
     );
   }
 
-  async getMyFeed(getPostQueryDto: GetPostQueryDto, email: string) {
+  async getFeed(getPostQueryDto: GetPostQueryDto, username: string) {
     return firstValueFrom(
-      this.userClient.send('get-my-feed', {
-        email,
+      this.userClient.send('get-feed', {
+        username,
         getPostQueryDto,
       }),
     );
   }
+
+  public getProfile = async (
+    username: string,
+    email: string,
+    getUserQueryDto?: GetUserQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.userClient.send('get-profile', {
+        username,
+        email,
+        getUserQueryDto,
+      }),
+    );
+  };
 }

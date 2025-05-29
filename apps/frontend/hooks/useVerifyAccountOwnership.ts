@@ -37,6 +37,7 @@ export const useVerifyAccountOwnership = (
           address,
           phone_number,
           gender,
+          username,
         } = tempUserUpdateDto;
 
         const updateUserProfileData: UpdateUserProfile = {
@@ -51,6 +52,7 @@ export const useVerifyAccountOwnership = (
             address,
             phone_number,
             gender,
+            username,
           },
         };
 

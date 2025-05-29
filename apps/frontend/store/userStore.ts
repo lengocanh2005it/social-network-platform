@@ -1,5 +1,5 @@
 import { getMe } from "@/lib/api/users";
-import { handleAxiosError } from "@/utils";
+import { handleAxiosError, RelationshipType } from "@/utils";
 import {
   UserEducationsType,
   UserProfilesType,
@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-type FullUserType = UsersType & {
+export type FullUserType = UsersType & {
   profile: UserProfilesType;
   educations: UserEducationsType[];
   socials: UserSocialsType[];
@@ -20,9 +20,13 @@ type FullUserType = UsersType & {
 
 interface UserState {
   user: FullUserType | null;
+  relationship: RelationshipType | null;
+  setRelationship: (relationship: RelationshipType | null) => void;
+  viewedUser: FullUserType | null;
   educationsHistory: UserEducationsType[][];
   workPlacesHistory: UserWorkPlacesType[][];
   setUser: (user: FullUserType | null) => void;
+  setViewedUser: (user: FullUserType | null) => void;
   resetUser: () => void;
   resetUserEducations: () => void;
   resetUserWorkPlaces: () => void;
@@ -41,9 +45,15 @@ interface UserState {
 
 const initialUserState: Pick<
   UserState,
-  "user" | "educationsHistory" | "workPlacesHistory"
+  | "user"
+  | "educationsHistory"
+  | "workPlacesHistory"
+  | "viewedUser"
+  | "relationship"
 > = {
   user: null,
+  viewedUser: null,
+  relationship: null,
   educationsHistory: [],
   workPlacesHistory: [],
 };
@@ -52,6 +62,8 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       ...initialUserState,
+      setRelationship: (relationship) => set({ relationship }),
+      setViewedUser: (user) => set({ viewedUser: user }),
       setUser: (user) => set({ user }),
       resetUser: () => set({ ...initialUserState }),
       resetUserEducations: () => {
