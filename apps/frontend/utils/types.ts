@@ -1,4 +1,8 @@
-import { AuthMethod, CreateCommentTargetType } from "@/utils/constants";
+import {
+  AuthMethod,
+  CreateCommentTargetType,
+  ResponseFriendRequestAction,
+} from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
 import {
   GenderType,
@@ -27,6 +31,7 @@ export type SignUpDto = {
   finger_print: string;
   deviceDetailsDto: DeviceDetails;
   captchaToken: string;
+  username: string;
 };
 
 export type SignInDto = {
@@ -152,6 +157,7 @@ export type InfoDetailsType = {
   first_name: string;
   last_name: string;
   nickname?: string;
+  username: string;
 };
 
 export type SocialsLinkType = {
@@ -194,6 +200,7 @@ export type TempUserUpdateType = {
   gender: GenderType;
   dob: ZonedDateTime;
   address: string;
+  username: string;
 };
 
 export enum Verify2FaActionEnum {
@@ -436,4 +443,22 @@ export type UnlikeMediaPostPayload = {
   postId: string;
   mediaId: string;
   unlikeMediaPostQueryDto: LikeMediaPostDto;
+};
+
+export type RelationshipType = {
+  status: "none" | "pending" | "accepted";
+  isInitiator: boolean;
+  initiatorId?: string;
+  targetId?: string;
+  initiated_at?: string;
+  confirmed_at?: string;
+};
+
+export type CreateFriendRequestType = {
+  target_id: string;
+};
+
+export type ResponseFriendRequestType = {
+  action: ResponseFriendRequestAction;
+  initiator_id: string;
 };

@@ -8,9 +8,17 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
+import { FriendsModule } from './modules/friends/friends.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, CommonModule, UploadsModule, PostsModule],
+  imports: [
+    AuthModule,
+    UsersModule,
+    CommonModule,
+    UploadsModule,
+    PostsModule,
+    FriendsModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,

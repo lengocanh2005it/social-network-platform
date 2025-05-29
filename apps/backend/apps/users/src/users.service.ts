@@ -1,4 +1,8 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
+import {
+  CreateFriendRequestDto,
+  ResponseFriendRequestDto,
+} from '@app/common/dtos/friends';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
@@ -15,6 +19,7 @@ import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
   hashPassword,
   REFRESH_TOKEN_LIFE,
+  ResponseFriendRequestAction,
   SyncOptions,
   toPascalCase,
   UploadUserImageTypeEnum,
@@ -347,6 +352,24 @@ export class UsersService implements OnModuleInit {
     updateInfoDetailsDto: UpdateInfoDetailsDto,
     user_id: string,
   ) => {
+    const { username } = updateInfoDetailsDto;
+
+    if (username?.trim() !== '') {
+      const existingUsername = await this.prismaService.userProfiles.findUnique(
+        {
+          where: {
+            username,
+          },
+        },
+      );
+
+      if (existingUsername && existingUsername.user_id !== user_id)
+        throw new RpcException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: `Username is already taken by another user.`,
+        });
+    }
+
     await this.prismaService.userProfiles.update({
       where: {
         user_id,
@@ -627,16 +650,19 @@ export class UsersService implements OnModuleInit {
   };
 
   public getMyFeed = async (
-    email: string,
+    username: string,
     getPostQueryDto: GetPostQueryDto,
   ) => {
-    const user = await this.prismaService.users.findUnique({
+    const userProfile = await this.prismaService.userProfiles.findUnique({
       where: {
-        email,
+        username,
+      },
+      include: {
+        user: true,
       },
     });
 
-    if (!user)
+    if (!userProfile)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
         message: `This email has not been registered.`,
@@ -644,7 +670,7 @@ export class UsersService implements OnModuleInit {
 
     return firstValueFrom(
       this.postsClient.send('get-profile-posts', {
-        user_id: user.id,
+        user_id: userProfile.user.id,
         getPostQueryDto,
       }),
     );
@@ -655,7 +681,7 @@ export class UsersService implements OnModuleInit {
 
     const friends = await this.prismaService.friends.findMany({
       where: {
-        friendship_status: FriendShipEnum.appcepted,
+        friendship_status: FriendShipEnum.accepted,
         OR: [
           {
             initiator_id: user.id,
@@ -674,5 +700,323 @@ export class UsersService implements OnModuleInit {
     return friends.map((friend) =>
       friend.initiator_id === user.id ? friend.target_id : friend.initiator_id,
     );
+  };
+
+  public createFriendRequest = async (
+    email: string,
+    createFriendRequestDto: CreateFriendRequestDto,
+  ) => {
+    const user = await this.handleGetUserByField('email', email);
+
+    const { target_id } = createFriendRequestDto;
+
+    const targetUser = await this.prismaService.users.findUnique({
+      where: {
+        id: target_id,
+      },
+      include: {
+        blockedUsers: true,
+      },
+    });
+
+    if (!targetUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user you're trying to send a friend request to does not exist. Please try again.`,
+      });
+
+    if (
+      targetUser?.blockedUsers?.length &&
+      !targetUser.blockedUsers.some((bu) => bu.blocked_user_id !== user.id)
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `The user you're trying to send a friend request to has blocked you. Please try again.`,
+      });
+
+    const newFriendRequest = await this.prismaService.friends.create({
+      data: {
+        initiator_id: user.id,
+        target_id,
+      },
+    });
+
+    return this.getFormattedFriendRequest(
+      newFriendRequest.initiator_id,
+      newFriendRequest.target_id,
+      true,
+    );
+  };
+
+  private getFormattedFriendRequest = async (
+    initiator_id: string,
+    target_id: string,
+    isInitiator = true,
+  ) => {
+    const request = await this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id,
+            target_id,
+          },
+          {
+            initiator_id: target_id,
+            target_id: initiator_id,
+          },
+        ],
+      },
+    });
+
+    return {
+      status: request?.friendship_status,
+      isInitiator,
+      initiatorId: request?.initiator_id,
+      targetId: request?.target_id,
+      confirmed_at: request?.confirmed_at,
+      initiated_at: request?.initiated_at,
+    };
+  };
+
+  public responseFriendRequest = async (
+    email: string,
+    responseFriendRequestDto: ResponseFriendRequestDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const { action, initiator_id } = responseFriendRequestDto;
+
+    const initiatorUser = await this.prismaService.users.findUnique({
+      where: {
+        id: initiator_id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!initiatorUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user who sent the friend request could not be found.`,
+      });
+
+    const friendRequest = await this.prismaService.friends.findUnique({
+      where: {
+        initiator_id_target_id: {
+          initiator_id,
+          target_id: user.id,
+        },
+      },
+    });
+
+    if (!friendRequest)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The friend request you're trying to respond to does not exist or may have been removed.`,
+      });
+
+    if (friendRequest.friendship_status === FriendShipEnum.accepted)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `This friend request has already been accepted.`,
+      });
+
+    if (action === ResponseFriendRequestAction.ACCEPT) {
+      const updatedFriendship = await this.prismaService.friends.update({
+        where: {
+          initiator_id_target_id: {
+            initiator_id,
+            target_id: user.id,
+          },
+        },
+        data: {
+          confirmed_at: new Date(),
+          friendship_status: FriendShipEnum.accepted,
+        },
+      });
+
+      return {
+        status: updatedFriendship.friendship_status,
+        isInitiator: updatedFriendship?.initiator_id === user.id,
+        initiatorId: updatedFriendship?.initiator_id,
+        targetId: updatedFriendship?.target_id,
+        initiated_at: updatedFriendship?.initiated_at,
+        confirmed_at: updatedFriendship?.confirmed_at,
+      };
+    } else {
+      await this.prismaService.friends.delete({
+        where: {
+          initiator_id_target_id: {
+            initiator_id,
+            target_id: user.id,
+          },
+        },
+      });
+
+      return {
+        status: 'none',
+        isInitiator: false,
+      };
+    }
+  };
+
+  public getProfile = async (
+    username: string,
+    email: string,
+    getUserQueryDto?: GetUserQueryDto,
+  ) => {
+    const user = await this.handleGetUserByField('email', email, {
+      includeProfile: true,
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const findUser = await this.prismaService.userProfiles.findUnique({
+      where: {
+        username,
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (!findUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The profile you are looking for does not exist.`,
+      });
+
+    let relationship: any;
+
+    let friendStatus: 'none' | FriendShipEnum = 'none';
+
+    if (findUser.id !== user.id) {
+      relationship = await this.getFriendRelationship(
+        user.id,
+        findUser.user_id,
+      );
+
+      if (relationship)
+        friendStatus =
+          relationship.friendship_status === FriendShipEnum.accepted
+            ? FriendShipEnum.accepted
+            : FriendShipEnum.pending;
+    }
+
+    if (findUser.user.email)
+      return {
+        ...(await this.handleGetMe(
+          findUser.user_id === user.id ? email : findUser.user.email,
+          getUserQueryDto,
+        )),
+        ...(user.id !== findUser.user_id && {
+          relationship: {
+            status: friendStatus,
+            isInitiator: relationship?.initiator_id === user.id,
+            initiatorId: relationship?.initiator_id,
+            targetId: relationship?.target_id,
+            initiated_at: relationship?.initiated_at,
+            confirmed_at: relationship?.confirmed_at,
+          },
+        }),
+      };
+  };
+
+  public getFriendRelationship = async (
+    initiator_id: string,
+    target_id: string,
+  ) => {
+    return this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id,
+            target_id,
+          },
+          {
+            initiator_id: target_id,
+            target_id: initiator_id,
+          },
+        ],
+      },
+    });
+  };
+
+  public deleteFriendRequest = async (email: string, target_id: string) => {
+    const user = await this.handleGetUserByField('email', email);
+
+    const targetUser = await this.prismaService.users.findUnique({
+      where: {
+        id: target_id,
+      },
+      include: {
+        blockedUsers: true,
+      },
+    });
+
+    if (!targetUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user you're trying to cancel the friend request does not exist. Please try again.`,
+      });
+
+    if (
+      targetUser?.blockedUsers?.length &&
+      !targetUser.blockedUsers.some((bu) => bu.blocked_user_id !== user.id)
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `The user you're trying to cancel the friend request has blocked you. Please try again.`,
+      });
+
+    const request = await this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id: user.id,
+            target_id,
+          },
+          {
+            initiator_id: target_id,
+            target_id: user.id,
+          },
+        ],
+      },
+    });
+
+    if (!request)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Friend request not found. Unable to cancel.`,
+      });
+
+    await this.prismaService.friends.delete({
+      where: {
+        initiator_id_target_id: {
+          initiator_id: request.initiator_id,
+          target_id: request.target_id,
+        },
+      },
+    });
+
+    return {
+      status: 'none',
+      isInitiator: false,
+    };
   };
 }

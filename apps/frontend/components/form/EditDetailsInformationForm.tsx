@@ -63,6 +63,12 @@ const formSchema = z.object({
   first_name: z.string().min(1, { message: `First name can't be empty.` }),
   last_name: z.string().min(1, { message: `Last name can't be empty.` }),
   nickname: z.string().optional(),
+  username: z
+    .string()
+    .min(1, { message: `Username can't be empty.` })
+    .max(100, {
+      message: `Username can't be longer than 100 characters.`,
+    }),
 });
 
 const EditDetailsInformationForm = () => {
@@ -89,6 +95,7 @@ const EditDetailsInformationForm = () => {
       first_name: user?.profile?.first_name ? user.profile.first_name : "",
       last_name: user?.profile?.last_name ? user.profile.last_name : "",
       nickname: user?.profile?.nickname ? user.profile.nickname : undefined,
+      username: user?.profile?.username ? user.profile.username : undefined,
     },
   });
 
@@ -114,6 +121,7 @@ const EditDetailsInformationForm = () => {
         phone_number: form.getValues("phone_number"),
         gender: form.getValues("gender"),
         nick_name: form.getValues("nickname"),
+        username: form.getValues("username"),
       });
 
       return;
@@ -216,19 +224,35 @@ const EditDetailsInformationForm = () => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="phone_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phone number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0393873630" {...field} />
-                  </FormControl>
-                  <FormMessage className="text-red-600" />
-                </FormItem>
-              )}
-            />
+            <div className="grid md:grid-cols-2 grid-cols-1 md:gap-3 gap-2">
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0393873630" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-600" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="john_doe01" {...field} />
+                    </FormControl>
+                    <FormMessage className="text-red-600" />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid md:grid-cols-2 grid-cols-1 md:gap-3 gap-2">
               <FormField

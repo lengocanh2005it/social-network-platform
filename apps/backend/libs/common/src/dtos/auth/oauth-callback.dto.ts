@@ -72,4 +72,8 @@ export class OAuthCallbackDto {
   @IsNotEmpty()
   @Length(6)
   readonly otp?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly username!: string;
 }

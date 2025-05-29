@@ -134,26 +134,44 @@ const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="dob"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-black">Date of birth</FormLabel>
-            <FormControl>
-              <DatePicker
-                hideTimeZone
-                showMonthAndYearPickers
-                aria-labelledby="date-and-time"
-                aria-label="date-and-time"
-                {...field}
-                inert={false}
-              />
-            </FormControl>
-            <FormMessage className="text-red-600 md:text-left text-center" />
-          </FormItem>
-        )}
-      />
+      <div className="grid md:grid-cols-2 grid-cols-1 md:gap-3 gap-2">
+        <FormField
+          control={form.control}
+          name="dob"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-black">Date of birth</FormLabel>
+              <FormControl>
+                <DatePicker
+                  hideTimeZone
+                  showMonthAndYearPickers
+                  aria-labelledby="date-and-time"
+                  aria-label="date-and-time"
+                  {...field}
+                  inert={false}
+                />
+              </FormControl>
+              <FormMessage className="text-red-600 md:text-left text-center" />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <Tooltip content="This will be used in your public profile URL (e.g. /profile/your_username)">
+                <FormLabel className="text-black">Username</FormLabel>
+              </Tooltip>
+              <FormControl>
+                <Input placeholder="john_doe01" {...field} />
+              </FormControl>
+              <FormMessage className="text-red-600 md:text-left text-center" />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}

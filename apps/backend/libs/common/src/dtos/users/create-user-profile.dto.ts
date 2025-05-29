@@ -53,4 +53,8 @@ export class CreateUserProfileDto {
   @IsString()
   @IsNotEmpty()
   readonly last_name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly username!: string;
 }

@@ -39,7 +39,9 @@ export async function middleware(request: NextRequest) {
 
   if (
     (!loggedIn || loggedIn === "false") &&
-    (pathname.startsWith("/home") || pathname.startsWith("/settings"))
+    (pathname.startsWith("/home") ||
+      pathname.startsWith("/settings") ||
+      pathname.startsWith("/profile"))
   ) {
     return NextResponse.redirect(new URL("/auth/sign-in", request.url));
   }

@@ -143,6 +143,10 @@ export class UpdateInfoDetailsDto {
   @IsString()
   @IsNotEmpty()
   readonly bio?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly username!: string;
 }
 
 export class UpdateUserProfileDto {

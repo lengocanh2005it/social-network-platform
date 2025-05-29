@@ -76,6 +76,12 @@ const formSchema = z
           message: "You must be 18 or older to register.",
         },
       ),
+      username: z
+        .string()
+        .min(1, { message: `Username can't be empty.` })
+        .max(100, {
+          message: `Username can't be longer than 100 characters.`,
+        }),
     }),
   );
 
@@ -108,7 +114,6 @@ const SignUpForm = () => {
       gender: undefined,
       dob: undefined,
     },
-    mode: "onTouched",
   });
 
   const handleValidCredentials = () => {

@@ -63,7 +63,7 @@ const SocialLink = ({
 
 const SocialsIntro = () => {
   const { setIsModalEditProfileOpen } = useAppStore();
-  const { user } = useUserStore();
+  const { user, viewedUser } = useUserStore();
 
   const workPlaces =
     user?.work_places?.length !== 0
@@ -129,9 +129,11 @@ const SocialsIntro = () => {
         />
       ))}
 
-      <Button color="primary" onPress={() => setIsModalEditProfileOpen(true)}>
-        Edit details
-      </Button>
+      {viewedUser?.id === user?.id && (
+        <Button color="primary" onPress={() => setIsModalEditProfileOpen(true)}>
+          Edit details
+        </Button>
+      )}
     </section>
   );
 };

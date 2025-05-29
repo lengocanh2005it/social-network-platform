@@ -20,5 +20,10 @@ export enum CreateCommentTargetType {
   IMAGE = "image",
 }
 
+export enum ResponseFriendRequestAction {
+  ACCEPT = "accept",
+  REJECT = "reject",
+}
+
 export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;

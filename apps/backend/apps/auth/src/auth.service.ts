@@ -505,6 +505,7 @@ export class AuthService implements OnModuleInit {
         last_name,
         refresh_token,
         otp,
+        username,
       } = oAuthCallbackDto;
 
       const { email, sub } =
@@ -563,6 +564,7 @@ export class AuthService implements OnModuleInit {
           gender,
           dob,
           address,
+          username,
         },
         this.avatarUrl,
         this.coverPhotoUrl,

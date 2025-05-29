@@ -53,7 +53,7 @@ const MenuPage = () => {
         <div
           className="hover:bg-gray-200 flex items-center p-2 rounded-md
         transition-all ease-in-out duration-300 cursor-pointer"
-          onClick={() => router.push("/profile")}
+          onClick={() => router.push(`/profile/${user?.profile?.username}`)}
         >
           {user && (
             <User

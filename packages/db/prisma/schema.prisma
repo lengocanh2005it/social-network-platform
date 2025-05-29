@@ -20,8 +20,6 @@ model Users {
   comments                  Comments[]
   conversation_participants ConversationParticipants[]
   conversations             Conversations[]
-  followings                Followers[]                @relation("UserFollowing")
-  followers                 Followers[]                @relation("UserFollowers")
   initiators                Friends[]                  @relation("InitiatorUser")
   targets                   Friends[]                  @relation("TargetUser")
   groupJoinRequests         GroupJoinRequests[]
@@ -54,6 +52,7 @@ model UserProfiles {
   dob             DateTime
   address         String
   avatar_url      String
+  username        String        @unique @db.VarChar(255)
   bio             String?
   status          ProfileStatus @default(active)
   nickname        String?       @db.VarChar(50)
@@ -394,16 +393,6 @@ model Friends {
   @@id([initiator_id, target_id])
 }
 
-model Followers {
-  user_id     String @db.Uuid
-  follower_id String @db.Uuid
-  follower    Users  @relation("UserFollowing", fields: [follower_id], references: [id], onDelete: Cascade)
-  user        Users  @relation("UserFollowers", fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@id([user_id, follower_id])
-  @@unique([user_id, follower_id])
-}
-
 model Blocks {
   user_id         String @db.Uuid
   blocked_user_id String @db.Uuid
@@ -538,7 +527,7 @@ enum NotificationType {
 }
 
 enum FriendShipStatus {
-  appcepted
+  accepted
   rejected
   pending
 }

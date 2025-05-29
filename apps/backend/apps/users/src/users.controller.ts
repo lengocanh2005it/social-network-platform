@@ -1,5 +1,10 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
+  CreateFriendRequestDto,
+  ResponseFriendRequestDto,
+} from '@app/common/dtos/friends';
+import { GetPostQueryDto } from '@app/common/dtos/posts';
+import {
   CreateUserSessionDto,
   GetUserQueryDto,
   UpdateUserProfileDto,
@@ -7,10 +12,9 @@ import {
   UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
 import { Verify2FaActions } from '@app/common/utils';
-import { Controller } from '@nestjs/common';
+import { Controller, Param } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
-import { GetPostQueryDto } from '@app/common/dtos/posts';
 
 @Controller()
 export class UsersController {
@@ -126,17 +130,55 @@ export class UsersController {
     );
   }
 
-  @MessagePattern('get-my-feed')
+  @MessagePattern('get-feed')
   async getMyFeed(
-    @Payload('email') email: string,
+    @Payload('username') username: string,
     @Payload('getPostQueryDto')
     getPostQueryDto: GetPostQueryDto,
   ) {
-    return this.usersService.getMyFeed(email, getPostQueryDto);
+    return this.usersService.getMyFeed(username, getPostQueryDto);
   }
 
   @MessagePattern('get-friends')
   async getFriendsOfUser(@Payload('email') email: string) {
     return this.usersService.getFriends(email);
+  }
+
+  @MessagePattern('create-friend-request')
+  async createFriendRequest(
+    @Payload('email') email: string,
+    @Payload('createFriendRequestDto')
+    createFriendRequestDto: CreateFriendRequestDto,
+  ) {
+    return this.usersService.createFriendRequest(email, createFriendRequestDto);
+  }
+
+  @MessagePattern('response-friend-request')
+  async responseFriendRequest(
+    @Payload('email') email: string,
+    @Payload('responseFriendRequestDto')
+    responseFriendRequestDto: ResponseFriendRequestDto,
+  ) {
+    return this.usersService.responseFriendRequest(
+      email,
+      responseFriendRequestDto,
+    );
+  }
+
+  @MessagePattern('get-profile')
+  async getProfile(
+    @Payload('username') username: string,
+    @Payload('email') email: string,
+    @Payload('getUserQueryDto') getUserQueryDto?: GetUserQueryDto,
+  ) {
+    return this.usersService.getProfile(username, email, getUserQueryDto);
+  }
+
+  @MessagePattern('delete-friend-request')
+  async deleteFriendRequest(
+    @Payload('email') email: string,
+    @Payload('target_id') target_id: string,
+  ) {
+    return this.usersService.deleteFriendRequest(email, target_id);
   }
 }
