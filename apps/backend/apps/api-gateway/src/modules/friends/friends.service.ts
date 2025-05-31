@@ -1,5 +1,7 @@
 import {
   CreateFriendRequestDto,
+  GetFriendRequestsQueryDto,
+  GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -17,6 +19,8 @@ export class FriendsService implements OnModuleInit {
       'create-friend-request',
       'delete-friend-request',
       'response-friend-request',
+      'get-friend-requests',
+      'get-friends-list',
     ];
 
     patterns.forEach((pattern) =>
@@ -53,6 +57,30 @@ export class FriendsService implements OnModuleInit {
       this.usersClient.send('delete-friend-request', {
         email,
         target_id,
+      }),
+    );
+  };
+
+  public getFriendRequests = async (
+    email: string,
+    getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.usersClient.send('get-friend-requests', {
+        email,
+        getFriendRequestsQueryDto,
+      }),
+    );
+  };
+
+  public getFriendsList = async (
+    email: string,
+    getFriendsListQueryDto: GetFriendsListQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.usersClient.send('get-friends-list', {
+        email,
+        getFriendsListQueryDto,
       }),
     );
   };

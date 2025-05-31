@@ -1,15 +1,16 @@
 import {
   CreateFriendRequestDto,
+  GetFriendRequestsQueryDto,
+  GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
 import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpException,
   HttpStatus,
-  Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -77,5 +78,42 @@ export class FriendsController {
       );
 
     return this.friendsService.deleteFriendRequest(email, target_id);
+  }
+
+  @Get()
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getFriendsList(
+    @KeycloakUser() user: any,
+    @Query() getFriendsListQueryDto: GetFriendsListQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.friendsService.getFriendsList(email, getFriendsListQueryDto);
+  }
+
+  @Get('requests')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getFriendRequests(
+    @KeycloakUser() user: any,
+    @Query() getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.friendsService.getFriendRequests(
+      email,
+      getFriendRequestsQueryDto,
+    );
   }
 }

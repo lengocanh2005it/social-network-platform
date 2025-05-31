@@ -51,6 +51,7 @@ export class PostsService implements OnModuleInit {
 
   public getProfilePosts = async (
     user_id: string,
+    currentUserId: string,
     getPostQueryDto?: GetPostQueryDto,
   ) => {
     const limit = getPostQueryDto?.limit ?? 10;
@@ -59,7 +60,7 @@ export class PostsService implements OnModuleInit {
       ? decodeCursor(getPostQueryDto.after)
       : null;
 
-    const posts = await this.prismaService.posts.findMany({
+    let posts = await this.prismaService.posts.findMany({
       where: this.buildProfilePostWhereClause(user_id),
       orderBy: { created_at: 'desc' },
       take: limit + 1,
@@ -80,6 +81,14 @@ export class PostsService implements OnModuleInit {
         hashtags: { include: { hashtag: true } },
       },
     });
+
+    if (user_id !== currentUserId) {
+      posts = posts.filter(
+        (p) =>
+          p.privacy === PostPrivaciesEnum.public ||
+          p.privacy === PostPrivaciesEnum.only_friend,
+      );
+    }
 
     const hasNextPage = posts.length > limit;
 
@@ -157,7 +166,13 @@ export class PostsService implements OnModuleInit {
 
     return {
       data: await Promise.all(
-        items.map((item) => this.transformPostItem(item, user_id)),
+        items.map((item) =>
+          this.transformPostItem(
+            item,
+            user_id,
+            item?.parent_post_id ? item.parent_post_id : undefined,
+          ),
+        ),
       ),
       nextCursor: hasNextPage ? encodeCursor(items[items.length - 1].id) : null,
     };
@@ -519,6 +534,7 @@ export class PostsService implements OnModuleInit {
         'profile.avatar_url',
         'profile.first_name',
         'profile.last_name',
+        'profile.username',
       ),
       likedByCurrentUser,
       topLikedUsers: await this.getTopUsersWhoLikedPost(item.id, userId),

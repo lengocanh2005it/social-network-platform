@@ -1,6 +1,5 @@
 import ProfilePhotos from "@/components/ProfilePhotos";
 import Link from "next/link";
-import React from "react";
 
 const images = [
   "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",

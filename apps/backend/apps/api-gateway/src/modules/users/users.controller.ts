@@ -3,10 +3,12 @@ import { GetUserQueryDto, UpdateUserProfileDto } from '@app/common/dtos/users';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Query,
 } from '@nestjs/common';
@@ -71,10 +73,37 @@ export class UsersController {
   }
 
   @Get('feed')
+  @Roles(RoleEnum.admin, RoleEnum.user)
   async getFeed(
     @Query('getPostQueryDto') getPostQueryDto: GetPostQueryDto,
     @Query('username') username: string,
+    @KeycloakUser() user: any,
   ) {
-    return this.usersService.getFeed(getPostQueryDto, username);
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.getFeed(getPostQueryDto, username, email);
+  }
+
+  @Delete('blocks/:targetId')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async blockUser(
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.blockUser(targetId, email);
   }
 }

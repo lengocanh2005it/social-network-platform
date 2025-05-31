@@ -17,6 +17,7 @@ import {
   UserX,
   XIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 import toast from "react-hot-toast";
 
@@ -31,6 +32,11 @@ const PostHeader: React.FC<PostHeaderProps> = ({
 }) => {
   const { hideHomePosts, homePosts, restoreHomePostAtIndex } = usePostStore();
   const { user } = useUserStore();
+  const router = useRouter();
+
+  const viewProfileClick = (username: string) => {
+    router.push(`/profile/${username}`);
+  };
 
   const handleHidePost = (postId: string) => {
     const index = homePosts.findIndex((p) => p.id === postId);
@@ -90,10 +96,14 @@ const PostHeader: React.FC<PostHeaderProps> = ({
             homePost.user.profile.last_name
           }
           className="object-cover cursor-pointer select-none"
+          onClick={() => viewProfileClick(homePost.user.profile.username)}
         />
 
         <div className="flex flex-col relative">
-          <h4 className="font-semibold">
+          <h4
+            className="font-semibold cursor-pointer hover:underline"
+            onClick={() => viewProfileClick(homePost.user.profile.username)}
+          >
             {homePost.user.profile.first_name +
               " " +
               homePost.user.profile.last_name}

@@ -8,26 +8,12 @@ import { ScrollShadow, Spinner } from "@heroui/react";
 import { useEffect } from "react";
 
 const FeedPage = () => {
-  const { data, isLoading, isError } = useGetPosts();
+  const { data, isLoading } = useGetPosts();
   const { homePosts, setHomePosts } = usePostStore();
 
   useEffect(() => {
     if (data && data?.data) setHomePosts(data?.data, data?.nextCursor);
   }, [data, setHomePosts]);
-
-  if (isLoading)
-    return (
-      <div
-        className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
-        flex-col items-center justify-center text-center"
-      >
-        <Spinner />
-
-        <p>Loading...</p>
-      </div>
-    );
-
-  if (isError) return <div>Error...</div>;
 
   return (
     <ScrollShadow
@@ -40,17 +26,24 @@ const FeedPage = () => {
 
       <StorySlider />
 
-      {homePosts?.length !== 0 ? (
-        <>
-          <section className="flex flex-col md:gap-2 gap-1">
-            {homePosts.map((post) => (
-              <PostCard key={post.id} homePost={post} />
-            ))}
-          </section>
-        </>
+      {isLoading ? (
+        <div
+          className="w-full flex md:gap-3 gap-2 
+        flex-col items-center justify-center text-center md:mt-8 mt-4"
+        >
+          <Spinner />
+
+          <p>Loading...</p>
+        </div>
       ) : (
         <>
-          {!isLoading && (
+          {homePosts?.length !== 0 ? (
+            <section className="flex flex-col md:gap-2 gap-1">
+              {homePosts.map((post) => (
+                <PostCard key={post.id} homePost={post} />
+              ))}
+            </section>
+          ) : (
             <div
               className="flex flex-col items-center justify-center text-center md:gap-2 gap-1
             md:mt-6 mt-4"

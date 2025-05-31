@@ -1,15 +1,12 @@
 "use client";
+import FriendRequests from "@/components/FriendRequests";
 import {
   Avatar,
-  Button,
   Divider,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  ScrollShadow,
-  Tooltip,
-  User,
 } from "@heroui/react";
 import {
   CircleX,
@@ -39,83 +36,10 @@ const onlineFriends = [
   { name: "Chloe King", avatar: "https://i.pravatar.cc/40?u=chloe" },
 ];
 
-const friendRequests = [
-  {
-    id: 1,
-    name: "John Smith",
-    avatar: "https://i.pravatar.cc/40?img=1",
-  },
-  {
-    id: 2,
-    name: "Emma Johnson",
-    avatar: "https://i.pravatar.cc/40?img=2",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    avatar: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: 4,
-    name: "Michael Brown",
-    avatar: "https://i.pravatar.cc/40?img=3",
-  },
-];
-
 const SideBarPage = () => {
   return (
     <main className="flex flex-col md:gap-1">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-medium text-black/70">Friend Requests</h2>
-
-        <ul>
-          <ScrollShadow
-            className="max-h-[200px]"
-            hideScrollBar
-            offset={0}
-            size={0}
-          >
-            {friendRequests.map((user) => (
-              <li
-                key={user.id}
-                className="flex items-center justify-between hover:bg-gray-100 p-2 rounded-lg"
-              >
-                <div className="flex items-center gap-3">
-                  <Tooltip content={user.name} delay={3000}>
-                    <User
-                      avatarProps={{
-                        src: user.avatar,
-                      }}
-                      name={
-                        <span className="block max-w-[100px] truncate text-sm font-medium">
-                          {user.name}
-                        </span>
-                      }
-                      className="cursor-pointer select-none"
-                    />
-                  </Tooltip>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    className="bg-blue-500 text-white text-sm px-3 py-1 rounded 
-                  hover:bg-blue-700 transition"
-                  >
-                    Confirm
-                  </Button>
-
-                  <Button
-                    className="bg-gray-200 text-sm px-3 py-1 rounded 
-                  hover:bg-gray-300 transition"
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ScrollShadow>
-        </ul>
-      </div>
+      <FriendRequests />
 
       <Divider className="md:my-3 my-2" />
 

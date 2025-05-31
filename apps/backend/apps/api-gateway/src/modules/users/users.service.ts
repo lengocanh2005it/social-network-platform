@@ -19,6 +19,7 @@ export class UsersService implements OnModuleInit {
       'get-user-session',
       'get-feed',
       'get-profile',
+      'block-user',
     ];
 
     patterns.forEach((pattern) => {
@@ -47,11 +48,16 @@ export class UsersService implements OnModuleInit {
     );
   }
 
-  async getFeed(getPostQueryDto: GetPostQueryDto, username: string) {
+  async getFeed(
+    getPostQueryDto: GetPostQueryDto,
+    username: string,
+    email: string,
+  ) {
     return firstValueFrom(
       this.userClient.send('get-feed', {
         username,
         getPostQueryDto,
+        email,
       }),
     );
   }
@@ -66,6 +72,15 @@ export class UsersService implements OnModuleInit {
         username,
         email,
         getUserQueryDto,
+      }),
+    );
+  };
+
+  public blockUser = async (targetUserId: string, email: string) => {
+    return firstValueFrom(
+      this.userClient.send('block-user', {
+        targetUserId,
+        email,
       }),
     );
   };
