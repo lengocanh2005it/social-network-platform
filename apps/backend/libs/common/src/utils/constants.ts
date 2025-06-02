@@ -50,7 +50,7 @@ export const BULLMQ_RETRY_LIMIT = 3;
 export const BULLMQ_RETRY_DELAY = 5000;
 export const IS_PRODUCTION =
   process.env.NODE_ENV === 'production' ? true : false;
-export const ACCESS_TOKEN_LIFE = 30 * 60 * 1000; // 30 minutes
+export const ACCESS_TOKEN_LIFE = 2 * 60 * 1000;
 export const REFRESH_TOKEN_LIFE = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const DEFAULT_ERROR_MESSAGE =
   'Oops! Something went wrong. Please try again.';

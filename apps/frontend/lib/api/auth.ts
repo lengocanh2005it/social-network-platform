@@ -81,8 +81,12 @@ export const changePassword = async (changePasswordDto: ChangePasswordDto) => {
   return response.data;
 };
 
-export const signOut = async () => {
-  const response = await axios.post("/auth/sign-out");
+export const signOut = async (user_id: string) => {
+  const response = await axios.post("/auth/sign-out", undefined, {
+    headers: {
+      user_id: user_id,
+    },
+  });
 
   return response.data;
 };

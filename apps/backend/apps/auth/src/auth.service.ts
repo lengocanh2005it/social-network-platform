@@ -1031,29 +1031,34 @@ export class AuthService implements OnModuleInit {
   };
 
   public signOut = async (signOutDto: SignOutDto) => {
-    const { access_token, refresh_token, finger_print } = signOutDto;
-
-    await this.keyCloakProvider.revokeToken(refresh_token, 'refresh_token');
-
-    const { email } = await this.keyCloakProvider.verifyToken(access_token);
-
-    if (!email)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `This email has not been registered.`,
-      });
-
-    const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
-    );
+    const { access_token, refresh_token, finger_print, user_id } = signOutDto;
 
     const updateUserSessionDto: UpdateUserSessionDto = {
-      user_id: user.id,
+      user_id,
       finger_print,
       status: SessionStatusEnum.inactive,
     };
+
+    if (refresh_token?.trim())
+      await this.keyCloakProvider.revokeToken(refresh_token, 'refresh_token');
+
+    if (access_token?.trim()) {
+      try {
+        await this.keyCloakProvider.verifyToken(access_token);
+      } catch (error) {
+        console.error(error);
+
+        this.usersClient.emit(
+          'update-user-session',
+          JSON.stringify(updateUserSessionDto),
+        );
+
+        throw new RpcException({
+          statusCode: HttpStatus.UNAUTHORIZED,
+          message: `Your session has expired. Please log in again.`,
+        });
+      }
+    }
 
     this.usersClient.emit(
       'update-user-session',

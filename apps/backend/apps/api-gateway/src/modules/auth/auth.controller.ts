@@ -205,28 +205,21 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Headers() headers: Record<string, any>,
   ) {
-    const access_token = req.cookies['access_token'] as string;
-
-    const refresh_token = req.cookies['refresh_token'] as string;
-
-    const fingerprint = headers['x-fingerprint'] as string;
-
-    if (!(access_token && refresh_token && fingerprint)) {
-      throw new HttpException(
-        'Your session has expired or been removed. Please sign in again.',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
+    const access_token = req.cookies['access_token'];
+    const refresh_token = req.cookies['refresh_token'];
+    const finger_print = headers['x-fingerprint'];
+    const user_id = headers['user_id'];
 
     const signOutDto: SignOutDto = {
       access_token,
       refresh_token,
-      finger_print: fingerprint,
+      finger_print,
+      user_id,
     };
 
     const data = await this.authService.signOut(signOutDto);
 
-    clearCookies(res);
+    if (data) clearCookies(res);
 
     return data;
   }

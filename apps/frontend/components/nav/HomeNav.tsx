@@ -264,7 +264,9 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
               <DropdownItem
                 key="log-out"
                 color="danger"
-                onPress={() => mutateSignOut()}
+                onPress={() => {
+                  if (user.id.trim()) mutateSignOut(user.id);
+                }}
               >
                 Log Out
               </DropdownItem>
