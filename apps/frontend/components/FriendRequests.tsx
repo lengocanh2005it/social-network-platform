@@ -36,7 +36,7 @@ const FriendRequests: React.FC = () => {
 
       setNextCursor(data?.nextCursor ? data.nextCursor : null);
     }
-  }, [data]);
+  }, [data, setNextCursor, setFriendRequests]);
 
   const handleLoadMore = async () => {
     if (!nextCursor || !user?.id) return;

@@ -1,5 +1,6 @@
 import { generateUUID } from "@/utils";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -26,7 +27,7 @@ export async function middleware(request: NextRequest) {
         },
       );
 
-      if (!res.data || !res.data.token) {
+      if (!res.data?.token) {
         throw new Error("Get token from server failed. Try again.");
       }
 
@@ -38,11 +39,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (accessToken) {
+    try {
+      const decoded: any = jwt.decode(accessToken);
+
+      if (decoded && decoded.exp && Date.now() < decoded.exp * 1000)
+        return NextResponse.next();
+    } catch (err) {
+      console.error("Access token decoding failed", err);
+    }
+  }
+
   if (
-    !refreshToken &&
-    (pathname.startsWith("/home") || pathname.startsWith("/settings"))
+    pathname.startsWith("/home") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/profile")
   ) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    const response = NextResponse.redirect(
+      new URL("/auth/sign-in", request.url),
+    );
+    response.cookies.set("access_token", "", { maxAge: 0 });
+    response.cookies.set("refresh_token", "", { maxAge: 0 });
+    response.cookies.set("role", "", { maxAge: 0 });
+    return response;
   }
 
   return NextResponse.next();
