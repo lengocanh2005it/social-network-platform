@@ -5,6 +5,7 @@ import {
 } from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
 import {
+  FriendShipStatusType,
   GenderType,
   PostContentType,
   PostPrivaciesType,
@@ -286,6 +287,7 @@ export interface Post {
       avatar_url: string;
       first_name: string;
       last_name: string;
+      username: string;
     };
   };
   privacy: PostPrivaciesType;
@@ -461,4 +463,61 @@ export type CreateFriendRequestType = {
 export type ResponseFriendRequestType = {
   action: ResponseFriendRequestAction;
   initiator_id: string;
+};
+
+export type GetFriendRequestsQueryDto = {
+  after?: string;
+  limit?: number;
+};
+
+export type GetFriendsListQueryDto = GetFriendRequestsQueryDto & {
+  username: string;
+  full_name?: string;
+};
+
+export type FriendRequestsType = {
+  friendship_status: FriendShipStatusType;
+  initiator_id: string;
+  initiated_at: string;
+  confirmed_at?: string;
+  initiator: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  };
+};
+
+export type Friend = {
+  user_id: string;
+  full_name: string;
+  username: string;
+  mutual_friends: number;
+  avatar_url: string;
+  is_friend: boolean;
+};
+
+export type BlockUserType = {
+  targetId: string;
+};
+
+export type GetBlockedUsersListQueryDto = GetFriendRequestsQueryDto;
+
+export type BlockedUserType = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
+  blocked_at: string;
+};
+
+export type SearchUserQueryDto = GetFeedQueryDto & {
+  full_name: string;
+};
+
+export type UserSearchResult = {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
 };

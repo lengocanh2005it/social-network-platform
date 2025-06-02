@@ -202,7 +202,7 @@ export class AuthController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   async signOut(
     @Req() req: Request,
-    @Res() res: Response,
+    @Res({ passthrough: true }) res: Response,
     @Headers() headers: Record<string, any>,
   ) {
     const access_token = req.cookies['access_token'] as string;
@@ -211,12 +211,7 @@ export class AuthController {
 
     const fingerprint = headers['x-fingerprint'] as string;
 
-    const isLoggedIn = req.cookies['logged_in'];
-
-    if (
-      !(access_token && refresh_token && fingerprint) ||
-      isLoggedIn !== 'true'
-    ) {
+    if (!(access_token && refresh_token && fingerprint)) {
       throw new HttpException(
         'Your session has expired or been removed. Please sign in again.',
         HttpStatus.UNAUTHORIZED,
@@ -231,11 +226,9 @@ export class AuthController {
 
     const data = await this.authService.signOut(signOutDto);
 
-    if (data) clearCookies(res);
-
     clearCookies(res);
 
-    return res.status(HttpStatus.CREATED).json(data);
+    return data;
   }
 
   @Post('send-otp')

@@ -26,8 +26,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
-    console.error(error);
-
     if (
       error?.response?.status === 401 &&
       !error.config._retry &&
@@ -36,6 +34,9 @@ axiosInstance.interceptors.response.use(
       ) ||
         error?.response?.data?.message?.includes(
           "Token verification failed. Please check and try again.",
+        ) ||
+        error?.response?.data?.message?.includes(
+          "Your token has expired. Please refresh your token to continue using the service.",
         ))
     ) {
       error.config._retry = true;

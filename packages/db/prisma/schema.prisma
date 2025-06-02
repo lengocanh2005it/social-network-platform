@@ -394,10 +394,11 @@ model Friends {
 }
 
 model Blocks {
-  user_id         String @db.Uuid
-  blocked_user_id String @db.Uuid
-  blockedUser     Users  @relation("BlockedUsers", fields: [blocked_user_id], references: [id], onDelete: Cascade)
-  user            Users  @relation("UserBlocks", fields: [user_id], references: [id], onDelete: Cascade)
+  user_id         String   @db.Uuid
+  blocked_user_id String   @db.Uuid
+  blocked_at      DateTime @default(now())
+  blockedUser     Users    @relation("BlockedUsers", fields: [blocked_user_id], references: [id], onDelete: Cascade)
+  user            Users    @relation("UserBlocks", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@id([user_id, blocked_user_id])
   @@unique([user_id, blocked_user_id])

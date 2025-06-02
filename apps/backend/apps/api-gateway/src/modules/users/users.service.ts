@@ -1,5 +1,10 @@
 import { GetPostQueryDto } from '@app/common/dtos/posts';
-import { GetUserQueryDto, UpdateUserProfileDto } from '@app/common/dtos/users';
+import {
+  GetBlockedUsersListQueryDto,
+  GetUserQueryDto,
+  SearchUserQueryDto,
+  UpdateUserProfileDto,
+} from '@app/common/dtos/users';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -19,6 +24,10 @@ export class UsersService implements OnModuleInit {
       'get-user-session',
       'get-feed',
       'get-profile',
+      'block-user',
+      'get-blocked-users',
+      'unblock-user',
+      'get-users',
     ];
 
     patterns.forEach((pattern) => {
@@ -47,11 +56,16 @@ export class UsersService implements OnModuleInit {
     );
   }
 
-  async getFeed(getPostQueryDto: GetPostQueryDto, username: string) {
+  async getFeed(
+    getPostQueryDto: GetPostQueryDto,
+    username: string,
+    email: string,
+  ) {
     return firstValueFrom(
       this.userClient.send('get-feed', {
         username,
         getPostQueryDto,
+        email,
       }),
     );
   }
@@ -66,6 +80,48 @@ export class UsersService implements OnModuleInit {
         username,
         email,
         getUserQueryDto,
+      }),
+    );
+  };
+
+  public blockUser = async (targetUserId: string, email: string) => {
+    return firstValueFrom(
+      this.userClient.send('block-user', {
+        targetUserId,
+        email,
+      }),
+    );
+  };
+
+  public getBlockedUsersList = async (
+    email: string,
+    getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.userClient.send('get-blocked-users', {
+        email,
+        getBlockedUsersListQueryDto,
+      }),
+    );
+  };
+
+  public unblockUser = async (email: string, targetId: string) => {
+    return firstValueFrom(
+      this.userClient.send('unblock-user', {
+        email,
+        targetId,
+      }),
+    );
+  };
+
+  public getUsers = async (
+    email: string,
+    searchUserQueryDto: SearchUserQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.userClient.send('get-users', {
+        email,
+        searchUserQueryDto,
       }),
     );
   };

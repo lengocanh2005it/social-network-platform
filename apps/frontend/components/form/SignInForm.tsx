@@ -199,7 +199,9 @@ const SignInForm = () => {
                   placeholder="johndoe01@gmail.com"
                   startContent={<Mail />}
                   isClearable
-                  value={field.value}
+                  aria-label="email"
+                  aria-labelledby="email"
+                  value={field.value || ""}
                   onChange={field.onChange}
                   onClear={() => {
                     form.setValue("email", "");

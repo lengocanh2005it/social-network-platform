@@ -30,9 +30,14 @@ export class PostsController {
   @MessagePattern('get-profile-posts')
   async getProfilePosts(
     @Payload('user_id') user_id: string,
+    @Payload('current_user_id') currentUserId: string,
     @Payload('getPostQueryDto') getPostQueryDto?: GetPostQueryDto,
   ) {
-    return this.postsService.getProfilePosts(user_id, getPostQueryDto);
+    return this.postsService.getProfilePosts(
+      user_id,
+      currentUserId,
+      getPostQueryDto,
+    );
   }
 
   @MessagePattern('get-home-posts')

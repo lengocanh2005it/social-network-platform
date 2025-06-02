@@ -2,12 +2,14 @@
 import EditImageButton from "@/components/button/EditImageButton";
 import PeopleKnow from "@/components/PeopleKnow";
 import {
+  useBlockUser,
   useCreateFriendRequest,
   useDeleteFriendRequest,
   useResponseToFriendRequest,
 } from "@/hooks";
-import { useAppStore, useUserStore } from "@/store";
+import { FullUserType, useAppStore, useUserStore } from "@/store";
 import {
+  BlockUserType,
   CreateFriendRequestType,
   RelationshipType,
   ResponseFriendRequestAction,
@@ -35,47 +37,23 @@ import {
   PlusCircle,
   Search,
   Shield,
+  UserLock,
   UserPlus,
   UserRoundX,
   X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
 
-const headersOptions = [
-  {
-    key: 1,
-    label: "Posts",
-  },
-  {
-    key: 2,
-    label: "About",
-  },
-  {
-    key: 3,
-    label: "Friends",
-  },
-  {
-    key: 4,
-    label: "Photos",
-  },
-  {
-    key: 5,
-    label: "Videos",
-  },
-  {
-    key: 6,
-    label: "Check-ins",
-  },
-];
-
 const ProfileHeaderSection = () => {
   const [isShowPeopleKnow, setIsShowPeopleKnow] = useState<boolean>(false);
-  const { viewedUser, user, relationship, setRelationship } = useUserStore();
+  const { viewedUser, user, relationship, setRelationship, setUser } =
+    useUserStore();
   const { setIsModalEditProfileOpen } = useAppStore();
   const [activeIndex, setActiveIndex] = useState(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
@@ -92,6 +70,41 @@ const ProfileHeaderSection = () => {
   } = useDeleteFriendRequest();
   const { mutate: mutateResponseToFriendRequest } =
     useResponseToFriendRequest();
+  const { mutate: mutateBlockUser } = useBlockUser();
+  const router = useRouter();
+
+  const headersOptions = [
+    {
+      key: 1,
+      label: "Posts",
+      href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
+    },
+    {
+      key: 2,
+      label: "About",
+      href: "/",
+    },
+    {
+      key: 3,
+      label: "Friends",
+      href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
+    },
+    {
+      key: 4,
+      label: "Photos",
+      href: "/",
+    },
+    {
+      key: 5,
+      label: "Videos",
+      href: "/",
+    },
+    {
+      key: 6,
+      label: "Check-ins",
+      href: "/",
+    },
+  ];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -187,6 +200,13 @@ const ProfileHeaderSection = () => {
           });
 
           setRelationship(data);
+
+          if (user) {
+            setUser({
+              ...user,
+              total_friends: user?.total_friends - 1,
+            });
+          }
         }
       },
     });
@@ -224,6 +244,27 @@ const ProfileHeaderSection = () => {
 
           setRelationship(data);
           setOpen(false);
+        }
+      },
+    });
+  };
+
+  const blockUserClick = (user: FullUserType) => {
+    const blockUserData: BlockUserType = {
+      targetId: user.id,
+    };
+
+    mutateBlockUser(blockUserData, {
+      onSuccess: (data: Record<string, string | boolean>) => {
+        if (data) {
+          router.push("/home");
+
+          toast.success(
+            `You have successfully blocked the user ${user.profile.first_name + " " + user.profile.last_name}.`,
+            {
+              position: "bottom-right",
+            },
+          );
         }
       },
     });
@@ -286,7 +327,7 @@ const ProfileHeaderSection = () => {
                   </div>
                 </PhotoProvider>
 
-                <div className="flex-1">
+                <div className="flex-1 relative">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center md:gap-2 gap-1">
                       <h1 className="md:text-3xl font-bold text-2xl">
@@ -302,7 +343,23 @@ const ProfileHeaderSection = () => {
                       )}
                     </div>
 
-                    <p className="text-gray-600">1000 friends</p>
+                    {viewedUser?.id !== user?.id ? (
+                      <>
+                        {viewedUser?.total_friends > 0 && (
+                          <p className="text-gray-600">
+                            {viewedUser?.total_friends} friends
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {user?.total_friends > 0 && (
+                          <p className="text-gray-600">
+                            {user.total_friends} friends
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
 
                   {viewedUser?.id === user?.id ? (
@@ -336,7 +393,7 @@ const ProfileHeaderSection = () => {
                       />
                     </div>
                   ) : (
-                    <>
+                    <div className="flex justify-end items-center md:gap-2 gap-1">
                       {relationship && (
                         <div className="flex gap-2 justify-end items-start">
                           {relationship.status === "none" && (
@@ -461,7 +518,31 @@ const ProfileHeaderSection = () => {
                             )}
                         </div>
                       )}
-                    </>
+
+                      <Dropdown
+                        placement="bottom-end"
+                        className="text-black"
+                        shouldBlockScroll={false}
+                      >
+                        <DropdownTrigger>
+                          <Button
+                            isIconOnly
+                            className="bg-transparent rounded-full"
+                          >
+                            <ChevronDown className="text-gray-700 focus:outline-none" />
+                          </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu aria-label="" variant="flat">
+                          <DropdownItem
+                            key="block"
+                            startContent={<UserLock />}
+                            onClick={() => blockUserClick(viewedUser)}
+                          >
+                            Block this user
+                          </DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </div>
                   )}
                 </div>
               </div>
@@ -478,9 +559,13 @@ const ProfileHeaderSection = () => {
                       ref={setItemRef(index)}
                       onMouseEnter={() => handleMouseEnter(index)}
                       onMouseLeave={handleMouseLeave}
+                      onClick={() => {
+                        setActiveIndex(index);
+                        updateIndicator(itemsRef.current[index]);
+                      }}
                     >
                       <Link
-                        href={"/"}
+                        href={option.href}
                         className="px-4 py-3 font-medium text-gray-700"
                       >
                         {option.label}

@@ -74,36 +74,42 @@ const ProfileIntroSection = () => {
 
         {viewedUser?.id !== user?.id ? (
           <>
-            <div className="w-full flex-1 flex flex-col md:p-3 p-2 md:gap-2 gap-1">
-              <p className="text-center text-gray-700">
-                {viewedUser?.profile?.bio}
-              </p>
+            {viewedUser?.profile?.bio && (
+              <div className="w-full flex-1 flex flex-col md:p-3 p-2 md:gap-2 gap-1">
+                <p className="text-center text-gray-700">
+                  {viewedUser?.profile?.bio}
+                </p>
 
-              {user?.id === viewedUser?.id && (
-                <Button
-                  color="primary"
-                  onPress={() => setIsClickedAddBio(true)}
-                >
-                  Edit bio
-                </Button>
-              )}
-            </div>
+                {user?.id === viewedUser?.id && (
+                  <Button
+                    color="primary"
+                    onPress={() => setIsClickedAddBio(true)}
+                  >
+                    Edit bio
+                  </Button>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <>
             {!isClickedAddBio ? (
-              <div className="w-full flex-1 flex flex-col md:p-3 p-2 md:gap-2 gap-1">
-                <p className="text-center text-gray-700">
-                  {user?.profile?.bio}
-                </p>
+              <>
+                {user?.profile?.bio && (
+                  <div className="w-full flex-1 flex flex-col md:p-3 p-2 md:gap-2 gap-1">
+                    <p className="text-center text-gray-700">
+                      {user?.profile?.bio}
+                    </p>
 
-                <Button
-                  color="primary"
-                  onPress={() => setIsClickedAddBio(true)}
-                >
-                  Edit bio
-                </Button>
-              </div>
+                    <Button
+                      color="primary"
+                      onPress={() => setIsClickedAddBio(true)}
+                    >
+                      Edit bio
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <>
                 <Form {...form}>

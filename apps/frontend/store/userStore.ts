@@ -1,5 +1,5 @@
 import { getMe } from "@/lib/api/users";
-import { handleAxiosError, RelationshipType } from "@/utils";
+import { Friend, handleAxiosError, RelationshipType } from "@/utils";
 import {
   UserEducationsType,
   UserProfilesType,
@@ -16,11 +16,14 @@ export type FullUserType = UsersType & {
   educations: UserEducationsType[];
   socials: UserSocialsType[];
   work_places: UserWorkPlacesType[];
+} & {
+  total_friends: number;
 };
 
 interface UserState {
   user: FullUserType | null;
   relationship: RelationshipType | null;
+  friends: Friend[];
   setRelationship: (relationship: RelationshipType | null) => void;
   viewedUser: FullUserType | null;
   educationsHistory: UserEducationsType[][];
@@ -41,6 +44,10 @@ interface UserState {
   updateUserWorkPlace: (id: string, data: Partial<UserWorkPlacesType>) => void;
   clearWorkPlacesHistory: () => void;
   clearEducationsHistory: () => void;
+  setFriends: (friends: Friend[]) => void;
+  updateFriendById: (userId: string, update: Partial<Friend>) => void;
+  removeFriendById: (userId: string) => void;
+  addOldFriends: (friends: Friend[]) => void;
 }
 
 const initialUserState: Pick<
@@ -50,18 +57,21 @@ const initialUserState: Pick<
   | "workPlacesHistory"
   | "viewedUser"
   | "relationship"
+  | "friends"
 > = {
   user: null,
   viewedUser: null,
   relationship: null,
   educationsHistory: [],
   workPlacesHistory: [],
+  friends: [],
 };
 
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       ...initialUserState,
+      setFriends: (friends) => set({ friends }),
       setRelationship: (relationship) => set({ relationship }),
       setViewedUser: (user) => set({ viewedUser: user }),
       setUser: (user) => set({ user }),
@@ -263,6 +273,20 @@ export const useUserStore = create<UserState>()(
       clearEducationsHistory: () => {
         set({ educationsHistory: [] });
       },
+      updateFriendById: (userId, update) =>
+        set((state) => ({
+          friends: state.friends.map((f) =>
+            f.user_id === userId ? { ...f, ...update } : f,
+          ),
+        })),
+      removeFriendById: (userId) =>
+        set((state) => ({
+          friends: state.friends.filter((f) => f.user_id !== userId),
+        })),
+      addOldFriends: (newFriends) =>
+        set((state) => ({
+          friends: [...state.friends, ...newFriends],
+        })),
     }),
     {
       name: "user-storage",

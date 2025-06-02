@@ -1,4 +1,5 @@
 "use client";
+import SearchDropdown from "@/components/SearchDropdown";
 import { useSignOut } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
@@ -7,7 +8,6 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Input,
   Link,
   Navbar,
   NavbarBrand,
@@ -28,7 +28,6 @@ import {
   Menu,
   MessageCircle,
   MoonIcon,
-  SearchIcon,
   Sun,
   TvMinimal,
   UsersRound,
@@ -125,7 +124,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
           />
         </NavbarBrand>
 
-        <Input
+        {/* <Input
           classNames={{
             base: "w-[84%] h-10",
             mainWrapper: "h-full",
@@ -137,7 +136,8 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
           size="sm"
           startContent={<SearchIcon size={18} />}
           type="search"
-        />
+        /> */}
+        <SearchDropdown />
       </NavbarContent>
 
       <NavbarContent

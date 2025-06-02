@@ -1,18 +1,22 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
   CreateFriendRequestDto,
+  GetFriendRequestsQueryDto,
+  GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
+  GetBlockedUsersListQueryDto,
   GetUserQueryDto,
+  SearchUserQueryDto,
   UpdateUserProfileDto,
   UpdateUserSessionDto,
   UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
 import { Verify2FaActions } from '@app/common/utils';
-import { Controller, Param } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
 
@@ -135,8 +139,9 @@ export class UsersController {
     @Payload('username') username: string,
     @Payload('getPostQueryDto')
     getPostQueryDto: GetPostQueryDto,
+    @Payload('email') email: string,
   ) {
-    return this.usersService.getMyFeed(username, getPostQueryDto);
+    return this.usersService.getMyFeed(username, getPostQueryDto, email);
   }
 
   @MessagePattern('get-friends')
@@ -180,5 +185,62 @@ export class UsersController {
     @Payload('target_id') target_id: string,
   ) {
     return this.usersService.deleteFriendRequest(email, target_id);
+  }
+
+  @MessagePattern('get-friend-requests')
+  async getFriendRequests(
+    @Payload('email') email: string,
+    @Payload('getFriendRequestsQueryDto')
+    getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
+  ) {
+    return this.usersService.getFriendRequests(
+      email,
+      getFriendRequestsQueryDto,
+    );
+  }
+
+  @MessagePattern('get-friends-list')
+  async getFriendsList(
+    @Payload('email') email: string,
+    @Payload('getFriendsListQueryDto')
+    getFriendsListQueryDto: GetFriendsListQueryDto,
+  ) {
+    return this.usersService.getFriendsList(email, getFriendsListQueryDto);
+  }
+
+  @MessagePattern('block-user')
+  async blockUser(
+    @Payload('email') email: string,
+    @Payload('targetUserId') targetUserId: string,
+  ) {
+    return this.usersService.blockUser(email, targetUserId);
+  }
+
+  @MessagePattern('get-blocked-users')
+  async getBlockedUsersList(
+    @Payload('email') email: string,
+    @Payload('getBlockedUsersListQueryDto')
+    getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+  ) {
+    return this.usersService.getBlockedUsersList(
+      email,
+      getBlockedUsersListQueryDto,
+    );
+  }
+
+  @MessagePattern('unblock-user')
+  async unblockUser(
+    @Payload('email') email: string,
+    @Payload('targetId') targetId: string,
+  ) {
+    return this.usersService.unblockUser(email, targetId);
+  }
+
+  @MessagePattern('get-users')
+  async getUsers(
+    @Payload('email') email: string,
+    @Payload('searchUserQueryDto') searchUserQueryDto: SearchUserQueryDto,
+  ) {
+    return this.usersService.getUsers(email, searchUserQueryDto);
   }
 }

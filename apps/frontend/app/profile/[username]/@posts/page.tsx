@@ -12,7 +12,7 @@ const ProfilePostsSection = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { viewedUser, user } = useUserStore();
   const { data, isLoading: isLoadingFeed } = useGetFeed(
-    viewedUser?.profile.username ?? "",
+    viewedUser?.profile?.username ?? "",
   );
 
   useEffect(() => {

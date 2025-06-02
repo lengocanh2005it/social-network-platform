@@ -36,6 +36,7 @@ import {
   PostPrivaciesType,
 } from "@repo/db";
 import { Ellipsis, EyeOff, Lock, SquarePen, Trash, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -44,7 +45,7 @@ interface ProfilePostsProps {
 }
 
 const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
-  const { user } = useUserStore();
+  const { user, viewedUser } = useUserStore();
   const { hidePost, posts, restorePostAtIndex } = usePostStore();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const {
@@ -64,9 +65,14 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
   const [isShowPostModal, setIsShowPostModal] = useState<boolean>(false);
   const [isShowParentPostModal, setIsShowParentPostModal] =
     useState<boolean>(false);
+  const router = useRouter();
 
   const handleConfirmClick = async (postId: string) => {
     mutateDeletePost(postId);
+  };
+
+  const viewProfileClick = (username: string) => {
+    router.push(`/profile/${username}`);
   };
 
   const handleHidePost = (postId: string) => {
@@ -217,10 +223,16 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                       post.user.profile.last_name
                     }
                     className="object-cover cursor-pointer select-none"
+                    onClick={() => viewProfileClick(post.user.profile.username)}
                   />
 
                   <div className="flex flex-col relative">
-                    <h4 className="font-semibold">
+                    <h4
+                      className="font-semibold cursor-pointer hover:underline"
+                      onClick={() =>
+                        viewProfileClick(post.user.profile.username)
+                      }
+                    >
                       {post.user.profile.first_name +
                         " " +
                         post.user.profile.last_name}
@@ -250,43 +262,45 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                   </div>
                 </div>
 
-                <div className="flex items-center md:gap-3 gap-2">
-                  <Dropdown
-                    placement="bottom-end"
-                    className="text-black"
-                    shouldBlockScroll={false}
-                  >
-                    <DropdownTrigger>
-                      <Ellipsis
-                        size={30}
-                        className="cursor-pointer focus:outline-none"
-                      />
-                    </DropdownTrigger>
-                    <DropdownMenu aria-label="Post options" variant="flat">
-                      <DropdownItem
-                        key="hide-post"
-                        startContent={<EyeOff />}
-                        onClick={() => handleHidePost(post.id)}
-                      >
-                        Hide post
-                      </DropdownItem>
-                      <DropdownItem
-                        key="update-post"
-                        onClick={() => setOpenUpdateModal(true)}
-                        startContent={<SquarePen />}
-                      >
-                        Update post
-                      </DropdownItem>
-                      <DropdownItem
-                        key="delete-post"
-                        startContent={<Trash />}
-                        onClick={() => setIsOpen(true)}
-                      >
-                        Delete post
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
+                {viewedUser?.id === user?.id && (
+                  <div className="flex items-center md:gap-3 gap-2">
+                    <Dropdown
+                      placement="bottom-end"
+                      className="text-black"
+                      shouldBlockScroll={false}
+                    >
+                      <DropdownTrigger>
+                        <Ellipsis
+                          size={30}
+                          className="cursor-pointer focus:outline-none"
+                        />
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Post options" variant="flat">
+                        <DropdownItem
+                          key="hide-post"
+                          startContent={<EyeOff />}
+                          onClick={() => handleHidePost(post.id)}
+                        >
+                          Hide post
+                        </DropdownItem>
+                        <DropdownItem
+                          key="update-post"
+                          onClick={() => setOpenUpdateModal(true)}
+                          startContent={<SquarePen />}
+                        >
+                          Update post
+                        </DropdownItem>
+                        <DropdownItem
+                          key="delete-post"
+                          startContent={<Trash />}
+                          onClick={() => setIsOpen(true)}
+                        >
+                          Delete post
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
+                  </div>
+                )}
               </div>
 
               {(post?.contents?.length !== 0 ||

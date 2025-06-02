@@ -1,12 +1,16 @@
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
   CreateFriendRequestDto,
+  GetFriendRequestsQueryDto,
+  GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
+  GetBlockedUsersListQueryDto,
   GetUserQueryDto,
+  SearchUserQueryDto,
   UpdateEducationsDto,
   UpdateInfoDetailsDto,
   UpdateSocialsLinkDto,
@@ -28,7 +32,7 @@ import {
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { FriendShipEnum, SessionStatusEnum } from '@repo/db';
+import { FriendShipEnum, SessionStatusEnum, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -97,7 +101,11 @@ export class UsersService implements OnModuleInit {
 
     const findUser = await this.prismaService.users.findUnique({
       where: { email },
-      include,
+      include: {
+        ...include,
+        targets: true,
+        initiators: true,
+      },
     });
 
     if (!findUser)
@@ -106,7 +114,21 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    return omit(findUser, ['password']);
+    const total_friends =
+      findUser.targets.filter(
+        (t) => t.friendship_status === FriendShipEnum.accepted,
+      ).length +
+      findUser.initiators.filter(
+        (i) => i.friendship_status === FriendShipEnum.accepted,
+      ).length;
+
+    return omit(
+      {
+        ...findUser,
+        total_friends,
+      },
+      ['password', 'targets', 'initiators'],
+    );
   };
 
   public updateUserProfile = async (
@@ -652,7 +674,10 @@ export class UsersService implements OnModuleInit {
   public getMyFeed = async (
     username: string,
     getPostQueryDto: GetPostQueryDto,
+    email: string,
   ) => {
+    const user = await this.handleGetUserByField('email', email);
+
     const userProfile = await this.prismaService.userProfiles.findUnique({
       where: {
         username,
@@ -672,6 +697,7 @@ export class UsersService implements OnModuleInit {
       this.postsClient.send('get-profile-posts', {
         user_id: userProfile.user.id,
         getPostQueryDto,
+        current_user_id: user.id,
       }),
     );
   };
@@ -876,8 +902,15 @@ export class UsersService implements OnModuleInit {
     email: string,
     getUserQueryDto?: GetUserQueryDto,
   ) => {
-    const user = await this.handleGetUserByField('email', email, {
-      includeProfile: true,
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        profile: true,
+        blockedUsers: true,
+        blockedBy: true,
+      },
     });
 
     if (!user)
@@ -895,11 +928,12 @@ export class UsersService implements OnModuleInit {
       },
     });
 
-    if (!findUser)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `The profile you are looking for does not exist.`,
-      });
+    if (
+      !findUser ||
+      user.blockedUsers.some((bu) => bu.blocked_user_id === findUser.user_id) ||
+      user.blockedBy.some((bb) => bb.user_id === findUser.user_id)
+    )
+      return null;
 
     let relationship: any;
 
@@ -1017,6 +1051,601 @@ export class UsersService implements OnModuleInit {
     return {
       status: 'none',
       isInitiator: false,
+    };
+  };
+
+  public getFriendRequests = async (
+    email: string,
+    getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
+  ) => {
+    const user = await this.handleGetUserByField('email', email);
+
+    const limit = getFriendRequestsQueryDto?.limit ?? 4;
+
+    const decodedCursor = getFriendRequestsQueryDto?.after
+      ? this.decodeCursor(getFriendRequestsQueryDto.after)
+      : null;
+
+    const friendRequests = await this.prismaService.friends.findMany({
+      where: {
+        target_id: user.id,
+        friendship_status: FriendShipEnum.pending,
+      },
+      include: {
+        initiator: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          initiated_at: 'desc',
+        },
+      ],
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          initiator_id_target_id: {
+            initiator_id: decodedCursor.initiatorId,
+            target_id: decodedCursor.targetId,
+          },
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = friendRequests.length > limit;
+
+    const items = hasNextPage ? friendRequests.slice(0, -1) : friendRequests;
+
+    return {
+      data: items.map((item) => ({
+        friendship_status: item.friendship_status,
+        initiator_id: item.initiator_id,
+        initiated_at: item.initiated_at,
+        confirmed_at: item?.confirmed_at,
+        initiator: {
+          id: item.initiator.id,
+          full_name: `${item.initiator.profile?.first_name ?? ''} ${item.initiator.profile?.last_name ?? ''}`,
+          avatar_url: item.initiator.profile?.avatar_url ?? '',
+          username: item.initiator.profile?.username ?? '',
+        },
+      })),
+      nextCursor: hasNextPage
+        ? this.encodeCursor(
+            items[items.length - 1].initiator_id,
+            items[items.length - 1].target_id,
+          )
+        : null,
+    };
+  };
+
+  public encodeCursor = (initiatorId: string, targetId: string): string => {
+    return Buffer.from(`${initiatorId}::${targetId}`).toString('base64');
+  };
+
+  public decodeCursor = (
+    cursor: string,
+  ): { initiatorId: string; targetId: string } => {
+    const [initiatorId, targetId] = Buffer.from(cursor, 'base64')
+      .toString('utf8')
+      .split('::');
+
+    return { initiatorId, targetId };
+  };
+
+  public getFriendsList = async (
+    email: string,
+    getFriendsListQueryDto: GetFriendsListQueryDto,
+  ) => {
+    const { username } = getFriendsListQueryDto;
+
+    const findUser = await this.prismaService.userProfiles.findUnique({
+      where: {
+        username,
+      },
+    });
+
+    if (!findUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user whose friend list you're trying to view does not exist. Please try again.`,
+      });
+
+    const user = await this.handleGetUserByField('email', email);
+
+    const limit = getFriendsListQueryDto?.limit ?? 10;
+
+    const decodedCursor = getFriendsListQueryDto?.after
+      ? this.decodeCursor(getFriendsListQueryDto.after)
+      : null;
+
+    const friends = await this.prismaService.friends.findMany({
+      where: {
+        friendship_status: FriendShipEnum.accepted,
+        OR: [
+          {
+            initiator_id: findUser.user_id,
+          },
+          {
+            target_id: findUser.user_id,
+          },
+        ],
+      },
+      include: {
+        target: {
+          include: {
+            profile: true,
+          },
+        },
+        initiator: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          initiated_at: 'desc',
+        },
+      ],
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          initiator_id_target_id: {
+            initiator_id: decodedCursor.initiatorId,
+            target_id: decodedCursor.targetId,
+          },
+        },
+        skip: 1,
+      }),
+    });
+
+    const fullNameQuery = getFriendsListQueryDto?.full_name?.toLowerCase();
+
+    const filteredFriends = fullNameQuery
+      ? friends.filter((item) => {
+          const isInitiator = findUser.user_id === item.initiator_id;
+
+          const profile = isInitiator
+            ? item.target.profile
+            : item.initiator.profile;
+
+          const fullName =
+            `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.toLowerCase();
+
+          return fullName.includes(fullNameQuery);
+        })
+      : friends;
+
+    const hasNextPage = filteredFriends.length > limit;
+
+    const items = hasNextPage ? filteredFriends.slice(0, -1) : filteredFriends;
+
+    return {
+      data: await Promise.all(
+        items.map(async (item) => {
+          const isInitiator = findUser.user_id === item.initiator_id;
+          return {
+            user_id: isInitiator ? item.target_id : item.initiator_id,
+            full_name: isInitiator
+              ? `${item.target.profile?.first_name ?? ''} ${item.target.profile?.last_name ?? ''}`
+              : `${item.initiator.profile?.first_name ?? ''} ${item.initiator.profile?.last_name ?? ''}`,
+            username: isInitiator
+              ? item.target.profile?.username
+              : item.initiator.profile?.username,
+            avatar_url: isInitiator
+              ? item.target.profile?.avatar_url
+              : item.initiator.profile?.avatar_url,
+            mutual_friends: isInitiator
+              ? await this.getMutualFriendsCount(user.id, item.target_id)
+              : await this.getMutualFriendsCount(user.id, item.initiator_id),
+            is_friend: isInitiator
+              ? await this.isHasFriendWithCurrentUser(user.id, item.target_id)
+              : await this.isHasFriendWithCurrentUser(
+                  user.id,
+                  item.initiator_id,
+                ),
+          };
+        }),
+      ),
+      nextCursor: hasNextPage
+        ? this.encodeCursor(
+            items[items.length - 1].initiator_id,
+            items[items.length - 1].target_id,
+          )
+        : null,
+    };
+  };
+
+  private getMutualFriendsCount = async (
+    currentUserId: string,
+    targetId: string,
+  ) => {
+    const currentUserFriends = await this.prismaService.friends.findMany({
+      where: {
+        friendship_status: FriendShipEnum.accepted,
+        OR: [{ initiator_id: currentUserId }, { target_id: currentUserId }],
+      },
+      select: {
+        initiator_id: true,
+        target_id: true,
+      },
+    });
+
+    const targetUserFriends = await this.prismaService.friends.findMany({
+      where: {
+        friendship_status: FriendShipEnum.accepted,
+        OR: [{ initiator_id: targetId }, { target_id: targetId }],
+      },
+      select: {
+        initiator_id: true,
+        target_id: true,
+      },
+    });
+
+    const extractFriendIds = (userId: string, list: any[]) =>
+      list.map((f) =>
+        f.initiator_id === userId ? f.target_id : f.initiator_id,
+      );
+
+    const currentUserFriendIds = extractFriendIds(
+      currentUserId,
+      currentUserFriends,
+    );
+
+    const targetUserFriendIds = extractFriendIds(targetId, targetUserFriends);
+
+    const mutualFriendIds = currentUserFriendIds.filter((id) =>
+      targetUserFriendIds.includes(id),
+    );
+
+    return mutualFriendIds.length;
+  };
+
+  private isHasFriendWithCurrentUser = async (
+    currentUserId: string,
+    targetId: string,
+  ) => {
+    const relationship = await this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id: currentUserId,
+            target_id: targetId,
+          },
+          {
+            target_id: currentUserId,
+            initiator_id: targetId,
+          },
+        ],
+      },
+    });
+
+    if (!relationship) return false;
+
+    return true;
+  };
+
+  public blockUser = async (email: string, targetUserId: string) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedUsers: true,
+        blockedBy: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const targetUser = (await this.handleGetUserByField(
+      'id',
+      targetUserId,
+    )) as UsersType;
+
+    if (user.id === targetUser.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You are not allowed to block yourself.`,
+      });
+
+    if (user.blockedUsers.some((bu) => bu.blocked_user_id === targetUserId))
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `This person is already in your block list.`,
+      });
+
+    if (user.blockedBy.some((bb) => bb.user_id === targetUserId))
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `This person has already blocked you.`,
+      });
+
+    const existingFriendship = await this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id: user.id,
+            target_id: targetUserId,
+          },
+          {
+            initiator_id: targetUserId,
+            target_id: user.id,
+          },
+        ],
+      },
+    });
+
+    if (existingFriendship)
+      await this.prismaService.friends.delete({
+        where: {
+          initiator_id_target_id: {
+            initiator_id: existingFriendship.initiator_id,
+            target_id: existingFriendship.target_id,
+          },
+        },
+      });
+
+    await this.prismaService.blocks.create({
+      data: {
+        user_id: user.id,
+        blocked_user_id: targetUserId,
+      },
+    });
+
+    return {
+      message: 'User has been successfully blocked.',
+      blockedUserId: targetUserId,
+      canUnblock: true,
+    };
+  };
+
+  public getBlockedUsersList = async (
+    email: string,
+    getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const limit = getBlockedUsersListQueryDto?.limit ?? 10;
+
+    const decodedCursor = getBlockedUsersListQueryDto?.after
+      ? this.decodeCursor(getBlockedUsersListQueryDto.after)
+      : null;
+
+    const blockedUsers = await this.prismaService.blocks.findMany({
+      where: {
+        user_id: user.id,
+      },
+      include: {
+        blockedUser: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          user_id_blocked_user_id: {
+            user_id: decodedCursor.initiatorId,
+            blocked_user_id: decodedCursor.targetId,
+          },
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = blockedUsers.length > limit;
+
+    const items = hasNextPage ? blockedUsers.slice(0, -1) : blockedUsers;
+
+    const nextCursor = hasNextPage
+      ? this.encodeCursor(
+          items[items.length - 1].user_id,
+          items[items.length - 1].blocked_user_id,
+        )
+      : null;
+
+    return {
+      data: items.map((item) => ({
+        user_id: item.blocked_user_id,
+        full_name: `${item.blockedUser.profile?.first_name ?? ''} ${item.blockedUser.profile?.last_name ?? ''}`,
+        avatar_url: item.blockedUser.profile?.avatar_url ?? '',
+        username: item.blockedUser.profile?.username,
+        blocked_at: item.blocked_at,
+      })),
+      nextCursor,
+    };
+  };
+
+  public unblockUser = async (email: string, targetId: string) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedUsers: true,
+        blockedBy: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const targetUser = await this.handleGetUserByField('id', targetId, {
+      includeProfile: true,
+    });
+
+    if (user.id === targetUser.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You are not allowed to unblock yourself.`,
+      });
+
+    if (!user.blockedUsers.some((bu) => bu.blocked_user_id === targetId))
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'This person is not in your blocked users list.',
+      });
+
+    if (user.blockedBy.some((bb) => bb.user_id === targetId))
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `This person has already blocked you.`,
+      });
+
+    const blockRelationship = await this.prismaService.blocks.findUnique({
+      where: {
+        user_id_blocked_user_id: {
+          user_id: user.id,
+          blocked_user_id: targetId,
+        },
+      },
+    });
+
+    if (!blockRelationship)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This person is not in your blocked users list.`,
+      });
+
+    await this.prismaService.blocks.delete({
+      where: {
+        user_id_blocked_user_id: {
+          user_id: blockRelationship.user_id,
+          blocked_user_id: blockRelationship.blocked_user_id,
+        },
+      },
+    });
+
+    return {
+      message: `User ${targetUser.profile.first_name ?? ''} ${targetUser.profile.last_name ?? ''} has been removed from your blocked list.`,
+      canBlock: true,
+    };
+  };
+
+  public getUsers = async (
+    email: string,
+    searchUserQueryDto: SearchUserQueryDto,
+  ) => {
+    function encodeCursor(data: { id: string }): string {
+      return Buffer.from(JSON.stringify(data)).toString('base64');
+    }
+
+    function decodeCursor(cursor: string): { id: string } {
+      return JSON.parse(Buffer.from(cursor, 'base64').toString());
+    }
+
+    const { full_name } = searchUserQueryDto;
+
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedBy: true,
+        blockedUsers: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const limit = searchUserQueryDto?.limit ?? 10;
+
+    const decodedCursor = searchUserQueryDto?.after
+      ? decodeCursor(searchUserQueryDto.after)
+      : null;
+
+    const blockedUserIds = Array.from(
+      new Set([
+        ...user.blockedUsers.map((u) => u.blocked_user_id),
+        ...user.blockedBy.map((u) => u.user_id),
+      ]),
+    );
+
+    const profiles = await this.prismaService.userProfiles.findMany({
+      where: {
+        user_id: {
+          not: user.id,
+          notIn: blockedUserIds,
+        },
+        OR: [
+          {
+            first_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+          {
+            last_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+        },
+        skip: 1,
+      }),
+      orderBy: {
+        id: 'desc',
+      },
+    });
+
+    const hasNextPage = profiles.length > limit;
+
+    const items = hasNextPage ? profiles.slice(0, -1) : profiles;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({ id: items[items.length - 1].id })
+      : null;
+
+    return {
+      data: items.map((item) => ({
+        id: item.user_id,
+        full_name: `${item.first_name ?? ''} ${item.last_name ?? ''}`,
+        avatar_url: item.avatar_url ?? '',
+        username: item.username ?? '',
+      })),
+      nextCursor,
     };
   };
 }

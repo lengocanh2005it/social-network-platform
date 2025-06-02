@@ -76,7 +76,7 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
               <Input
                 placeholder="johndoe01@gmail.com"
                 isClearable
-                value={field.value}
+                value={field?.value || ""}
                 onChange={field.onChange}
                 onClear={() => {
                   form.setValue("email", "");

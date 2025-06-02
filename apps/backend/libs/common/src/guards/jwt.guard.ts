@@ -1,12 +1,9 @@
 import {
-  BadRequestException,
   ExecutionContext,
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
 import { AuthGuard } from 'nest-keycloak-connect';
 
 @Injectable()
