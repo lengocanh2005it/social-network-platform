@@ -8,7 +8,9 @@ import {
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
+  GetBlockedUsersListQueryDto,
   GetUserQueryDto,
+  SearchUserQueryDto,
   UpdateUserProfileDto,
   UpdateUserSessionDto,
   UploadUserImageQueryDto,
@@ -212,5 +214,33 @@ export class UsersController {
     @Payload('targetUserId') targetUserId: string,
   ) {
     return this.usersService.blockUser(email, targetUserId);
+  }
+
+  @MessagePattern('get-blocked-users')
+  async getBlockedUsersList(
+    @Payload('email') email: string,
+    @Payload('getBlockedUsersListQueryDto')
+    getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+  ) {
+    return this.usersService.getBlockedUsersList(
+      email,
+      getBlockedUsersListQueryDto,
+    );
+  }
+
+  @MessagePattern('unblock-user')
+  async unblockUser(
+    @Payload('email') email: string,
+    @Payload('targetId') targetId: string,
+  ) {
+    return this.usersService.unblockUser(email, targetId);
+  }
+
+  @MessagePattern('get-users')
+  async getUsers(
+    @Payload('email') email: string,
+    @Payload('searchUserQueryDto') searchUserQueryDto: SearchUserQueryDto,
+  ) {
+    return this.usersService.getUsers(email, searchUserQueryDto);
   }
 }

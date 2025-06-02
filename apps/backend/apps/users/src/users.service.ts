@@ -8,7 +8,9 @@ import {
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
+  GetBlockedUsersListQueryDto,
   GetUserQueryDto,
+  SearchUserQueryDto,
   UpdateEducationsDto,
   UpdateInfoDetailsDto,
   UpdateSocialsLinkDto,
@@ -1402,6 +1404,248 @@ export class UsersService implements OnModuleInit {
       message: 'User has been successfully blocked.',
       blockedUserId: targetUserId,
       canUnblock: true,
+    };
+  };
+
+  public getBlockedUsersList = async (
+    email: string,
+    getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const limit = getBlockedUsersListQueryDto?.limit ?? 10;
+
+    const decodedCursor = getBlockedUsersListQueryDto?.after
+      ? this.decodeCursor(getBlockedUsersListQueryDto.after)
+      : null;
+
+    const blockedUsers = await this.prismaService.blocks.findMany({
+      where: {
+        user_id: user.id,
+      },
+      include: {
+        blockedUser: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          user_id_blocked_user_id: {
+            user_id: decodedCursor.initiatorId,
+            blocked_user_id: decodedCursor.targetId,
+          },
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = blockedUsers.length > limit;
+
+    const items = hasNextPage ? blockedUsers.slice(0, -1) : blockedUsers;
+
+    const nextCursor = hasNextPage
+      ? this.encodeCursor(
+          items[items.length - 1].user_id,
+          items[items.length - 1].blocked_user_id,
+        )
+      : null;
+
+    return {
+      data: items.map((item) => ({
+        user_id: item.blocked_user_id,
+        full_name: `${item.blockedUser.profile?.first_name ?? ''} ${item.blockedUser.profile?.last_name ?? ''}`,
+        avatar_url: item.blockedUser.profile?.avatar_url ?? '',
+        username: item.blockedUser.profile?.username,
+        blocked_at: item.blocked_at,
+      })),
+      nextCursor,
+    };
+  };
+
+  public unblockUser = async (email: string, targetId: string) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedUsers: true,
+        blockedBy: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const targetUser = await this.handleGetUserByField('id', targetId, {
+      includeProfile: true,
+    });
+
+    if (user.id === targetUser.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You are not allowed to unblock yourself.`,
+      });
+
+    if (!user.blockedUsers.some((bu) => bu.blocked_user_id === targetId))
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'This person is not in your blocked users list.',
+      });
+
+    if (user.blockedBy.some((bb) => bb.user_id === targetId))
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `This person has already blocked you.`,
+      });
+
+    const blockRelationship = await this.prismaService.blocks.findUnique({
+      where: {
+        user_id_blocked_user_id: {
+          user_id: user.id,
+          blocked_user_id: targetId,
+        },
+      },
+    });
+
+    if (!blockRelationship)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This person is not in your blocked users list.`,
+      });
+
+    await this.prismaService.blocks.delete({
+      where: {
+        user_id_blocked_user_id: {
+          user_id: blockRelationship.user_id,
+          blocked_user_id: blockRelationship.blocked_user_id,
+        },
+      },
+    });
+
+    return {
+      message: `User ${targetUser.profile.first_name ?? ''} ${targetUser.profile.last_name ?? ''} has been removed from your blocked list.`,
+      canBlock: true,
+    };
+  };
+
+  public getUsers = async (
+    email: string,
+    searchUserQueryDto: SearchUserQueryDto,
+  ) => {
+    function encodeCursor(data: { id: string }): string {
+      return Buffer.from(JSON.stringify(data)).toString('base64');
+    }
+
+    function decodeCursor(cursor: string): { id: string } {
+      return JSON.parse(Buffer.from(cursor, 'base64').toString());
+    }
+
+    const { full_name } = searchUserQueryDto;
+
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedBy: true,
+        blockedUsers: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const limit = searchUserQueryDto?.limit ?? 10;
+
+    const decodedCursor = searchUserQueryDto?.after
+      ? decodeCursor(searchUserQueryDto.after)
+      : null;
+
+    const blockedUserIds = Array.from(
+      new Set([
+        ...user.blockedUsers.map((u) => u.blocked_user_id),
+        ...user.blockedBy.map((u) => u.user_id),
+      ]),
+    );
+
+    const profiles = await this.prismaService.userProfiles.findMany({
+      where: {
+        user_id: {
+          not: user.id,
+          notIn: blockedUserIds,
+        },
+        OR: [
+          {
+            first_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+          {
+            last_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+      take: limit + 1,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+        },
+        skip: 1,
+      }),
+      orderBy: {
+        id: 'desc',
+      },
+    });
+
+    const hasNextPage = profiles.length > limit;
+
+    const items = hasNextPage ? profiles.slice(0, -1) : profiles;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({ id: items[items.length - 1].id })
+      : null;
+
+    return {
+      data: items.map((item) => ({
+        id: item.user_id,
+        full_name: `${item.first_name ?? ''} ${item.last_name ?? ''}`,
+        avatar_url: item.avatar_url ?? '',
+        username: item.username ?? '',
+      })),
+      nextCursor,
     };
   };
 }

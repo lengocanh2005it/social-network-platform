@@ -139,13 +139,6 @@ export const initializeCookies = (
     sameSite: 'lax',
     maxAge: ACCESS_TOKEN_LIFE,
   });
-
-  res.cookie('logged_in', true, {
-    httpOnly: false,
-    secure: IS_PRODUCTION ? true : false,
-    sameSite: 'lax',
-    maxAge: ACCESS_TOKEN_LIFE,
-  });
 };
 
 export function capitalize(str: string): string {

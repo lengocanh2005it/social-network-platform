@@ -500,3 +500,24 @@ export type Friend = {
 export type BlockUserType = {
   targetId: string;
 };
+
+export type GetBlockedUsersListQueryDto = GetFriendRequestsQueryDto;
+
+export type BlockedUserType = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
+  blocked_at: string;
+};
+
+export type SearchUserQueryDto = GetFeedQueryDto & {
+  full_name: string;
+};
+
+export type UserSearchResult = {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
+};

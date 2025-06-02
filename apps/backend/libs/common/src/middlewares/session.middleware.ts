@@ -58,7 +58,13 @@ export class SessionMiddleware implements NestMiddleware {
 
       next();
     } catch (error) {
-      console.error(error);
+      console.error('Error here: ', error);
+
+      if (error.name === 'TokenExpiredError')
+        throw new HttpException(
+          'Your token has expired. Please refresh your token to continue using the service.',
+          HttpStatus.UNAUTHORIZED,
+        );
 
       const statusCode = error?.error?.statusCode || error?.status || 500;
 

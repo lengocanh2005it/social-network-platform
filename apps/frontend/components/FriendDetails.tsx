@@ -39,6 +39,10 @@ const FriendDetails: React.FC<FriendDetailsProps> = ({ friend }) => {
     mutateBlockUser(blockUserData, {
       onSuccess: (data: Record<string, string | boolean>) => {
         if (data) {
+          toast.success(`Successfully blocked user ${friend.full_name}.`, {
+            position: "bottom-right",
+          });
+
           updateFriendById(friend.user_id, {
             is_friend: false,
           });

@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { Tooltip } from "@heroui/react";
 import { RotateCcw } from "lucide-react";

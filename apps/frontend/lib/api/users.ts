@@ -2,11 +2,13 @@ import axios from "@/lib/axios";
 import {
   BlockUserType,
   CreateFriendRequestType,
+  GetBlockedUsersListQueryDto,
   GetFeedQueryDto,
   GetFriendRequestsQueryDto,
   GetFriendsListQueryDto,
   GetUserQueryDto,
   ResponseFriendRequestType,
+  SearchUserQueryDto,
   UpdateUserProfile,
 } from "@/utils";
 
@@ -101,6 +103,30 @@ export const blockUser = async (blockUserType: BlockUserType) => {
   const { targetId } = blockUserType;
 
   const response = await axios.delete(`/users/blocks/${targetId}`);
+
+  return response.data;
+};
+
+export const getBlockedUsersList = async (
+  getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
+) => {
+  const response = await axios.get(`/users/me/blocked`, {
+    params: getBlockedUsersListQueryDto,
+  });
+
+  return response.data;
+};
+
+export const unblockUser = async (targetId: string) => {
+  const response = await axios.delete(`/users/me/blocked/${targetId}`);
+
+  return response.data;
+};
+
+export const getUsers = async (searchUserQueryDto: SearchUserQueryDto) => {
+  const response = await axios.get(`/users`, {
+    params: searchUserQueryDto,
+  });
 
   return response.data;
 };
