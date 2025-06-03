@@ -25,7 +25,7 @@ export default function EditImageButton({
   const [modalOpen, setModalOpen] = useState(false);
   const { mutate: mutateUploadImage } = useUploadImage();
   const [isLoaing, setIsLoading] = useState<boolean>(false);
-  const { setUser } = useUserStore();
+  const { setUser, user } = useUserStore();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -83,14 +83,17 @@ export default function EditImageButton({
           position: "bottom-right",
         });
 
-        const res = await getMe({
-          includeProfile: true,
-          includeEducations: true,
-          includeWorkPlaces: true,
-          includeSocials: true,
-        });
+        if (user?.profile) {
+          const res = await getMe({
+            includeProfile: true,
+            includeEducations: true,
+            includeWorkPlaces: true,
+            includeSocials: true,
+            username: user.profile.username,
+          });
 
-        if (res) setUser(res);
+          if (res) setUser(res);
+        }
       }
     } catch (error) {
       handleAxiosError(error);

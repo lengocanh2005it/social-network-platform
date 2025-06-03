@@ -32,7 +32,7 @@ export class UsersController {
   @MessagePattern('get-me')
   async getMe(
     @Payload('email') email: string,
-    @Payload('getUserQueryDto') getUserQueryDto?: GetUserQueryDto,
+    @Payload('getUserQueryDto') getUserQueryDto: GetUserQueryDto,
   ) {
     return this.usersService.handleGetMe(email, getUserQueryDto);
   }
@@ -100,7 +100,7 @@ export class UsersController {
     payload: {
       field: 'email' | 'phone_number' | 'id';
       value: string;
-      getUserQueryDto?: GetUserQueryDto;
+      getUserQueryDto: GetUserQueryDto;
     },
   ) {
     const { field, value, getUserQueryDto } = payload;
@@ -174,7 +174,7 @@ export class UsersController {
   async getProfile(
     @Payload('username') username: string,
     @Payload('email') email: string,
-    @Payload('getUserQueryDto') getUserQueryDto?: GetUserQueryDto,
+    @Payload('getUserQueryDto') getUserQueryDto: GetUserQueryDto,
   ) {
     return this.usersService.getProfile(username, email, getUserQueryDto);
   }

@@ -115,12 +115,6 @@ export interface SocialItem {
   url: string;
 }
 
-export type FriendType = {
-  avatar: string;
-  name: string;
-  id: string;
-};
-
 export type GetUserQueryDto = {
   includeProfile?: boolean;
   includeFollowings?: boolean;
@@ -130,6 +124,7 @@ export type GetUserQueryDto = {
   includeEducations?: boolean;
   includeSocials?: boolean;
   includePosts?: boolean;
+  username: string;
 };
 
 export type Education = {

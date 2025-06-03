@@ -1,7 +1,11 @@
 import { ToBoolean } from '@app/common/decorators';
-import { IsBoolean, IsOptional } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetUserQueryDto {
+  @IsString()
+  @IsNotEmpty()
+  readonly username!: string;
+
   @IsOptional()
   @IsBoolean()
   @ToBoolean()

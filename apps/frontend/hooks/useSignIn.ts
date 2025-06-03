@@ -46,24 +46,27 @@ export const useSignIn = () => {
       )
         return;
 
-      const response = await getMe({
-        includeProfile: true,
-        includeEducations: true,
-        includeWorkPlaces: true,
-        includeSocials: true,
-      });
+      if (data?.username) {
+        const response = await getMe({
+          includeProfile: true,
+          includeEducations: true,
+          includeWorkPlaces: true,
+          includeSocials: true,
+          username: data.username,
+        });
 
-      if (response) setUser(response);
+        if (response) setUser(response);
 
-      if (data?.role === "user") {
-        router.push("/home");
-      } else if (data?.role === "admin") {
-        router.push("/home/dashboard");
+        if (data?.role === "user") {
+          router.push("/home");
+        } else if (data?.role === "admin") {
+          router.push("/home/dashboard");
+        }
+
+        toast.success("Successfully logged in!", {
+          position: "bottom-right",
+        });
       }
-
-      toast.success("Successfully logged in!", {
-        position: "bottom-right",
-      });
     },
     onError: (error: any) => handleAxiosError(error),
   });

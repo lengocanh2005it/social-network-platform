@@ -220,13 +220,16 @@ export class AuthService implements OnModuleInit {
       };
     }
 
-    return this.createSessionAndIssueTokens(
-      email,
-      password,
-      fingerprint,
-      findDevice,
-      existingUser.id,
-    );
+    if (existingUser.profile) {
+      return this.createSessionAndIssueTokens(
+        email,
+        password,
+        fingerprint,
+        findDevice,
+        existingUser.id,
+        existingUser.profile.username,
+      );
+    }
   };
 
   public signUp = async (signUpDto: SignUpDto, userIp?: string) => {
@@ -1053,10 +1056,11 @@ export class AuthService implements OnModuleInit {
           JSON.stringify(updateUserSessionDto),
         );
 
-        throw new RpcException({
-          statusCode: HttpStatus.UNAUTHORIZED,
-          message: `Your session has expired. Please log in again.`,
-        });
+        if (!refresh_token?.trim())
+          throw new RpcException({
+            statusCode: HttpStatus.UNAUTHORIZED,
+            message: `Your session has expired. Please log in again.`,
+          });
       }
     }
 
@@ -1295,12 +1299,15 @@ export class AuthService implements OnModuleInit {
     try {
       const { sub } = this.jwtService.verify<TwoFaToken>(token);
 
-      const user = await firstValueFrom<UsersType>(
+      const user = await firstValueFrom<any>(
         this.usersClient.send(
           'get-user-by-field',
           JSON.stringify({
             field: 'id',
             value: sub,
+            getUserQueryDto: {
+              includeProfile: true,
+            },
           }),
         ),
       );
@@ -1329,6 +1336,7 @@ export class AuthService implements OnModuleInit {
         fingerprint,
         device,
         sub,
+        user.profile.username,
       );
     } catch (error) {
       console.error(error);
@@ -1354,6 +1362,7 @@ export class AuthService implements OnModuleInit {
     fingerprint: string,
     device: UserDevicesType,
     user_id: string,
+    username: string,
   ) => {
     const data = await this.keyCloakProvider.signInByKeycloak(email, password);
 
@@ -1376,6 +1385,7 @@ export class AuthService implements OnModuleInit {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
       role: await this.keyCloakProvider.getRolesKeycloak(data.access_token),
+      username,
     };
   };
 

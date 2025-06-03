@@ -35,7 +35,7 @@ export class UsersService implements OnModuleInit {
     });
   }
 
-  async getMe(email: string, getUserQueryDto?: GetUserQueryDto): Promise<any> {
+  async getMe(email: string, getUserQueryDto: GetUserQueryDto): Promise<any> {
     return firstValueFrom(
       this.userClient.send('get-me', {
         email,
@@ -73,7 +73,7 @@ export class UsersService implements OnModuleInit {
   public getProfile = async (
     username: string,
     email: string,
-    getUserQueryDto?: GetUserQueryDto,
+    getUserQueryDto: GetUserQueryDto,
   ) => {
     return firstValueFrom(
       this.userClient.send('get-profile', {

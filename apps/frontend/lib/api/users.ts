@@ -12,7 +12,7 @@ import {
   UpdateUserProfile,
 } from "@/utils";
 
-export const getMe = async (getUserQueryDto?: GetUserQueryDto) => {
+export const getMe = async (getUserQueryDto: GetUserQueryDto) => {
   const response = await axios.get("/users/me", {
     params: getUserQueryDto,
   });
@@ -44,7 +44,7 @@ export const getMyFeed = async (
 
 export const getProfile = async (
   username: string,
-  getUserQueryDto?: GetUserQueryDto,
+  getUserQueryDto: GetUserQueryDto,
 ) => {
   const response = await axios.get(`/users/usernames/${username}`, {
     params: getUserQueryDto,

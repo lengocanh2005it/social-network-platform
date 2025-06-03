@@ -27,3 +27,5 @@ export enum ResponseFriendRequestAction {
 
 export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;
+export const MAX_DISPLAY_FRIEND_LISTS = 9;
+export const MAX_VISIBLE_CHATBOX = 3;

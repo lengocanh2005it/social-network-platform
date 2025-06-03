@@ -33,6 +33,7 @@ import {
   Ellipsis,
   Eye,
   Lock,
+  MessagesSquare,
   Plus,
   PlusCircle,
   Search,
@@ -44,8 +45,8 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
@@ -72,39 +73,74 @@ const ProfileHeaderSection = () => {
     useResponseToFriendRequest();
   const { mutate: mutateBlockUser } = useBlockUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
 
-  const headersOptions = [
-    {
-      key: 1,
-      label: "Posts",
-      href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
-    },
-    {
-      key: 2,
-      label: "About",
-      href: "/",
-    },
-    {
-      key: 3,
-      label: "Friends",
-      href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
-    },
-    {
-      key: 4,
-      label: "Photos",
-      href: "/",
-    },
-    {
-      key: 5,
-      label: "Videos",
-      href: "/",
-    },
-    {
-      key: 6,
-      label: "Check-ins",
-      href: "/",
-    },
-  ];
+  const headersOptions = useMemo(
+    () => [
+      {
+        key: 1,
+        label: "Posts",
+        href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
+      },
+      {
+        key: 2,
+        label: "About",
+        href: "/",
+      },
+      {
+        key: 3,
+        label: "Friends",
+        href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
+      },
+      {
+        key: 4,
+        label: "Photos",
+        href: "/",
+      },
+      {
+        key: 5,
+        label: "Videos",
+        href: "/",
+      },
+      {
+        key: 6,
+        label: "Check-ins",
+        href: "/",
+      },
+    ],
+    [
+      user?.id,
+      user?.profile?.username,
+      viewedUser?.id,
+      viewedUser?.profile?.username,
+    ],
+  );
+
+  useEffect(() => {
+    if (!itemsRef.current.length) return;
+
+    if (tab) {
+      const targetIndex = headersOptions.findIndex((option) =>
+        option.href.includes(`tab=${tab}`),
+      );
+      if (targetIndex !== -1) {
+        setActiveIndex(targetIndex);
+        updateIndicator(itemsRef.current[targetIndex]);
+      } else {
+        setActiveIndex(0);
+        updateIndicator(itemsRef.current[0]);
+      }
+    } else {
+      setActiveIndex(0);
+      updateIndicator(itemsRef.current[0]);
+    }
+  }, [
+    tab,
+    viewedUser?.profile?.username,
+    user?.profile?.username,
+    headersOptions,
+  ]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -141,13 +177,6 @@ const ProfileHeaderSection = () => {
       }
     }, 500);
   };
-
-  useEffect(() => {
-    if (itemsRef.current[0]) {
-      updateIndicator(itemsRef.current[0]);
-      setActiveIndex(0);
-    }
-  }, []);
 
   const setItemRef = (index: number) => (el: HTMLDivElement | null) => {
     itemsRef.current[index] = el;
@@ -426,14 +455,24 @@ const ProfileHeaderSection = () => {
                                   Please wait...
                                 </Button>
                               ) : (
-                                <Button
-                                  color="primary"
-                                  startContent={<UserRoundX />}
-                                  onPress={handleDeleteFriend}
-                                >
-                                  Unfriend
-                                </Button>
+                                <>
+                                  <Button
+                                    color="primary"
+                                    startContent={<UserRoundX />}
+                                    onPress={handleDeleteFriend}
+                                  >
+                                    Unfriend
+                                  </Button>
+                                </>
                               )}
+
+                              <Button
+                                startContent={<MessagesSquare />}
+                                className="bg-blue-500 hover:bg-blue-700 text-white px-3 
+                                py-1 rounded-md text-sm"
+                              >
+                                Message
+                              </Button>
                             </>
                           )}
 

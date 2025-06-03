@@ -28,7 +28,7 @@ interface MediaState {
   clearNewMediaFiles: () => void;
 }
 
-export const useMediaStore = create<MediaState>((set, get) => ({
+export const useMediaStore = create<MediaState>((set) => ({
   mediaFiles: [],
   deletedMediaFiles: [],
   newMediaFiles: [],

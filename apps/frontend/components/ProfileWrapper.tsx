@@ -5,10 +5,10 @@ import FriendsTab from "@/components/tabs/FriendsTab";
 import { useGetProfile } from "@/hooks";
 import { useUserStore } from "@/store";
 import { Button } from "@heroui/react";
+import { HomeIcon } from "lucide-react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
-import Image from "next/image";
-import { HomeIcon } from "lucide-react";
 
 interface ProfileWrapperProps {
   username: string;
@@ -38,6 +38,7 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
     includeEducations: true,
     includeSocials: true,
     includeWorkPlaces: true,
+    username,
   });
 
   useEffect(() => {

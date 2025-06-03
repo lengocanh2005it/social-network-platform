@@ -27,16 +27,20 @@ axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (
-      error?.response?.status === 401 &&
-      !error.config._retry &&
-      (error?.response?.data?.message?.includes(
-        "We couldn't verify your session. Please sign in again to continue securely.",
-      ) ||
-        error?.response?.data?.message?.includes(
-          "Missing access and refresh tokens. Please log in again.",
+      (error?.response?.status === 401 &&
+        !error.config._retry &&
+        (error?.response?.data?.message?.includes(
+          "We couldn't verify your session. Please sign in again to continue securely.",
         ) ||
+          error?.response?.data?.message?.includes(
+            "Missing access and refresh tokens. Please log in again.",
+          ) ||
+          error?.response?.data?.message?.includes(
+            "Your session has expired. Please log in again.",
+          ))) ||
+      (error?.response?.status === 400 &&
         error?.response?.data?.message?.includes(
-          "Your session has expired. Please log in again.",
+          "Refresh token is invalid or expired.",
         ))
     ) {
       toast.error(error?.response?.data?.message);

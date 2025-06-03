@@ -111,11 +111,12 @@ export const useUserStore = create<UserState>()(
       resetUserProfile: async () => {
         const currentUser = get().user;
 
-        if (!currentUser) return;
+        if (!currentUser || !currentUser.profile) return;
 
         try {
           const response = await getMe({
             includeProfile: true,
+            username: currentUser.profile.username,
           });
 
           if (!response?.profile)
