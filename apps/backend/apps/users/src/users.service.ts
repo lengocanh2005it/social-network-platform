@@ -32,7 +32,7 @@ import {
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { FriendShipEnum, SessionStatusEnum, UsersType } from '@repo/db';
+import { FriendShipEnum, SessionStatusEnum } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -78,8 +78,42 @@ export class UsersService implements OnModuleInit {
 
   public handleGetMe = async (
     email: string,
-    getUserQueryDto?: GetUserQueryDto,
+    getUserQueryDto: GetUserQueryDto,
   ) => {
+    const { username } = getUserQueryDto;
+
+    const findUserWithUsername =
+      await this.prismaService.userProfiles.findUnique({
+        where: {
+          username,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    if (!findUserWithUsername || !findUserWithUsername.user.email)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user you're looking for doesn't exist.`,
+      });
+
+    const currentUser = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedBy: true,
+        blockedUsers: true,
+      },
+    });
+
+    if (!currentUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
     const relations = [
       'profile',
       'followings',
@@ -100,7 +134,7 @@ export class UsersService implements OnModuleInit {
     }, {});
 
     const findUser = await this.prismaService.users.findUnique({
-      where: { email },
+      where: { email: findUserWithUsername.user.email },
       include: {
         ...include,
         targets: true,
@@ -114,13 +148,26 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    const total_friends =
-      findUser.targets.filter(
-        (t) => t.friendship_status === FriendShipEnum.accepted,
-      ).length +
-      findUser.initiators.filter(
-        (i) => i.friendship_status === FriendShipEnum.accepted,
-      ).length;
+    const blockedUserIds = Array.from(
+      new Set([
+        ...currentUser.blockedUsers.map((u) => u.blocked_user_id),
+        ...currentUser.blockedBy.map((u) => u.user_id),
+      ]),
+    );
+
+    const acceptedTargets = findUser.targets.filter(
+      (t) =>
+        t.friendship_status === FriendShipEnum.accepted &&
+        !blockedUserIds.includes(t.initiator_id),
+    );
+
+    const acceptedInitiators = findUser.initiators.filter(
+      (i) =>
+        i.friendship_status === FriendShipEnum.accepted &&
+        !blockedUserIds.includes(i.target_id),
+    );
+
+    const total_friends = acceptedTargets.length + acceptedInitiators.length;
 
     return omit(
       {
@@ -139,6 +186,9 @@ export class UsersService implements OnModuleInit {
       where: {
         email,
       },
+      include: {
+        profile: true,
+      },
     });
 
     if (!existingUserEmail)
@@ -152,6 +202,8 @@ export class UsersService implements OnModuleInit {
         statusCode: HttpStatus.BAD_REQUEST,
         message: `Please provide data to update user profile.`,
       });
+
+    if (!existingUserEmail.profile) return null;
 
     const { socials, educations, infoDetails, workPlaces } =
       updateUserProfileDto;
@@ -172,6 +224,7 @@ export class UsersService implements OnModuleInit {
       includeEducations: true,
       includeWorkPlaces: true,
       includeSocials: true,
+      username: existingUserEmail.profile.username,
     });
   };
 
@@ -562,7 +615,7 @@ export class UsersService implements OnModuleInit {
   public handleGetUserByField = async (
     field: 'email' | 'phone_number' | 'id',
     value: string,
-    getUserQueryDto?: GetUserQueryDto,
+    getUserQueryDto: GetUserQueryDto,
   ) => {
     const relations = [
       'profile',
@@ -621,7 +674,17 @@ export class UsersService implements OnModuleInit {
   };
 
   public updateStatus2Fa = async (email: string, action: Verify2FaActions) => {
-    await this.handleGetMe(email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     await this.prismaService.users.update({
       where: {
@@ -676,7 +739,17 @@ export class UsersService implements OnModuleInit {
     getPostQueryDto: GetPostQueryDto,
     email: string,
   ) => {
-    const user = await this.handleGetUserByField('email', email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const userProfile = await this.prismaService.userProfiles.findUnique({
       where: {
@@ -703,7 +776,20 @@ export class UsersService implements OnModuleInit {
   };
 
   public getFriends = async (email: string) => {
-    const user = await this.handleGetMe(email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const friends = await this.prismaService.friends.findMany({
       where: {
@@ -732,7 +818,17 @@ export class UsersService implements OnModuleInit {
     email: string,
     createFriendRequestDto: CreateFriendRequestDto,
   ) => {
-    const user = await this.handleGetUserByField('email', email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const { target_id } = createFriendRequestDto;
 
@@ -900,7 +996,7 @@ export class UsersService implements OnModuleInit {
   public getProfile = async (
     username: string,
     email: string,
-    getUserQueryDto?: GetUserQueryDto,
+    getUserQueryDto: GetUserQueryDto,
   ) => {
     const user = await this.prismaService.users.findUnique({
       where: {
@@ -952,12 +1048,9 @@ export class UsersService implements OnModuleInit {
             : FriendShipEnum.pending;
     }
 
-    if (findUser.user.email)
+    if (findUser.user.email && user.email)
       return {
-        ...(await this.handleGetMe(
-          findUser.user_id === user.id ? email : findUser.user.email,
-          getUserQueryDto,
-        )),
+        ...(await this.handleGetMe(user.email, getUserQueryDto)),
         ...(user.id !== findUser.user_id && {
           relationship: {
             status: friendStatus,
@@ -992,7 +1085,17 @@ export class UsersService implements OnModuleInit {
   };
 
   public deleteFriendRequest = async (email: string, target_id: string) => {
-    const user = await this.handleGetUserByField('email', email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const targetUser = await this.prismaService.users.findUnique({
       where: {
@@ -1058,7 +1161,17 @@ export class UsersService implements OnModuleInit {
     email: string,
     getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
   ) => {
-    const user = await this.handleGetUserByField('email', email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const limit = getFriendRequestsQueryDto?.limit ?? 4;
 
@@ -1153,7 +1266,21 @@ export class UsersService implements OnModuleInit {
         message: `The user whose friend list you're trying to view does not exist. Please try again.`,
       });
 
-    const user = await this.handleGetUserByField('email', email);
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        blockedBy: true,
+        blockedUsers: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
 
     const limit = getFriendsListQueryDto?.limit ?? 10;
 
@@ -1161,15 +1288,48 @@ export class UsersService implements OnModuleInit {
       ? this.decodeCursor(getFriendsListQueryDto.after)
       : null;
 
+    const blockedUserIds = Array.from(
+      new Set([
+        ...user.blockedUsers.map((u) => u.blocked_user_id),
+        ...user.blockedBy.map((u) => u.user_id),
+      ]),
+    );
+
+    const totalFriends = await this.prismaService.friends.count({
+      where: {
+        OR: [
+          {
+            initiator_id: findUser.user_id,
+            target_id: {
+              notIn: blockedUserIds,
+            },
+          },
+          {
+            target_id: findUser.user_id,
+            initiator_id: {
+              notIn: blockedUserIds,
+            },
+          },
+        ],
+        friendship_status: FriendShipEnum.accepted,
+      },
+    });
+
     const friends = await this.prismaService.friends.findMany({
       where: {
         friendship_status: FriendShipEnum.accepted,
         OR: [
           {
             initiator_id: findUser.user_id,
+            target_id: {
+              notIn: blockedUserIds,
+            },
           },
           {
             target_id: findUser.user_id,
+            initiator_id: {
+              notIn: blockedUserIds,
+            },
           },
         ],
       },
@@ -1250,6 +1410,7 @@ export class UsersService implements OnModuleInit {
           };
         }),
       ),
+      total_friends: totalFriends,
       nextCursor: hasNextPage
         ? this.encodeCursor(
             items[items.length - 1].initiator_id,
@@ -1345,10 +1506,20 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    const targetUser = (await this.handleGetUserByField(
-      'id',
-      targetUserId,
-    )) as UsersType;
+    const targetUser = await this.prismaService.users.findUnique({
+      where: {
+        id: targetUserId,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!targetUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user you're trying to interact with does not exist. Please try again.`,
+      });
 
     if (user.id === targetUser.id)
       throw new RpcException({
@@ -1495,9 +1666,20 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    const targetUser = await this.handleGetUserByField('id', targetId, {
-      includeProfile: true,
+    const targetUser = await this.prismaService.users.findUnique({
+      where: {
+        id: targetId,
+      },
+      include: {
+        profile: true,
+      },
     });
+
+    if (!targetUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The user you're trying to interact with does not exist. Please try again.`,
+      });
 
     if (user.id === targetUser.id)
       throw new RpcException({
@@ -1542,7 +1724,7 @@ export class UsersService implements OnModuleInit {
     });
 
     return {
-      message: `User ${targetUser.profile.first_name ?? ''} ${targetUser.profile.last_name ?? ''} has been removed from your blocked list.`,
+      message: `User ${targetUser?.profile?.first_name ?? ''} ${targetUser?.profile?.last_name ?? ''} has been removed from your blocked list.`,
       canBlock: true,
     };
   };

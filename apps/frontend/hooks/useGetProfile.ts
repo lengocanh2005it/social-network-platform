@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useGetProfile = (
   username: string,
-  getUserQueryDto?: GetUserQueryDto,
+  getUserQueryDto: GetUserQueryDto,
 ) => {
   return useQuery({
     queryKey: [`profile/${username}`],

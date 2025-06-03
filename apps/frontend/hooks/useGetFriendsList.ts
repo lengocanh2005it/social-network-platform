@@ -11,5 +11,6 @@ export const useGetFriendsList = (
     queryFn: () => getFriendsList(getFriendsListQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!userId,
   });
 };

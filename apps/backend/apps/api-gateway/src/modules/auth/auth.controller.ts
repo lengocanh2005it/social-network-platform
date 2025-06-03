@@ -37,16 +37,24 @@ export class AuthController {
 
   @Public()
   @Post('sign-in')
-  async signIn(@Body() signInDto: SignInDto, @Res() res: Response) {
+  async signIn(
+    @Body() signInDto: SignInDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const data = await this.authService.signIn(signInDto);
 
-    if (data?.access_token && data?.refresh_token && data?.role) {
+    if (
+      data?.access_token &&
+      data?.refresh_token &&
+      data?.role &&
+      data?.username
+    ) {
       const { access_token, refresh_token, role } = data;
 
       initializeCookies(res, { access_token, refresh_token, role });
     }
 
-    return res.status(HttpStatus.CREATED).json(data);
+    return data;
   }
 
   @Public()

@@ -8,41 +8,38 @@ datasource db {
 }
 
 model Users {
-  id                        String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                     String?                    @unique @db.VarChar(255)
-  password                  String?                    @db.VarChar(255)
-  is_email_verified         Boolean                    @default(false)
-  two_factor_enabled        Boolean                    @default(false)
-  role                      Role                       @default(user)
-  blockedBy                 Blocks[]                   @relation("BlockedUsers")
-  blockedUsers              Blocks[]                   @relation("UserBlocks")
-  comment_likes             CommentLikes[]
-  comments                  Comments[]
-  conversation_participants ConversationParticipants[]
-  conversations             Conversations[]
-  initiators                Friends[]                  @relation("InitiatorUser")
-  targets                   Friends[]                  @relation("TargetUser")
-  groupJoinRequests         GroupJoinRequests[]
-  groups                    Groups[]
-  messages                  Messages[]
-  notifications             Notifications[]
-  oauth_account             OAuthAccounts?
-  post_image_likes          PostImageLikes[]
-  post_image_shares         PostImageShares[]
-  post_likes                PostLikes[]
-  post_tags                 PostTags[]
-  post_video_likes          PostVideoLikes[]
-  post_video_shares         PostVideoShares[]
-  posts                     Posts[]
-  stories                   Stories[]
-  story_reactions           StoryReactions[]
-  story_views               StoryViews[]
-  devices                   UserDevices[]
-  educations                UserEducations[]
-  profile                   UserProfiles?
-  sessions                  UserSessions[]
-  socials                   UserSocials[]
-  work_places               UserWorkPlaces[]
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String?           @unique @db.VarChar(255)
+  password            String?           @db.VarChar(255)
+  is_email_verified   Boolean           @default(false)
+  two_factor_enabled  Boolean           @default(false)
+  role                Role              @default(user)
+  blockedBy           Blocks[]          @relation("BlockedUsers")
+  blockedUsers        Blocks[]          @relation("UserBlocks")
+  comment_likes       CommentLikes[]
+  comments            Comments[]
+  conversationAsUser1 Conversations[]   @relation("User1")
+  conversationAsUser2 Conversations[]   @relation("User2")
+  initiators          Friends[]         @relation("InitiatorUser")
+  targets             Friends[]         @relation("TargetUser")
+  messages            Messages[]
+  notifications       Notifications[]
+  oauth_account       OAuthAccounts?
+  post_image_likes    PostImageLikes[]
+  post_image_shares   PostImageShares[]
+  post_likes          PostLikes[]
+  post_tags           PostTags[]
+  post_video_likes    PostVideoLikes[]
+  post_video_shares   PostVideoShares[]
+  posts               Posts[]
+  stories             Stories[]
+  story_views         StoryViews[]
+  devices             UserDevices[]
+  educations          UserEducations[]
+  profile             UserProfiles?
+  sessions            UserSessions[]
+  socials             UserSocials[]
+  work_places         UserWorkPlaces[]
 }
 
 model UserProfiles {
@@ -304,37 +301,6 @@ model CommentLikes {
   @@unique([user_id, comment_id])
 }
 
-model Groups {
-  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name              String
-  description       String?
-  cover_photo_url   String?
-  is_private        Boolean             @default(false)
-  created_at        DateTime            @default(now())
-  created_by        String              @db.Uuid
-  groupJoinRequests GroupJoinRequests[]
-  user              Users               @relation(fields: [created_by], references: [id], onDelete: Cascade)
-}
-
-model GroupMembers {
-  group_id String          @db.Uuid
-  user_id  String          @db.Uuid
-  role     GroupMemberRole
-
-  @@id([group_id, user_id])
-  @@unique([group_id, user_id])
-}
-
-model GroupJoinRequests {
-  id         String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  status     GroupJoinRequestsStatus @default(pending)
-  created_at DateTime                @default(now())
-  group_id   String                  @db.Uuid
-  user_id    String                  @db.Uuid
-  group      Groups                  @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  user       Users                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
 model Stories {
   id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content_type ContentStoryType @default(text)
@@ -344,7 +310,6 @@ model Stories {
   expires_at   DateTime
   user_id      String           @db.Uuid
   user         Users            @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  reactions    StoryReactions[]
   views        StoryViews[]
 }
 
@@ -353,18 +318,6 @@ model StoryViews {
   viewer_id String  @db.Uuid
   story     Stories @relation(fields: [story_id], references: [id], onDelete: Cascade)
   viewer    Users   @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
-
-  @@id([story_id, viewer_id])
-  @@unique([story_id, viewer_id])
-}
-
-model StoryReactions {
-  story_id   String   @db.Uuid
-  viewer_id  String   @db.Uuid
-  reaction   String
-  reacted_at DateTime @default(now())
-  story      Stories  @relation(fields: [story_id], references: [id], onDelete: Cascade)
-  viewer     Users    @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
 
   @@id([story_id, viewer_id])
   @@unique([story_id, viewer_id])
@@ -405,28 +358,16 @@ model Blocks {
 }
 
 model Conversations {
-  id               String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  is_group         Boolean                    @default(false)
-  group_name       String?
-  group_avatar_url String?
-  created_at       DateTime                   @default(now())
-  updated_at       DateTime                   @default(now())
-  created_by       String                     @db.Uuid
-  participants     ConversationParticipants[]
-  creator          Users                      @relation(fields: [created_by], references: [id], onDelete: Cascade)
-  messages         Messages[]
-}
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime   @default(now())
+  user_1_id  String     @db.Uuid
+  user_2_id  String     @db.Uuid
+  messages   Messages[]
 
-model ConversationParticipants {
-  user_id         String        @db.Uuid
-  conversation_id String        @db.Uuid
-  joined_at       DateTime      @default(now())
-  leaved_at       DateTime?
-  conversation    Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
-  user            Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_1 Users @relation("User1", fields: [user_1_id], references: [id], onDelete: Cascade)
+  user_2 Users @relation("User2", fields: [user_2_id], references: [id], onDelete: Cascade)
 
-  @@id([user_id, conversation_id])
-  @@unique([user_id, conversation_id])
+  @@unique([user_1_id, user_2_id])
 }
 
 model Messages {
@@ -440,18 +381,9 @@ model Messages {
   reply_to_message_id String?       @db.Uuid
   user_id             String        @db.Uuid
   conversation        Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
-  parentMessage       Messages?     @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: Cascade)
+  parent_message      Messages?     @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: Cascade)
   replies             Messages[]    @relation("MessageReplies")
   user                Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-}
-
-model MessageReactions {
-  message_id    String   @db.Uuid
-  user_id       String   @db.Uuid
-  reaction_type String
-  reacted_at    DateTime @default(now())
-
-  @@id([message_id, user_id])
 }
 
 enum Role {

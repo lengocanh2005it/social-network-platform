@@ -37,6 +37,15 @@
         "tsConfigPath": "libs/common/tsconfig.lib.json"
       }
     },
+    "conversations": {
+      "type": "application",
+      "root": "apps/conversations",
+      "entryFile": "main",
+      "sourceRoot": "apps/conversations/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/conversations/tsconfig.app.json"
+      }
+    },
     "emails": {
       "type": "application",
       "root": "apps/emails",

@@ -1,60 +1,52 @@
+"use client";
 import FriendsList from "@/components/FriendsList";
-import { FriendType } from "@/utils";
+import { useFriendStore, useUserStore } from "@/store";
 import Link from "next/link";
+import React from "react";
 
-const friends: FriendType[] = [
-  {
-    id: "1",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "John Doe",
-  },
-  {
-    id: "2",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "Jane Doe",
-  },
-  {
-    id: "3",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "Luke Coleman",
-  },
-  {
-    id: "4",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "Luke Coleman",
-  },
-  {
-    id: "5",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "Michale Jackson",
-  },
-  {
-    id: "6",
-    avatar:
-      "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-    name: "Lisa Jackson",
-  },
-];
+const ProfileFriendSection: React.FC = () => {
+  const { viewedUser, user } = useUserStore();
+  const { friends, totalFriends } = useFriendStore();
 
-const ProfileFriendSection = () => {
   return (
     <section className="w-full flex flex-col md:gap-2 gap-1">
       <div className="flex items-center justify-between">
         <h1 className="font-medium md:text-xl text-lg">Friends</h1>
 
-        <Link href={"/"} className="text-blue-700 hover:underline">
-          See all friends
-        </Link>
+        {totalFriends >= 2 && (
+          <Link
+            href={`/profile/${
+              viewedUser?.id !== user?.id
+                ? (viewedUser?.profile.username ?? "")
+                : (user?.profile.username ?? "")
+            }/?tab=friends`}
+            className="text-blue-700 hover:underline"
+          >
+            See all friends
+          </Link>
+        )}
       </div>
 
-      <p>88 friends</p>
+      {totalFriends > 0 && (
+        <p>
+          {totalFriends} friend{totalFriends > 1 && "s"}
+        </p>
+      )}
 
-      <FriendsList friends={friends} />
+      {friends?.length > 0 ? (
+        <FriendsList friends={friends} />
+      ) : (
+        <div className="text-center py-6 px-4 flex flex-col md:gap-2 gap-1">
+          <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
+            Your friends list is empty
+          </h1>
+
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            Start connecting with others so you don&apos;t miss any fun
+            conversations.
+          </p>
+        </div>
+      )}
     </section>
   );
 };

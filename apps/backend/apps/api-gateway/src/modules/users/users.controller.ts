@@ -29,7 +29,7 @@ export class UsersController {
   @Roles(RoleEnum.admin, RoleEnum.user)
   async getMe(
     @KeycloakUser() user: any,
-    @Query() getUserQueryDto?: GetUserQueryDto,
+    @Query() getUserQueryDto: GetUserQueryDto,
   ) {
     const { email } = user;
 
@@ -45,9 +45,9 @@ export class UsersController {
   @Get('/usernames/:username')
   @Roles(RoleEnum.admin, RoleEnum.user)
   async getProfile(
-    @Param('username') username: string,
     @KeycloakUser() user: any,
-    @Query() getUserQueryDto?: GetUserQueryDto,
+    @Query() getUserQueryDto: GetUserQueryDto,
+    @Param('username') username: string,
   ) {
     const { email } = user;
 

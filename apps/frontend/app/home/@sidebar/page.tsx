@@ -1,5 +1,9 @@
 "use client";
+import ChatBox from "@/components/chatbox/ChatBox";
 import FriendRequests from "@/components/FriendRequests";
+import PrimaryLoading from "@/components/loading/PrimaryLoading";
+import { useGetFriendsList } from "@/hooks";
+import { useFriendStore, useUserStore } from "@/store";
 import {
   Avatar,
   Divider,
@@ -14,29 +18,22 @@ import {
   MessageSquareWarning,
   SearchIcon,
 } from "lucide-react";
+import { useEffect } from "react";
 
-const onlineFriends = [
-  { name: "Alice Nguyen", avatar: "https://i.pravatar.cc/40?u=alice" },
-  { name: "Michael Tran", avatar: "https://i.pravatar.cc/40?u=michael" },
-  { name: "David Do", avatar: "https://i.pravatar.cc/40?u=david" },
-  { name: "Sarah Lee", avatar: "https://i.pravatar.cc/40?u=sarah" },
-  { name: "Emily Johnson", avatar: "https://i.pravatar.cc/40?u=emily" },
-  { name: "Daniel Kim", avatar: "https://i.pravatar.cc/40?u=daniel" },
-  { name: "Sophia White", avatar: "https://i.pravatar.cc/40?u=sophia" },
-  { name: "James Smith", avatar: "https://i.pravatar.cc/40?u=james" },
-  { name: "Olivia Brown", avatar: "https://i.pravatar.cc/40?u=olivia" },
-  { name: "William Taylor", avatar: "https://i.pravatar.cc/40?u=william" },
-  { name: "Isabella Davis", avatar: "https://i.pravatar.cc/40?u=isabella" },
-  { name: "Ethan Moore", avatar: "https://i.pravatar.cc/40?u=ethan" },
-  { name: "Mia Clark", avatar: "https://i.pravatar.cc/40?u=mia" },
-  { name: "Logan Lewis", avatar: "https://i.pravatar.cc/40?u=logan" },
-  { name: "Grace Hall", avatar: "https://i.pravatar.cc/40?u=grace" },
-  { name: "Lucas Allen", avatar: "https://i.pravatar.cc/40?u=lucas" },
-  { name: "Ava Young", avatar: "https://i.pravatar.cc/40?u=ava" },
-  { name: "Chloe King", avatar: "https://i.pravatar.cc/40?u=chloe" },
-];
+const SideBarPage: React.FC = () => {
+  const { user } = useUserStore();
 
-const SideBarPage = () => {
+  const { setFriends, setTotalFriends, friends, openChat } = useFriendStore();
+
+  const { data, isLoading } = useGetFriendsList(user?.id ?? "", {
+    username: user?.profile.username ?? "",
+  });
+
+  useEffect(() => {
+    if (data?.data) setFriends(data.data);
+    if (data?.total_friends) setTotalFriends(data.total_friends);
+  }, [data, setFriends, setTotalFriends]);
+
   return (
     <main className="flex flex-col md:gap-1">
       <FriendRequests />
@@ -77,30 +74,46 @@ const SideBarPage = () => {
           </div>
         </div>
 
-        <ul className="space-y-3">
-          {onlineFriends.map((friend, index) => (
-            <li
-              key={index}
-              className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
-            >
-              <div className="relative">
-                <Avatar
-                  src={friend.avatar}
-                  alt={friend.name}
-                  className="select-none cursor-pointer object-cover"
-                />
+        {isLoading ? (
+          <PrimaryLoading />
+        ) : (
+          <>
+            {friends?.length > 0 ? (
+              <>
+                <ul className="space-y-3">
+                  {friends.map((friend) => (
+                    <li
+                      key={friend.user_id}
+                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 
+                      p-2 rounded-sm"
+                      onClick={() => openChat(friend)}
+                    >
+                      <div className="relative">
+                        <Avatar
+                          src={friend.avatar_url}
+                          alt={friend.full_name}
+                          className="select-none cursor-pointer object-cover"
+                        />
 
-                <span
-                  className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full 
+                        <span
+                          className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full 
                 border-2 border-white"
-                />
-              </div>
+                        />
+                      </div>
 
-              <span>{friend.name}</span>
-            </li>
-          ))}
-        </ul>
+                      <span>{friend.full_name}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p>Empty Users</p>
+            )}
+          </>
+        )}
       </div>
+
+      <ChatBox />
     </main>
   );
 };

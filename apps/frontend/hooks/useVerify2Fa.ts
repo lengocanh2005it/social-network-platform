@@ -13,7 +13,7 @@ export const useVerify2Fa = () => {
     setMethod,
     setIsVerifiedFor2FA,
   } = useAppStore();
-  const { setUser } = useUserStore();
+  const { setUser, user } = useUserStore();
   const router = useRouter();
 
   return useMutation({
@@ -40,56 +40,65 @@ export const useVerify2Fa = () => {
             position: "bottom-right",
           });
 
-          const res = await getMe({
-            includeProfile: true,
-            includeEducations: true,
-            includeWorkPlaces: true,
-            includeSocials: true,
-          });
+          if (user?.profile) {
+            const res = await getMe({
+              includeProfile: true,
+              includeEducations: true,
+              includeWorkPlaces: true,
+              includeSocials: true,
+              username: user.profile.username,
+            });
 
-          if (res) setUser(res);
+            if (res) setUser(res);
+          }
         }
       }
 
       if (action === Verify2FaActionEnum.SIGN_IN) {
         if (data && data?.access_token && data?.refresh_token && data?.role) {
-          const response = await getMe({
-            includeProfile: true,
-            includeEducations: true,
-            includeWorkPlaces: true,
-            includeSocials: true,
-          });
+          if (user?.profile) {
+            const response = await getMe({
+              includeProfile: true,
+              includeEducations: true,
+              includeWorkPlaces: true,
+              includeSocials: true,
+              username: user.profile.username,
+            });
 
-          if (response) setUser(response);
+            if (response) setUser(response);
 
-          if (data?.role === "user") {
-            router.push("/home");
-          } else if (data?.role === "admin") {
-            router.push("/home/dashboard");
+            if (data?.role === "user") {
+              router.push("/home");
+            } else if (data?.role === "admin") {
+              router.push("/home/dashboard");
+            }
+
+            toast.success("Successfully logged in!", {
+              position: "bottom-right",
+            });
           }
-
-          toast.success("Successfully logged in!", {
-            position: "bottom-right",
-          });
         }
       }
 
       if (action === Verify2FaActionEnum.DISABLE_2FA) {
-        const updatedUserData = await getMe({
-          includeProfile: true,
-          includeEducations: true,
-          includeWorkPlaces: true,
-          includeSocials: true,
-        });
+        if (user?.profile) {
+          const updatedUserData = await getMe({
+            includeProfile: true,
+            includeEducations: true,
+            includeWorkPlaces: true,
+            includeSocials: true,
+            username: user.profile.username,
+          });
 
-        if (updatedUserData) setUser(updatedUserData);
+          if (updatedUserData) setUser(updatedUserData);
 
-        toast.success(
-          "Two-factor authentication has been disabled. Your account is now less secure.",
-          {
-            position: "bottom-right",
-          },
-        );
+          toast.success(
+            "Two-factor authentication has been disabled. Your account is now less secure.",
+            {
+              position: "bottom-right",
+            },
+          );
+        }
       }
     },
     onError: (error: any) => handleAxiosError(error),
