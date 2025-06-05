@@ -1,11 +1,75 @@
-import { useUserStore } from "@/store";
+import { useCreateMessage } from "@/hooks";
+import { useConversationStore, useUserStore } from "@/store";
+import { CreateMessageDto, Friend, Message } from "@/utils";
 import { Avatar, Input } from "@heroui/react";
 import { SendHorizonalIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-const ChatBoxInput: React.FC = () => {
+interface ChatBoxInputProps {
+  friend: Friend;
+  setParentMessage: (parentMessage: Message | null) => void;
+  parentMessage: Message | null;
+}
+
+const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
+  friend,
+  setParentMessage,
+  parentMessage,
+}) => {
   const { user } = useUserStore();
   const [message, setMessage] = useState<string>("");
+  const { mutate: mutateCreateMessage } = useCreateMessage();
+  const { addMessage, conversations, setHasNewMessage } =
+    useConversationStore();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (parentMessage) {
+      inputRef.current?.focus();
+    }
+  }, [parentMessage]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        inputRef.current.blur();
+        setParentMessage(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setParentMessage]);
+
+  const handleSubmit = () => {
+    if (!message?.trim()) return;
+
+    const createMessageDto: CreateMessageDto = {
+      content: message,
+      target_id: friend.user_id,
+      ...(parentMessage && { reply_to_message_id: parentMessage.id }),
+    };
+
+    mutateCreateMessage(createMessageDto, {
+      onSuccess: (data: Message) => {
+        if (data) {
+          addMessage(conversations[friend.user_id]?.id, data);
+          setHasNewMessage(conversations[friend.user_id]?.id, true);
+          setTimeout(() => {
+            setHasNewMessage(conversations[friend.user_id]?.id, false);
+          }, 800);
+          setMessage("");
+          setParentMessage(null);
+          if (inputRef.current) inputRef.current.blur();
+        }
+      },
+    });
+  };
 
   return (
     <>
@@ -27,9 +91,24 @@ const ChatBoxInput: React.FC = () => {
           <Input
             placeholder="Enter a message..."
             size="md"
+            ref={inputRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            endContent={message?.trim() !== "" ? <SendHorizonalIcon /> : null}
+            endContent={
+              message?.trim() !== "" ? (
+                <SendHorizonalIcon
+                  className="cursor-pointer opacity-60 hover:opacity-100 duration-250 ease-in-out
+          transition-opacity"
+                  onClick={handleSubmit}
+                />
+              ) : null
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
           />
         </div>
       )}

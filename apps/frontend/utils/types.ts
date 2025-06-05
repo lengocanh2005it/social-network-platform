@@ -516,3 +516,44 @@ export type UserSearchResult = {
   avatar_url: string;
   username: string;
 };
+
+export type CreateMessageDto = {
+  content: string;
+  reply_to_message_id?: string;
+  target_id: string;
+};
+
+export type Conversation = {
+  id: string;
+  created_at: string;
+};
+
+export type Message = {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  conversation_id: string;
+  reply_to_message_id?: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  };
+  parent_message?: Message;
+};
+
+export type GetMessagesQueryDto = GetFeedQueryDto;
+
+export type UpdateMessageDto = {
+  messageId: string;
+  conversationId: string;
+  content: string;
+};
+
+export type DeleteMessageDto = {
+  messageId: string;
+  conversationId: string;
+};

@@ -1,10 +1,98 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  CreateMessageDto,
+  GetMessagesQueryDto,
+  UpdateMessageDto,
+} from '@app/common/dtos/conversations';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class ConversationsService {
+export class ConversationsService implements OnModuleInit {
   constructor(
     @Inject('CONVERSATIONS_SERVICE')
     private readonly conversationsClient: ClientKafka,
   ) {}
+
+  onModuleInit() {
+    const patterns = [
+      'create-message',
+      'get-messages-of-conversation',
+      'get-conversation-with-target-user',
+      'update-message',
+      'delete-message',
+    ];
+
+    patterns.forEach((pattern) =>
+      this.conversationsClient.subscribeToResponseOf(pattern),
+    );
+  }
+
+  public createMessage = async (
+    email: string,
+    createMessageDto: CreateMessageDto,
+  ) => {
+    return firstValueFrom(
+      this.conversationsClient.send('create-message', {
+        email,
+        createMessageDto,
+      }),
+    );
+  };
+
+  public getConversationWithTargetUser = async (
+    targetUserId: string,
+    email: string,
+  ) => {
+    return firstValueFrom(
+      this.conversationsClient.send('get-conversation-with-target-user', {
+        targetUserId,
+        email,
+      }),
+    );
+  };
+
+  public getMessagesOfConversation = async (
+    email: string,
+    conversationId: string,
+    getMessagesQueryDto?: GetMessagesQueryDto,
+  ) => {
+    return firstValueFrom(
+      this.conversationsClient.send('get-messages-of-conversation', {
+        email,
+        conversationId,
+        getMessagesQueryDto,
+      }),
+    );
+  };
+
+  public updateMessage = async (
+    conversationId: string,
+    messageId: string,
+    updateMessageDto: UpdateMessageDto,
+    email: string,
+  ) => {
+    return firstValueFrom(
+      this.conversationsClient.send('update-message', {
+        conversationId,
+        messageId,
+        updateMessageDto,
+        email,
+      }),
+    );
+  };
+
+  public deleteMessage = async (
+    conversationId: string,
+    messageId: string,
+    email: string,
+  ) => {
+    return firstValueFrom(
+      this.conversationsClient.send('delete-message', {
+        conversationId,
+        messageId,
+        email,
+      }),
+    );
+  };
 }

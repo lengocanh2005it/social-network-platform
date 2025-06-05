@@ -1,5 +1,6 @@
 "use client";
 import EditImageButton from "@/components/button/EditImageButton";
+import ChatBox from "@/components/chatbox/ChatBox";
 import PeopleKnow from "@/components/PeopleKnow";
 import {
   useBlockUser,
@@ -7,10 +8,16 @@ import {
   useDeleteFriendRequest,
   useResponseToFriendRequest,
 } from "@/hooks";
-import { FullUserType, useAppStore, useUserStore } from "@/store";
+import {
+  FullUserType,
+  useAppStore,
+  useFriendStore,
+  useUserStore,
+} from "@/store";
 import {
   BlockUserType,
   CreateFriendRequestType,
+  Friend,
   RelationshipType,
   ResponseFriendRequestAction,
   ResponseFriendRequestType,
@@ -75,6 +82,7 @@ const ProfileHeaderSection = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
+  const { openChat } = useFriendStore();
 
   const headersOptions = useMemo(
     () => [
@@ -299,6 +307,21 @@ const ProfileHeaderSection = () => {
     });
   };
 
+  const handleMessageClick = () => {
+    if (!viewedUser) return;
+
+    const friend: Friend = {
+      user_id: viewedUser.id,
+      full_name: `${viewedUser.profile.first_name} ${viewedUser.profile.last_name}`,
+      username: viewedUser.profile.username,
+      mutual_friends: 0,
+      avatar_url: viewedUser.profile.avatar_url,
+      is_friend: true,
+    };
+
+    openChat(friend);
+  };
+
   return (
     <>
       {viewedUser && (
@@ -470,6 +493,7 @@ const ProfileHeaderSection = () => {
                                 startContent={<MessagesSquare />}
                                 className="bg-blue-500 hover:bg-blue-700 text-white px-3 
                                 py-1 rounded-md text-sm"
+                                onPress={handleMessageClick}
                               >
                                 Message
                               </Button>
@@ -671,6 +695,8 @@ const ProfileHeaderSection = () => {
           </div>
         </>
       )}
+
+      <ChatBox right={10} />
     </>
   );
 };
