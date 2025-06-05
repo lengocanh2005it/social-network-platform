@@ -23,7 +23,8 @@ import { useEffect } from "react";
 const SideBarPage: React.FC = () => {
   const { user } = useUserStore();
 
-  const { setFriends, setTotalFriends, friends, openChat } = useFriendStore();
+  const { setFriends, setTotalFriends, friends, openChat, clearOpenChats } =
+    useFriendStore();
 
   const { data, isLoading } = useGetFriendsList(user?.id ?? "", {
     username: user?.profile.username ?? "",
@@ -32,7 +33,9 @@ const SideBarPage: React.FC = () => {
   useEffect(() => {
     if (data?.data) setFriends(data.data);
     if (data?.total_friends) setTotalFriends(data.total_friends);
-  }, [data, setFriends, setTotalFriends]);
+
+    return () => clearOpenChats();
+  }, [data, setFriends, setTotalFriends, clearOpenChats]);
 
   return (
     <main className="flex flex-col md:gap-1">
@@ -113,7 +116,7 @@ const SideBarPage: React.FC = () => {
         )}
       </div>
 
-      <ChatBox />
+      <ChatBox right={27} />
     </main>
   );
 };

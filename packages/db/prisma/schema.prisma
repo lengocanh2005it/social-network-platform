@@ -373,7 +373,6 @@ model Conversations {
 model Messages {
   id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content             String
-  message_type        MessageType   @default(text)
   created_at          DateTime      @default(now())
   updated_at          DateTime      @default(now())
   deleted_at          DateTime?

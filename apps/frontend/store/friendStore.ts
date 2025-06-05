@@ -10,6 +10,7 @@ interface FriendState {
   setTotalFriends: (totalFriends: number) => void;
   openChat: (friend: Friend) => void;
   closeChat: (friendId: string) => void;
+  clearOpenChats: () => void;
 }
 
 export const useFriendStore = create<FriendState>((set, get) => ({
@@ -52,4 +53,5 @@ export const useFriendStore = create<FriendState>((set, get) => ({
       set({ openChats: newOpenChats });
     }
   },
+  clearOpenChats: () => set({ openChats: [], hiddenChats: [] }),
 }));

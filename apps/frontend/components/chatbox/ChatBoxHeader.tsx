@@ -3,6 +3,7 @@ import { useFriendStore } from "@/store";
 import { Friend } from "@/utils";
 import { Avatar, Tooltip } from "@heroui/react";
 import { XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface ChatBoxHeaderProps {
@@ -11,6 +12,11 @@ interface ChatBoxHeaderProps {
 
 const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({ friend }) => {
   const { closeChat } = useFriendStore();
+  const router = useRouter();
+
+  const handleViewProfile = () => {
+    router.push(`/profile/${friend.username}`);
+  };
 
   return (
     <div className="flex bg-gray-200 rounded-t-lg items-center justify-between border-b p-3">
@@ -20,6 +26,7 @@ const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({ friend }) => {
             src={friend.avatar_url}
             alt={friend.full_name}
             className="select-none cursor-pointer object-cover"
+            onClick={handleViewProfile}
           />
 
           <span

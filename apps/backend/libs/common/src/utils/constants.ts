@@ -101,6 +101,11 @@ export const KAFKA_SERVICES = [
     clientId: 'posts',
     groupId: 'posts-group',
   },
+  {
+    serviceName: 'CONVERSATIONS_SERVICE',
+    clientId: 'conversations',
+    groupId: 'conversations-group',
+  },
 ] as const;
 
 export enum AuthMethod {
