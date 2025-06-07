@@ -99,7 +99,7 @@ export class PostsService implements OnModuleInit {
         items.map((item) =>
           this.transformPostItem(
             item,
-            user_id,
+            currentUserId,
             item?.parent_post_id ? item.parent_post_id : undefined,
           ),
         ),
