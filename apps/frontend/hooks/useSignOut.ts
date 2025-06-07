@@ -13,8 +13,7 @@ export const useSignOut = () => {
     mutationFn: signOut,
     onSuccess: (data: any) => {
       if (data && data?.message) {
-        localStorage.removeItem("user-storage");
-        localStorage.removeItem("app-storage");
+        localStorage.clear();
         toast.success(data.message, {
           position: "bottom-right",
         });
