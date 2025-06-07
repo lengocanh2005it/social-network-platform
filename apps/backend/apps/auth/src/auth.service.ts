@@ -925,9 +925,13 @@ export class AuthService implements OnModuleInit {
     const { email } = await this.keyCloakProvider.verifyToken(access_token);
 
     const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
 
     if (!user)
@@ -986,9 +990,13 @@ export class AuthService implements OnModuleInit {
     finger_print: string,
   ) => {
     const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
 
     const { currentPassword, newPassword } = changePasswordDto;

@@ -84,12 +84,14 @@ const ProfileHeaderSection = () => {
   const tab = searchParams.get("tab");
   const { openChat } = useFriendStore();
 
+  const isCurrentUser = viewedUser?.id === user?.id;
+
   const headersOptions = useMemo(
     () => [
       {
         key: 1,
         label: "Posts",
-        href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
+        href: `/profile/${isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
       },
       {
         key: 2,
@@ -99,7 +101,7 @@ const ProfileHeaderSection = () => {
       {
         key: 3,
         label: "Friends",
-        href: `/profile/${viewedUser?.id !== user?.id ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
+        href: `/profile/${isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
       },
       {
         key: 4,
@@ -117,12 +119,7 @@ const ProfileHeaderSection = () => {
         href: "/",
       },
     ],
-    [
-      user?.id,
-      user?.profile?.username,
-      viewedUser?.id,
-      viewedUser?.profile?.username,
-    ],
+    [user?.profile?.username, viewedUser?.profile?.username, isCurrentUser],
   );
 
   useEffect(() => {
@@ -328,16 +325,26 @@ const ProfileHeaderSection = () => {
         <>
           <div className="w-full h-full shadow pb-2 px-2 rounded-b-lg">
             <PhotoProvider>
-              <PhotoView src={viewedUser.profile.cover_photo_url}>
+              <PhotoView
+                src={
+                  !isCurrentUser
+                    ? viewedUser.profile.cover_photo_url
+                    : user?.profile.cover_photo_url
+                }
+              >
                 <div
                   className="h-60 w-full bg-gray-300 relative rounded-b-md cursor-pointer"
                   style={{
-                    backgroundImage: `url(${viewedUser.profile.cover_photo_url})`,
+                    backgroundImage: `url(${
+                      !isCurrentUser
+                        ? viewedUser.profile.cover_photo_url
+                        : user?.profile.cover_photo_url
+                    })`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                   }}
                 >
-                  {user?.id === viewedUser?.id && (
+                  {isCurrentUser && (
                     <div onClick={(e) => e.stopPropagation()}>
                       <EditImageButton type="cover_photo" />
                     </div>
@@ -360,9 +367,19 @@ const ProfileHeaderSection = () => {
               <div className="flex items-start md:gap-3 gap-2">
                 <PhotoProvider>
                   <div className="relative -mt-24">
-                    <PhotoView src={viewedUser.profile.avatar_url}>
+                    <PhotoView
+                      src={
+                        (!isCurrentUser
+                          ? viewedUser.profile.avatar_url
+                          : user?.profile.avatar_url) ?? ""
+                      }
+                    >
                       <Image
-                        src={viewedUser.profile.avatar_url}
+                        src={
+                          (!isCurrentUser
+                            ? viewedUser.profile.avatar_url
+                            : user?.profile.avatar_url) ?? ""
+                        }
                         alt="Avatar"
                         width={180}
                         height={180}
@@ -373,9 +390,7 @@ const ProfileHeaderSection = () => {
                       />
                     </PhotoView>
 
-                    {viewedUser?.id === user?.id && (
-                      <EditImageButton type="avatar" />
-                    )}
+                    {isCurrentUser && <EditImageButton type="avatar" />}
                   </div>
                 </PhotoProvider>
 
@@ -383,19 +398,39 @@ const ProfileHeaderSection = () => {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center md:gap-2 gap-1">
                       <h1 className="md:text-3xl font-bold text-2xl">
-                        {viewedUser.profile.first_name +
-                          " " +
-                          viewedUser.profile.last_name}
+                        {!isCurrentUser
+                          ? `${
+                              viewedUser.profile.first_name +
+                              " " +
+                              viewedUser.profile.last_name
+                            }`
+                          : `${
+                              user?.profile.first_name +
+                              " " +
+                              user?.profile.last_name
+                            }`}
                       </h1>
 
-                      {viewedUser.profile.nickname && (
-                        <p className="md:text-lg text-medium text-gray-600">
-                          ({viewedUser.profile.nickname})
-                        </p>
+                      {isCurrentUser ? (
+                        <>
+                          {user?.profile?.nickname && (
+                            <p className="md:text-lg text-medium text-gray-600">
+                              ({user?.profile?.nickname})
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {viewedUser.profile.nickname && (
+                            <p className="md:text-lg text-medium text-gray-600">
+                              ({viewedUser.profile.nickname})
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
 
-                    {viewedUser?.id !== user?.id ? (
+                    {!isCurrentUser ? (
                       <>
                         {viewedUser?.total_friends > 0 && (
                           <p className="text-gray-600">
@@ -405,16 +440,16 @@ const ProfileHeaderSection = () => {
                       </>
                     ) : (
                       <>
-                        {user?.total_friends > 0 && (
+                        {user?.total_friends && user.total_friends > 0 && (
                           <p className="text-gray-600">
-                            {user.total_friends} friends
+                            {user?.total_friends ?? 0} friends
                           </p>
                         )}
                       </>
                     )}
                   </div>
 
-                  {viewedUser?.id === user?.id ? (
+                  {isCurrentUser ? (
                     <div className="flex gap-2 justify-end items-start">
                       <Button
                         startContent={<Plus className="focus:outline-none" />}

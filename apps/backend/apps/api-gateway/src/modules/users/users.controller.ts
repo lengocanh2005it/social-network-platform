@@ -80,10 +80,11 @@ export class UsersController {
   @Get('feed')
   @Roles(RoleEnum.admin, RoleEnum.user)
   async getFeed(
-    @Query('getPostQueryDto') getPostQueryDto: GetPostQueryDto,
-    @Query('username') username: string,
+    @Query() getPostQueryDto: GetPostQueryDto & { username: string },
     @KeycloakUser() user: any,
   ) {
+    const { username, ...res } = getPostQueryDto;
+
     const { email } = user;
 
     if (!email || typeof email !== 'string')
@@ -92,7 +93,7 @@ export class UsersController {
         HttpStatus.NOT_FOUND,
       );
 
-    return this.usersService.getFeed(getPostQueryDto, username, email);
+    return this.usersService.getFeed(res, username, email);
   }
 
   @Delete('blocks/:targetId')

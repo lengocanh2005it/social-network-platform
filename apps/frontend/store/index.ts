@@ -5,3 +5,4 @@ export * from "./postStore";
 export * from "./commentStore";
 export * from "./friendStore";
 export * from "./conversationStore";
+export * from "./storyStore";
