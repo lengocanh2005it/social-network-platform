@@ -17,6 +17,7 @@ export type {
   FriendShipStatus as FriendShipStatusType,
   Posts as PostsType,
   Comments as CommentsType,
+  ContentStoryType as ContentStoryType,
 } from "@prisma/client";
 
 import type { Prisma } from "@prisma/client";
@@ -32,4 +33,5 @@ export {
   SessionStatus as SessionStatusEnum,
   PostContentType as PostContentTypeEnum,
   FriendShipStatus as FriendShipEnum,
+  ContentStoryType as ContentStoryTypeEnum,
 } from "@prisma/client";

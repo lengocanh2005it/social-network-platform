@@ -180,9 +180,13 @@ export class PostsService implements OnModuleInit {
 
   public createPost = async (email: string, createPostDto: CreatePostDto) => {
     const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
 
     const { images, videos, contents, tags, hashtags, ...res } = createPostDto;
@@ -386,16 +390,14 @@ export class PostsService implements OnModuleInit {
 
   private verifyModifyPost = async (email: string, postId: string) => {
     const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
-
-    if (!user)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `This email has not been registered.`,
-      });
 
     const post = await this.prismaService.posts.findUnique({
       where: {
@@ -851,13 +853,14 @@ export class PostsService implements OnModuleInit {
     postId: string,
     createCommentDto: CreateCommentDto,
   ) => {
-    const user = await firstValueFrom<any>(
-      this.usersClient.send('get-me', {
-        email,
-        getUserQueryDto: {
-          includeProfile: true,
-        },
-      }),
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
 
     if (!user)

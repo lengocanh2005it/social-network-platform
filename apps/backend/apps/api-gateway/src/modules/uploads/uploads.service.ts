@@ -18,6 +18,7 @@ export class UploadsService implements OnModuleInit {
 
   onModuleInit() {
     this.usersClient.subscribeToResponseOf('get-me');
+    this.usersClient.subscribeToResponseOf('get-user-by-field');
   }
 
   public uploadUserImage = async (
@@ -26,9 +27,13 @@ export class UploadsService implements OnModuleInit {
     file: Express.Multer.File,
   ) => {
     const user = await firstValueFrom<UsersType>(
-      this.usersClient.send('get-me', {
-        email,
-      }),
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
     );
 
     const { fileUrl } = await this.uploadImage(file);

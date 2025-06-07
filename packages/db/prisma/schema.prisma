@@ -314,10 +314,11 @@ model Stories {
 }
 
 model StoryViews {
-  story_id  String  @db.Uuid
-  viewer_id String  @db.Uuid
-  story     Stories @relation(fields: [story_id], references: [id], onDelete: Cascade)
-  viewer    Users   @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
+  story_id  String   @db.Uuid
+  viewer_id String   @db.Uuid
+  viewed_at DateTime @default(now())
+  story     Stories  @relation(fields: [story_id], references: [id], onDelete: Cascade)
+  viewer    Users    @relation(fields: [viewer_id], references: [id], onDelete: Cascade)
 
   @@id([story_id, viewer_id])
   @@unique([story_id, viewer_id])
@@ -427,12 +428,6 @@ enum PostContentType {
 enum PostContentLanguage {
   vn
   en
-}
-
-enum GroupJoinRequestsStatus {
-  pending
-  approved
-  rejected
 }
 
 enum ContentStoryType {

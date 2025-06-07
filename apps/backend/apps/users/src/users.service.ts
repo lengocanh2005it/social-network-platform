@@ -780,8 +780,9 @@ export class UsersService implements OnModuleInit {
       where: {
         email,
       },
-      select: {
-        id: true,
+      include: {
+        blockedBy: true,
+        blockedUsers: true,
       },
     });
 
@@ -791,17 +792,30 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
+    const blockedUserIds = Array.from(
+      new Set([
+        ...user.blockedUsers.map((u) => u.blocked_user_id),
+        ...user.blockedBy.map((u) => u.user_id),
+      ]),
+    );
+
     const friends = await this.prismaService.friends.findMany({
       where: {
-        friendship_status: FriendShipEnum.accepted,
         OR: [
           {
             initiator_id: user.id,
+            target_id: {
+              notIn: blockedUserIds,
+            },
           },
           {
             target_id: user.id,
+            initiator_id: {
+              notIn: blockedUserIds,
+            },
           },
         ],
+        friendship_status: FriendShipEnum.accepted,
       },
       select: {
         initiator_id: true,

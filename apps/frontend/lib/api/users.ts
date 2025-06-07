@@ -34,7 +34,7 @@ export const getMyFeed = async (
 ) => {
   const response = await axios.get("/users/feed", {
     params: {
-      getFeedQueryDto,
+      ...(getFeedQueryDto?.after && { after: getFeedQueryDto.after }),
       username,
     },
   });

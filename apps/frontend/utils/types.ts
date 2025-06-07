@@ -5,6 +5,7 @@ import {
 } from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
 import {
+  ContentStoryType,
   FriendShipStatusType,
   GenderType,
   PostContentType,
@@ -556,4 +557,40 @@ export type UpdateMessageDto = {
 export type DeleteMessageDto = {
   messageId: string;
   conversationId: string;
+};
+
+export type CreateStoryDto = {
+  content_type: ContentStoryType;
+  content_url?: string;
+  text_content?: string;
+  expires_at: string;
+};
+
+export type GetStoryQueryDto = GetFeedQueryDto;
+
+export type GetStoryViewersQueryDto = GetFeedQueryDto;
+
+export type Story = {
+  id: string;
+  content_type: ContentStoryType;
+  content_url: string | null;
+  text_content: string | null;
+  created_at: string;
+  expires_at: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  };
+  total_views: number;
+  viewed_by_current_user: boolean;
+};
+
+export type StoryViewer = {
+  user_id: string;
+  full_name: string;
+  viewed_at: string;
+  avatar_url: string;
+  username: string;
 };

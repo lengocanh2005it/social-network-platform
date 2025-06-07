@@ -10,6 +10,7 @@ import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { FriendsModule } from './modules/friends/friends.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
+import { StoriesModule } from './modules/stories/stories.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
     PostsModule,
     FriendsModule,
     ConversationsModule,
+    StoriesModule,
   ],
   providers: [
     {
