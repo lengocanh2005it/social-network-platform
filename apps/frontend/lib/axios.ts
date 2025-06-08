@@ -26,9 +26,40 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (res) => res,
   async (error) => {
+    const config = error.config;
+
+    if (
+      error?.response?.status === 500 &&
+      !config._retryCount &&
+      !config.__isRetryRequest
+    ) {
+      config._retryCount = 1;
+      config.__isRetryRequest = true;
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(axiosInstance(config));
+        }, 1000);
+      });
+    }
+
+    if (
+      error?.response?.status === 500 &&
+      config._retryCount &&
+      config._retryCount < 3
+    ) {
+      config._retryCount += 1;
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(axiosInstance(config));
+        }, 1000);
+      });
+    }
+
     if (
       (error?.response?.status === 401 &&
-        !error.config._retry &&
+        !config._retry &&
         (error?.response?.data?.message?.includes(
           "We couldn't verify your session. Please sign in again to continue securely.",
         ) ||

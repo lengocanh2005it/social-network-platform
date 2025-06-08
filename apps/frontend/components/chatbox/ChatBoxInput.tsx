@@ -1,7 +1,7 @@
 "use client";
 import { useCreateMessage, useSocket } from "@/hooks";
 import { useConversationStore, useUserStore } from "@/store";
-import { CreateMessageDto, Friend, Message } from "@/utils";
+import { CreateMessageDto, Friend, Message, SocketNamespace } from "@/utils";
 import { Avatar, Input } from "@heroui/react";
 import { SendHorizonalIcon } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -23,7 +23,7 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
   const { addMessage, conversations, setHasNewMessage } =
     useConversationStore();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { on, off, emit } = useSocket();
+  const { on, off, emit } = useSocket(SocketNamespace.CONVERSATIONS);
 
   useEffect(() => {
     if (parentMessage) {

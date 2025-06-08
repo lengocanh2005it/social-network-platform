@@ -12,6 +12,7 @@ interface FriendState {
   openChat: (friend: Friend) => void;
   closeChat: (friendId: string) => void;
   clearOpenChats: () => void;
+  updateOnlineStatus: (onlineIds: string[]) => void;
 }
 
 export const useFriendStore = create<FriendState>()(
@@ -56,6 +57,15 @@ export const useFriendStore = create<FriendState>()(
       },
 
       clearOpenChats: () => set({ openChats: [], hiddenChats: [] }),
+
+      updateOnlineStatus: (onlineIds) => {
+        const { friends } = get();
+        const updatedFriends = friends.map((f) => ({
+          ...f,
+          is_online: onlineIds.includes(f.user_id),
+        }));
+        set({ friends: updatedFriends });
+      },
     }),
     {
       name: "friend-storage",

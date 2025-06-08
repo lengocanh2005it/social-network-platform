@@ -2,15 +2,21 @@ import { CommonModule } from '@app/common';
 import { JwtGuard, RoleGuard } from '@app/common/guards';
 import { SessionMiddleware } from '@app/common/middlewares';
 import { publicPaths } from '@app/common/utils';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { FriendsModule } from './modules/friends/friends.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { StoriesModule } from './modules/stories/stories.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { UsersModule } from './modules/users/users.module';
-import { PostsModule } from './modules/posts/posts.module';
-import { FriendsModule } from './modules/friends/friends.module';
-import { ConversationsModule } from './modules/conversations/conversations.module';
-import { StoriesModule } from './modules/stories/stories.module';
+import { PresenceGateway } from './presence.gateway';
 
 @Module({
   imports: [
@@ -24,6 +30,7 @@ import { StoriesModule } from './modules/stories/stories.module';
     StoriesModule,
   ],
   providers: [
+    PresenceGateway,
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
@@ -38,7 +45,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(SessionMiddleware)
-      .exclude(...publicPaths)
+      .exclude(...publicPaths, {
+        path: '/ws/*path',
+        method: RequestMethod.ALL,
+      })
       .forRoutes('*');
   }
 }

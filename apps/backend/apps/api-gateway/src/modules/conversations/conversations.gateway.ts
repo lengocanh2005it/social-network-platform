@@ -1,3 +1,4 @@
+import { createWsAuthMiddleware } from '@app/common/middlewares';
 import { KeycloakProvider } from '@app/common/providers';
 import { Message } from '@app/common/utils';
 import { Inject } from '@nestjs/common';
@@ -8,128 +9,45 @@ import {
   MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import * as cookie from 'cookie';
-import { firstValueFrom } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 
 const configService = new ConfigService();
 
 @WebSocketGateway({
+  namespace: '/ws/conversations',
   cors: {
     origin: configService.get<string>('FRONTEND_URL', ''),
     withCredentials: true,
   },
 })
 export class ConversationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  readonly server: Server;
+  private readonly server: Server;
 
   constructor(
     private readonly keycloakProvider: KeycloakProvider,
     @Inject('USERS_SERVICE') private readonly usersClient: ClientKafka,
   ) {}
 
-  async handleConnection(client: Socket) {
-    this.usersClient.subscribeToResponseOf('get-user-by-field');
-
-    const cookies = client.handshake.headers.cookie;
-
-    if (!cookies) {
-      client.disconnect();
-      return;
-    }
-
-    const { access_token, refresh_token } = cookie.parse(cookies);
-
-    if (!access_token && !refresh_token) {
-      client.disconnect();
-      return;
-    }
-
-    try {
-      let email: string = '';
-
-      if (access_token) {
-        const payload = await this.keycloakProvider.verifyToken(access_token);
-
-        email = payload.email;
-      } else if (refresh_token) {
-        const refreshed =
-          await this.keycloakProvider.refreshToken(refresh_token);
-
-        const payload = await this.keycloakProvider.verifyToken(
-          refreshed.access_token,
-        );
-
-        email = payload.email;
-      }
-
-      if (!email) {
-        client.disconnect();
-        return;
-      }
-
-      const user = await firstValueFrom<any>(
-        this.usersClient.send(
-          'get-user-by-field',
-          JSON.stringify({
-            field: 'email',
-            value: email,
-            getUserQueryDto: {
-              includeProfile: true,
-            },
-          }),
-        ),
-      );
-
-      if (!user) {
-        client.disconnect();
-        return;
-      }
-
-      client.data.email = user.email;
-
-      client.join(user.id);
-
-      console.log(
-        `User ${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''} is now online.`,
-      );
-    } catch (err) {
-      console.error(err);
-      client.disconnect();
-    }
+  afterInit(server: Server) {
+    server.use(createWsAuthMiddleware(this.keycloakProvider, this.usersClient));
   }
 
-  async handleDisconnect(client: Socket) {
-    const email: string = client?.data?.email;
+  handleConnection(client: Socket) {
+    const user = client.data.user;
+    client.join(user.id);
+  }
 
-    const user = await firstValueFrom<any>(
-      this.usersClient.send(
-        'get-user-by-field',
-        JSON.stringify({
-          field: 'email',
-          value: email,
-          getUserQueryDto: {
-            includeProfile: true,
-          },
-        }),
-      ),
-    );
-
-    if (!user) {
-      client.disconnect();
-      return;
-    }
-
-    console.log(
-      `User ${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''} is now offline.`,
-    );
+  handleDisconnect(client: Socket) {
+    const user = client.data.user;
+    client.leave(user.id);
   }
 
   @SubscribeMessage('sendMessage')

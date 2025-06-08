@@ -25,6 +25,12 @@ export enum ResponseFriendRequestAction {
   REJECT = "reject",
 }
 
+export enum SocketNamespace {
+  PRESENCE = "presence",
+  CONVERSATIONS = "conversations",
+  NOTIFICATIONS = "notifications",
+}
+
 export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;
 export const MAX_DISPLAY_FRIEND_LISTS = 9;

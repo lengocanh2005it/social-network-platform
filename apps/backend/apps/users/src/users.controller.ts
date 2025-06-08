@@ -243,4 +243,9 @@ export class UsersController {
   ) {
     return this.usersService.getUsers(email, searchUserQueryDto);
   }
+
+  @MessagePattern('get-users-by-ids')
+  async getUsersByIds(@Payload() userIds: string[]) {
+    return this.usersService.getUsersByIds(userIds);
+  }
 }

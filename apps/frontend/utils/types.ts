@@ -491,6 +491,7 @@ export type Friend = {
   mutual_friends: number;
   avatar_url: string;
   is_friend: boolean;
+  is_online?: boolean;
 };
 
 export type BlockUserType = {

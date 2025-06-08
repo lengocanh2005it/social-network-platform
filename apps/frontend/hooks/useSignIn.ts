@@ -1,3 +1,4 @@
+import { useSocket } from "@/hooks";
 import { signIn } from "@/lib/api/auth";
 import { getMe } from "@/lib/api/users";
 import { useAppStore, useUserStore } from "@/store";

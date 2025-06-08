@@ -44,6 +44,7 @@ export type SignInResponse = TokensReponse & {
 };
 
 export const DEFAULT_TTL_OTP_EXPIRED = 600000;
+export const DEFAULT_TTL_ONLINE = 600000;
 export const EMAILS_QUEUE_NAME = 'emails-queue';
 export const SMS_QUEUE_NAME = 'sms-queue';
 export const BULLMQ_RETRY_LIMIT = 3;
