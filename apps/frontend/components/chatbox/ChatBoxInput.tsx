@@ -1,4 +1,5 @@
-import { useCreateMessage } from "@/hooks";
+"use client";
+import { useCreateMessage, useSocket } from "@/hooks";
 import { useConversationStore, useUserStore } from "@/store";
 import { CreateMessageDto, Friend, Message } from "@/utils";
 import { Avatar, Input } from "@heroui/react";
@@ -22,6 +23,7 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
   const { addMessage, conversations, setHasNewMessage } =
     useConversationStore();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const { on, off, emit } = useSocket();
 
   useEffect(() => {
     if (parentMessage) {
@@ -46,6 +48,15 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
     };
   }, [setParentMessage]);
 
+  useEffect(() => {
+    const messageHandler = (data: Message) =>
+      addMessage(conversations[friend.user_id]?.id, data);
+
+    on("newMessage", messageHandler);
+
+    return () => off("newMessage", messageHandler);
+  }, [addMessage, conversations, friend.user_id, on, off]);
+
   const handleSubmit = () => {
     if (!message?.trim()) return;
 
@@ -58,7 +69,10 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
     mutateCreateMessage(createMessageDto, {
       onSuccess: (data: Message) => {
         if (data) {
-          addMessage(conversations[friend.user_id]?.id, data);
+          emit("sendMessage", {
+            newMessage: data,
+            target_id: createMessageDto.target_id,
+          });
           setHasNewMessage(conversations[friend.user_id]?.id, true);
           setTimeout(() => {
             setHasNewMessage(conversations[friend.user_id]?.id, false);

@@ -40,6 +40,7 @@ export * from "./useSendOtp";
 export * from "./useSignIn";
 export * from "./useSignOut";
 export * from "./useSignUp";
+export * from "./useSocket";
 export * from "./useUnblockUser";
 export * from "./useUnlikeComment";
 export * from "./useUnlikeMediaPost";
