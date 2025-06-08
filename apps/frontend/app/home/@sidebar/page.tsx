@@ -2,8 +2,9 @@
 import ChatBox from "@/components/chatbox/ChatBox";
 import FriendRequests from "@/components/FriendRequests";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
-import { useGetFriendsList } from "@/hooks";
+import { useGetFriendsList, useSocket } from "@/hooks";
 import { useFriendStore, useUserStore } from "@/store";
+import { SocketNamespace } from "@/utils";
 import {
   Avatar,
   Divider,
@@ -23,8 +24,46 @@ import { useEffect } from "react";
 const SideBarPage: React.FC = () => {
   const { user } = useUserStore();
 
-  const { setFriends, setTotalFriends, friends, openChat, clearOpenChats } =
-    useFriendStore();
+  const {
+    setFriends,
+    setTotalFriends,
+    friends,
+    openChat,
+    clearOpenChats,
+    updateOnlineStatus,
+  } = useFriendStore();
+  const { on, off, emit } = useSocket(SocketNamespace.PRESENCE);
+
+  useEffect(() => {
+    const handleOnlineFriends = (friendIds: string[]) =>
+      updateOnlineStatus(friendIds);
+
+    const handleFriendOnline = ({ user_id }: { user_id: string }) => {
+      const updated = friends.map((friend) =>
+        friend.user_id === user_id ? { ...friend, is_online: true } : friend,
+      );
+      setFriends(updated);
+    };
+
+    const handleFriendOffline = ({ user_id }: { user_id: string }) => {
+      const updated = friends.map((friend) =>
+        friend.user_id === user_id ? { ...friend, is_online: false } : friend,
+      );
+      setFriends(updated);
+    };
+
+    on("online-friends", handleOnlineFriends);
+    on("friend-online", handleFriendOnline);
+    on("friend-offline", handleFriendOffline);
+
+    emit("get-online-friends");
+
+    return () => {
+      off("online-friends", handleOnlineFriends);
+      off("friend-online", handleFriendOnline);
+      off("friend-offline", handleFriendOffline);
+    };
+  }, [on, off, emit, friends, setFriends, updateOnlineStatus]);
 
   const { data, isLoading } = useGetFriendsList(user?.id ?? "", {
     username: user?.profile.username ?? "",
@@ -84,29 +123,37 @@ const SideBarPage: React.FC = () => {
             {friends?.length > 0 ? (
               <>
                 <ul className="space-y-3">
-                  {friends.map((friend) => (
-                    <li
-                      key={friend.user_id}
-                      className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 
+                  {friends
+                    .slice()
+                    .sort((a, b) => {
+                      if (a.is_online === b.is_online) return 0;
+                      return a.is_online ? -1 : 1;
+                    })
+                    .map((friend) => (
+                      <li
+                        key={friend.user_id}
+                        className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 
                       p-2 rounded-sm"
-                      onClick={() => openChat(friend)}
-                    >
-                      <div className="relative">
-                        <Avatar
-                          src={friend.avatar_url}
-                          alt={friend.full_name}
-                          className="select-none cursor-pointer object-cover"
-                        />
+                        onClick={() => openChat(friend)}
+                      >
+                        <div className="relative">
+                          <Avatar
+                            src={friend.avatar_url}
+                            alt={friend.full_name}
+                            className="select-none cursor-pointer object-cover"
+                          />
 
-                        <span
-                          className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full 
-                border-2 border-white"
-                        />
-                      </div>
+                          {friend.is_online && (
+                            <span
+                              className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full 
+              border-2 border-white"
+                            />
+                          )}
+                        </div>
 
-                      <span>{friend.full_name}</span>
-                    </li>
-                  ))}
+                        <span>{friend.full_name}</span>
+                      </li>
+                    ))}
                 </ul>
               </>
             ) : (

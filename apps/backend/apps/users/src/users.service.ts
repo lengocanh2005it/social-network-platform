@@ -1844,4 +1844,21 @@ export class UsersService implements OnModuleInit {
       nextCursor,
     };
   };
+
+  public getUsersByIds = async (userIds: string[]) => {
+    return Promise.all(
+      userIds.map(async (userId) => {
+        const user = await this.prismaService.users.findUnique({
+          where: {
+            id: userId,
+          },
+          include: {
+            profile: true,
+          },
+        });
+
+        return user ? omit(user, ['password']) : null;
+      }),
+    );
+  };
 }

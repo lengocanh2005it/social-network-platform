@@ -17,4 +17,14 @@ export class RedisController {
   async getKey(@Payload() key: string) {
     return this.redisService.getKey(key);
   }
+
+  @EventPattern('del-key')
+  async delKey(@Payload() key: string) {
+    return this.redisService.delKey(key);
+  }
+
+  @MessagePattern('get-keys-by-prefix')
+  async getKeysByPrefix(@Payload() prefix: string) {
+    return this.redisService.getKeysByPrefix(prefix);
+  }
 }
