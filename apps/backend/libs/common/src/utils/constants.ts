@@ -142,6 +142,8 @@ export const publicPaths = [
   '/auth/token/refresh',
   '/auth/2fa/verify',
   '/auth/trust-device',
+  '/socket.io',
+  '/',
 ];
 
 export enum VerifyOwnershipOtpMethodEnum {
@@ -210,3 +212,20 @@ export enum ResponseFriendRequestAction {
   ACCEPT = 'accept',
   REJECT = 'reject',
 }
+
+export type Message = {
+  id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  conversation_id: string;
+  reply_to_message_id?: string;
+  user: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  };
+  parent_message?: Message;
+};
