@@ -1,3 +1,4 @@
+import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import {
   CreateCommentDto,
   CreateCommentReplyDto,
@@ -19,6 +20,7 @@ import {
   CreateCommentTargetType,
   decodeCursor,
   encodeCursor,
+  generateNotificationMessage,
   isToxic,
   PostMediaEnum,
 } from '@app/common/utils';
@@ -26,6 +28,7 @@ import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   CommentsType,
+  NotificationTypeEnum,
   PostPrivaciesEnum,
   PostsType,
   UsersType,
@@ -41,6 +44,8 @@ export class PostsService implements OnModuleInit {
     @Inject('USERS_SERVICE')
     private readonly usersClient: ClientKafka,
     private readonly huggingFaceProvider: HuggingFaceProvider,
+    @Inject('NOTIFICATIONS_SERVICE')
+    private readonly notificationsClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -587,6 +592,28 @@ export class PostsService implements OnModuleInit {
 
     await this.createPostLike(user.id, existingPost);
 
+    const fullContent = existingPost.contents.map((c) => c.content).join(' ');
+
+    const postTitle =
+      fullContent.length > 100
+        ? fullContent.slice(0, 100) + '...'
+        : fullContent;
+
+    const createNotificationDto: CreateNotificationDto = {
+      type: NotificationTypeEnum.post_liked,
+      content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
+        senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+        postTitle,
+      }),
+      sender_id: user.id,
+      recipient_id: existingPost.user_id,
+      metadata: {
+        post_id: existingPost.id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
+
     return {
       post: await this.getFormattedPost(postId, user.id),
       topUsers: await this.getTopUsersWhoLikedPost(postId, user.id),
@@ -643,12 +670,15 @@ export class PostsService implements OnModuleInit {
   };
 
   private verifyUserPost = async (email: string, postId: string) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -656,6 +686,14 @@ export class PostsService implements OnModuleInit {
     const existingPost = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+        contents: true,
       },
     });
 

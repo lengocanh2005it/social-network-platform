@@ -2,7 +2,6 @@ export { PrismaClient } from "@prisma/client";
 
 export type {
   Gender as GenderType,
-  GroupMemberRole as GroupMemberRoleType,
   PostPrivacies as PostPrivaciesType,
   Role as RoleType,
   SessionStatus as SessionStatusType,
@@ -18,6 +17,7 @@ export type {
   Posts as PostsType,
   Comments as CommentsType,
   ContentStoryType as ContentStoryType,
+  NotificationType,
 } from "@prisma/client";
 
 import type { Prisma } from "@prisma/client";
@@ -26,7 +26,6 @@ export type { Prisma };
 
 export {
   Gender as GenderEnum,
-  GroupMemberRole as GroupMemberRoleEnum,
   OAuthProvider as OAuthProviderEnum,
   PostPrivacies as PostPrivaciesEnum,
   Role as RoleEnum,
@@ -34,4 +33,5 @@ export {
   PostContentType as PostContentTypeEnum,
   FriendShipStatus as FriendShipEnum,
   ContentStoryType as ContentStoryTypeEnum,
+  NotificationType as NotificationTypeEnum,
 } from "@prisma/client";

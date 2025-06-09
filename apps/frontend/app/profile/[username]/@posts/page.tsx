@@ -11,9 +11,11 @@ const ProfilePostsSection = () => {
   const { posts, appendOldPosts, setPosts, nextCursor } = usePostStore();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { viewedUser, user } = useUserStore();
-  const { data, isLoading: isLoadingFeed } = useGetFeed(
-    viewedUser?.profile?.username ?? "",
-  );
+  const {
+    data,
+    isLoading: isLoadingFeed,
+    isError,
+  } = useGetFeed(viewedUser?.profile?.username ?? "");
 
   useEffect(() => {
     if (data && data?.data) {
@@ -103,6 +105,8 @@ const ProfilePostsSection = () => {
           <p>Loading...</p>
         </div>
       )}
+
+      {isError && <div>Error...</div>}
     </section>
   );
 };

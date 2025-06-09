@@ -17,6 +17,7 @@ import {
 } from '@app/common/dtos/auth';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
+import { instanceToPlain } from 'class-transformer';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -52,7 +53,9 @@ export class AuthService implements OnModuleInit {
   }
 
   public signIn = async (signInDto: SignInDto) => {
-    return firstValueFrom(this.authClient.send('sign-in', signInDto));
+    return firstValueFrom(
+      this.authClient.send('sign-in', instanceToPlain(signInDto)),
+    );
   };
 
   public signUp = async (signUpDto: SignUpDto, userIp?: string) => {

@@ -8,38 +8,39 @@ datasource db {
 }
 
 model Users {
-  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String?           @unique @db.VarChar(255)
-  password            String?           @db.VarChar(255)
-  is_email_verified   Boolean           @default(false)
-  two_factor_enabled  Boolean           @default(false)
-  role                Role              @default(user)
-  blockedBy           Blocks[]          @relation("BlockedUsers")
-  blockedUsers        Blocks[]          @relation("UserBlocks")
-  comment_likes       CommentLikes[]
-  comments            Comments[]
-  conversationAsUser1 Conversations[]   @relation("User1")
-  conversationAsUser2 Conversations[]   @relation("User2")
-  initiators          Friends[]         @relation("InitiatorUser")
-  targets             Friends[]         @relation("TargetUser")
-  messages            Messages[]
-  notifications       Notifications[]
-  oauth_account       OAuthAccounts?
-  post_image_likes    PostImageLikes[]
-  post_image_shares   PostImageShares[]
-  post_likes          PostLikes[]
-  post_tags           PostTags[]
-  post_video_likes    PostVideoLikes[]
-  post_video_shares   PostVideoShares[]
-  posts               Posts[]
-  stories             Stories[]
-  story_views         StoryViews[]
-  devices             UserDevices[]
-  educations          UserEducations[]
-  profile             UserProfiles?
-  sessions            UserSessions[]
-  socials             UserSocials[]
-  work_places         UserWorkPlaces[]
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String?           @unique @db.VarChar(255)
+  password              String?           @db.VarChar(255)
+  is_email_verified     Boolean           @default(false)
+  two_factor_enabled    Boolean           @default(false)
+  role                  Role              @default(user)
+  blockedBy             Blocks[]          @relation("BlockedUsers")
+  blockedUsers          Blocks[]          @relation("UserBlocks")
+  comment_likes         CommentLikes[]
+  comments              Comments[]
+  conversationAsUser1   Conversations[]   @relation("User1")
+  conversationAsUser2   Conversations[]   @relation("User2")
+  initiators            Friends[]         @relation("InitiatorUser")
+  targets               Friends[]         @relation("TargetUser")
+  messages              Messages[]
+  receivedNotifications Notifications[]   @relation("ReceivedNotifications")
+  sentNotifications     Notifications[]   @relation("SentNotifications")
+  oauth_account         OAuthAccounts?
+  post_image_likes      PostImageLikes[]
+  post_image_shares     PostImageShares[]
+  post_likes            PostLikes[]
+  post_tags             PostTags[]
+  post_video_likes      PostVideoLikes[]
+  post_video_shares     PostVideoShares[]
+  posts                 Posts[]
+  stories               Stories[]
+  story_views           StoryViews[]
+  devices               UserDevices[]
+  educations            UserEducations[]
+  profile               UserProfiles?
+  sessions              UserSessions[]
+  socials               UserSocials[]
+  work_places           UserWorkPlaces[]
 }
 
 model UserProfiles {
@@ -325,14 +326,21 @@ model StoryViews {
 }
 
 model Notifications {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  type         NotificationType
-  messages     String
-  metadata     Json?
-  is_read      Boolean          @default(false)
-  created_at   DateTime         @default(now())
-  recipient_id String           @db.Uuid
-  recipient    Users            @relation(fields: [recipient_id], references: [id], onDelete: Cascade)
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type       NotificationType
+  content    String
+  metadata   Json?
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  recipient_id String @db.Uuid
+  recipient    Users  @relation("ReceivedNotifications", fields: [recipient_id], references: [id], onDelete: Cascade)
+
+  sender_id String? @db.Uuid
+  sender    Users?  @relation("SentNotifications", fields: [sender_id], references: [id])
+
+  @@index([recipient_id])
+  @@index([recipient_id, is_read])
 }
 
 model Friends {
@@ -391,12 +399,6 @@ enum Role {
   user
 }
 
-enum GroupMemberRole {
-  member
-  censor
-  owner
-}
-
 enum Gender {
   male
   female
@@ -441,15 +443,11 @@ enum NotificationType {
   friend_request_rejected
   post_liked
   post_commented
+  comment_liked
   comment_replied
   post_shared
   tagged_in_post
-  tagged_in_comment
-  group_invite
-  group_join_request
-  group_role_changed
-  followed_you
-  birthday_reminder
+  story_added_by_friend
   system_announcement
 }
 

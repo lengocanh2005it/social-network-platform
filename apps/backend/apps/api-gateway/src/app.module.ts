@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { FriendsModule } from './modules/friends/friends.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { StoriesModule } from './modules/stories/stories.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -28,6 +29,7 @@ import { PresenceGateway } from './presence.gateway';
     FriendsModule,
     ConversationsModule,
     StoriesModule,
+    NotificationsModule,
   ],
   providers: [
     PresenceGateway,
