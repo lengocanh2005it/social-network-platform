@@ -29,7 +29,7 @@ const NotificationsTab: React.FC = () => {
       ? {
           is_read: activeTab === "read" ? true : false,
         }
-      : undefined
+      : undefined,
   );
   const dropdownRef = useRef<HTMLDivElement>(null);
   const {
@@ -114,7 +114,7 @@ const NotificationsTab: React.FC = () => {
 
   const lastNotificationRef = useInfiniteScroll(
     loadMore,
-    !!activeTab && !!notifications[activeTab].nextCursor
+    !!activeTab && !!notifications[activeTab].nextCursor,
   );
 
   const handleSelectNotification = (id: string, checked: boolean) => {
@@ -145,7 +145,7 @@ const NotificationsTab: React.FC = () => {
             });
           }
         },
-      }
+      },
     );
   };
 
@@ -157,13 +157,13 @@ const NotificationsTab: React.FC = () => {
         if (data) {
           if (notification.type === NotificationTypeEnum.post_liked) {
             router.push(
-              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}`
+              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}`,
             );
           } else if (
             notification.type === NotificationTypeEnum.post_commented
           ) {
             router.push(
-              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}/?commentId=${notification?.metadata?.comment_id}`
+              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}/?commentId=${notification?.metadata?.comment_id}`,
             );
           }
         }
@@ -255,13 +255,13 @@ const NotificationsTab: React.FC = () => {
                                       <NotificationItem
                                         notification={notification}
                                         isSelected={selectedNotifications.has(
-                                          notification.id
+                                          notification.id,
                                         )}
                                         onSelect={handleSelectNotification}
                                       />
                                     </div>
                                   );
-                                }
+                                },
                               )}
 
                               {hasMore && <PrimaryLoading />}
@@ -302,12 +302,12 @@ const NotificationsTab: React.FC = () => {
                                     <NotificationItem
                                       notification={notification}
                                       isSelected={selectedNotifications.has(
-                                        notification.id
+                                        notification.id,
                                       )}
                                       onSelect={handleSelectNotification}
                                     />
                                   </div>
-                                )
+                                ),
                               )}
 
                               {hasMore && <PrimaryLoading />}

@@ -167,7 +167,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
 
           if (data?.comments) {
             data?.comments.forEach((comment) =>
-              addNewComments(homePost.id, comment)
+              addNewComments(homePost.id, comment),
             );
           }
         }
@@ -214,7 +214,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
 
               if (commentsByPostId[homePost.id]?.length) {
                 commentsByPostId[homePost.id]?.forEach((c) =>
-                  setReplies(c.id, [])
+                  setReplies(c.id, []),
                 );
               }
             }}
@@ -274,7 +274,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                                       key={comment.id}
                                       comment={comment}
                                     />
-                                  )
+                                  ),
                                 )}
 
                                 {isFetching && (

@@ -96,7 +96,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
 
       toast.custom(
         () => <UndoPostToast onUndo={undo} remaining={remaining} />,
-        { id: toastId, duration: HIDE_DURATION }
+        { id: toastId, duration: HIDE_DURATION },
       );
     }, 1000);
 
@@ -118,7 +118,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
       {
         duration: HIDE_DURATION + 500,
         position: "bottom-right",
-      }
+      },
     );
   };
 
@@ -131,7 +131,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     content: string,
     privacy: PostPrivaciesType,
     images?: File[],
-    videos?: File[]
+    videos?: File[],
   ) => {
     const hashtags: string[] = [];
 

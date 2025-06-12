@@ -71,11 +71,11 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
   const { data, isLoading, error } = useGetPostOfUser(
     user?.id ?? "",
     username,
-    postId
+    postId,
   );
   const [post, setPost] = useState<PostDetails | null>(null);
   const { data: commentsData, isLoading: isCommentsLoading } = useGetComments(
-    post?.id ?? ""
+    post?.id ?? "",
   );
   const [comment, setComment] = useState<string>("");
   const statusCode = (

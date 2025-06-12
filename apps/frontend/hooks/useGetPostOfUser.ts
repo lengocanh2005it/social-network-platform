@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 export const useGetPostOfUser = (
   currentUserId: string,
   username: string,
-  postId: string
+  postId: string,
 ) => {
   return useQuery({
     queryKey: [`${currentUserId}/posts/${postId}?username=${username}`],

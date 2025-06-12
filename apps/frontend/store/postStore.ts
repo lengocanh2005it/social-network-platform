@@ -34,7 +34,7 @@ export const usePostStore = create<PostStore>((set) => ({
     set({
       homePosts: posts.sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       ),
       nextHomeCursor,
     });
@@ -43,7 +43,7 @@ export const usePostStore = create<PostStore>((set) => ({
     set({
       posts: posts.sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       ),
       nextCursor,
     }),
@@ -59,7 +59,7 @@ export const usePostStore = create<PostStore>((set) => ({
   updatePost: (postId, update) =>
     set((state) => ({
       posts: state.posts.map((post) =>
-        post.id === postId ? { ...post, ...update } : post
+        post.id === postId ? { ...post, ...update } : post,
       ),
     })),
   clearPosts: () => set({ posts: [], nextCursor: null }),
