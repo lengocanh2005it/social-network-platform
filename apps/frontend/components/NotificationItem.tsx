@@ -29,20 +29,22 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         />
       </div>
 
-      <div className="flex md:gap-3">
-        {sender && (
-          <Avatar
-            src={sender.avatar_url}
-            alt={sender.full_name}
-            className="cursor-pointer select-none w-10 h-10 flex-shrink-0 rounded-full"
-          />
-        )}
-        <div className="flex-1 text-sm">
-          <p className="text-gray-800 font-xs">{sender?.full_name}</p>
-          <p className="text-gray-600">{content}</p>
-          <p className="text-xs text-gray-400">
-            {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
-          </p>
+      <div className="flex md:gap-3 justify-between w-full">
+        <div className="flex md:gap-3">
+          {sender && (
+            <Avatar
+              src={sender.avatar_url}
+              alt={sender.full_name}
+              className="cursor-pointer select-none w-10 h-10 flex-shrink-0 rounded-full"
+            />
+          )}
+          <div className="flex-1 text-sm">
+            <p className="text-gray-800 font-xs">{sender?.full_name}</p>
+            <p className="text-gray-600">{content}</p>
+            <p className="text-xs text-gray-400">
+              {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
+            </p>
+          </div>
         </div>
 
         {!is_read && <span className="w-2 h-2 bg-blue-500 rounded-full mt-2" />}

@@ -241,3 +241,12 @@ export type NotificationParams = {
   postTitle?: string;
   commentContent?: string;
 };
+
+export const fieldDisplayMap: Record<string, string> = {
+  id: 'ID',
+  email: 'email',
+  phone_number: 'phone number',
+  username: 'username',
+  national_id: 'national ID',
+  nickname: 'nickname',
+};

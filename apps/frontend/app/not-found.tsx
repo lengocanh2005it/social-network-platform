@@ -1,19 +1,33 @@
 "use client";
-import { useAppStore } from "@/store";
-import { getCookie } from "@/utils";
+import { getMe } from "@/lib/api/users";
+import { useUserStore } from "@/store";
+import { Button } from "@heroui/react";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import React from "react";
 
-const NotFoundPage = () => {
-  const { isLoggedIn, setIsLoggedIn } = useAppStore();
+const NotFoundPage: React.FC = () => {
+  const router = useRouter();
+  const { user, setUser } = useUserStore();
 
-  useEffect(() => {
-    const isLoggedInCookie = getCookie("logged_in");
+  const handleClick = async () => {
+    if (!user || !user.profile || !user?.profile.username) router.push("/");
 
-    if (isLoggedInCookie) setIsLoggedIn(true);
-    else setIsLoggedIn(false);
-  }, [setIsLoggedIn]);
+    if (user?.profile?.username) {
+      const res = await getMe({
+        includeProfile: true,
+        includeEducations: true,
+        includeWorkPlaces: true,
+        includeSocials: true,
+        username: user.profile.username,
+      });
+
+      if (res) {
+        setUser(res);
+        router.push("/home");
+      }
+    } else router.push("/");
+  };
 
   return (
     <div
@@ -45,12 +59,13 @@ const NotFoundPage = () => {
           back to the homepage.
         </p>
 
-        <Link
-          href={isLoggedIn ? "/home" : "/"}
-          className="px-6 py-3 bg-black/80 text-white rounded-full hover:bg-black transition"
+        <Button
+          onPress={handleClick}
+          className="px-6 py-3 bg-black/80 ease-in-out duration-250
+          text-white rounded-full hover:bg-black transition"
         >
           Back to Home
-        </Link>
+        </Button>
       </div>
     </div>
   );

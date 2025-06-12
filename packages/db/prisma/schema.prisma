@@ -273,7 +273,7 @@ model PostTags {
 
 model Comments {
   id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  content           String?
+  content           String
   created_at        DateTime       @default(now())
   updated_at        DateTime       @default(now())
   deleted_at        DateTime?

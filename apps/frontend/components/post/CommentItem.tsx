@@ -128,7 +128,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               deleteReply(parentId, comment.id);
 
               const findComment = commentsByPostId[post.id].find(
-                (p) => p.id === parentId,
+                (p) => p.id === parentId
               );
 
               if (findComment) {
@@ -143,7 +143,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             }
           }
         },
-      },
+      }
     );
   };
 
@@ -258,7 +258,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             }
             setLiked(true);
           },
-        },
+        }
       );
     } else {
       mutateUnlikeComment(
@@ -272,13 +272,17 @@ const CommentItem: React.FC<CommentItemProps> = ({
             }
             setLiked(false);
           },
-        },
+        }
       );
     }
   };
 
   return (
-    <div className="relative" style={{ marginLeft: level > 0 ? 24 : 0 }}>
+    <div
+      className="relative"
+      id={comment.id}
+      style={{ marginLeft: level > 0 ? 24 : 0 }}
+    >
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex gap-2 group relative w-fit">

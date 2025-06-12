@@ -1,12 +1,14 @@
+import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import {
   CreateStoryDto,
   GetStoryQueryDto,
   GetStoryViewersQueryDto,
 } from '@app/common/dtos/stories';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
+import { generateNotificationMessage } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { UsersType } from '@repo/db';
+import { NotificationTypeEnum, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -16,6 +18,8 @@ export class StoriesService implements OnModuleInit {
     private readonly prismaService: PrismaService,
     @Inject('USERS_SERVICE')
     private readonly usersClient: ClientKafka,
+    @Inject('NOTIFICATIONS_SERVICE')
+    private readonly notificationsClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -98,12 +102,15 @@ export class StoriesService implements OnModuleInit {
     email: string,
     createStoryDto: CreateStoryDto,
   ) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -135,6 +142,34 @@ export class StoriesService implements OnModuleInit {
         expires_at,
         user_id: user.id,
       },
+    });
+
+    const friendIds = await firstValueFrom<string[]>(
+      this.usersClient.send('get-friends', {
+        email,
+      }),
+    );
+
+    friendIds.forEach((friendId) => {
+      const createNotificationDto: CreateNotificationDto = {
+        type: NotificationTypeEnum.story_added_by_friend,
+        content: generateNotificationMessage(
+          NotificationTypeEnum.story_added_by_friend,
+          {
+            senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+          },
+        ),
+        recipient_id: friendId,
+        sender_id: user.id,
+        metadata: {
+          story_id: newStory.id,
+        },
+      };
+
+      this.notificationsClient.emit(
+        'create-notification',
+        createNotificationDto,
+      );
     });
 
     return this.getFormattedStory(newStory.id, user.id);

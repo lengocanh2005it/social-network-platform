@@ -4,12 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useGetComments = (
   postId: string,
-  getCommentQueryDto?: GetCommentQueryDto,
+  getCommentQueryDto?: GetCommentQueryDto
 ) => {
   return useQuery({
     queryKey: [`${postId}/comments`],
     queryFn: () => getComments(postId, getCommentQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!postId,
   });
 };

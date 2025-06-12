@@ -5,6 +5,7 @@ import {
   GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
+import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   CreateUserSessionDto,
@@ -21,6 +22,8 @@ import {
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
+  fieldDisplayMap,
+  generateNotificationMessage,
   hashPassword,
   REFRESH_TOKEN_LIFE,
   ResponseFriendRequestAction,
@@ -32,7 +35,11 @@ import {
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { FriendShipEnum, SessionStatusEnum } from '@repo/db';
+import {
+  FriendShipEnum,
+  NotificationTypeEnum,
+  SessionStatusEnum,
+} from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -41,6 +48,8 @@ export class UsersService implements OnModuleInit {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject('POSTS_SERVICE') private readonly postsClient: ClientKafka,
+    @Inject('NOTIFICATIONS_SERVICE')
+    private readonly notificationsClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -613,7 +622,7 @@ export class UsersService implements OnModuleInit {
   };
 
   public handleGetUserByField = async (
-    field: 'email' | 'phone_number' | 'id',
+    field: 'email' | 'phone_number' | 'id' | 'username',
     value: string,
     getUserQueryDto: GetUserQueryDto,
   ) => {
@@ -648,11 +657,13 @@ export class UsersService implements OnModuleInit {
         where: { email: value },
         include,
       });
-    } else if (field === 'phone_number') {
+    } else if (field === 'phone_number' || field === 'username') {
       findUser = await this.prismaService.users.findFirst({
         where: {
           profile: {
-            phone_number: value,
+            ...(field === 'phone_number'
+              ? { phone_number: value }
+              : { username: value }),
           },
         },
         include,
@@ -667,7 +678,7 @@ export class UsersService implements OnModuleInit {
     if (!findUser)
       throw new RpcException({
         statusCode: HttpStatus.NOT_FOUND,
-        message: `This ${field === 'email' ? 'email' : 'phone number'} has not been registered.`,
+        message: `This ${fieldDisplayMap[field] || field} has not been registered.`,
       });
 
     return findUser;
@@ -836,6 +847,9 @@ export class UsersService implements OnModuleInit {
       where: {
         email,
       },
+      include: {
+        profile: true,
+      },
     });
 
     if (!user)
@@ -876,6 +890,24 @@ export class UsersService implements OnModuleInit {
         target_id,
       },
     });
+
+    const createNotificationDto: CreateNotificationDto = {
+      type: NotificationTypeEnum.post_commented,
+      content: generateNotificationMessage(
+        NotificationTypeEnum.post_commented,
+        {
+          senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+        },
+      ),
+      recipient_id: targetUser.id,
+      sender_id: user.id,
+      metadata: {
+        initiator_id: newFriendRequest.initiator_id,
+        target_id: newFriendRequest.target_id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
 
     return this.getFormattedFriendRequest(
       newFriendRequest.initiator_id,
@@ -921,6 +953,9 @@ export class UsersService implements OnModuleInit {
     const user = await this.prismaService.users.findUnique({
       where: {
         email,
+      },
+      include: {
+        profile: true,
       },
     });
 
@@ -982,6 +1017,13 @@ export class UsersService implements OnModuleInit {
         },
       });
 
+      this.createFriendRequestResponsNotification(
+        NotificationTypeEnum.friend_request_accepted,
+        user,
+        initiator_id,
+        user.id,
+      );
+
       return {
         status: updatedFriendship.friendship_status,
         isInitiator: updatedFriendship?.initiator_id === user.id,
@@ -999,6 +1041,13 @@ export class UsersService implements OnModuleInit {
           },
         },
       });
+
+      this.createFriendRequestResponsNotification(
+        NotificationTypeEnum.friend_request_rejected,
+        user,
+        initiator_id,
+        user.id,
+      );
 
       return {
         status: 'none',
@@ -1860,5 +1909,27 @@ export class UsersService implements OnModuleInit {
         return user ? omit(user, ['password']) : null;
       }),
     );
+  };
+
+  private createFriendRequestResponsNotification = (
+    type: NotificationTypeEnum,
+    user: any,
+    recipient_id: string,
+    sender_id: string,
+  ) => {
+    const createNotificationDto: CreateNotificationDto = {
+      type,
+      content: generateNotificationMessage(type, {
+        senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+      }),
+      recipient_id,
+      sender_id,
+      metadata: {
+        initiator_id: recipient_id,
+        target_id: user.id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
   };
 }
