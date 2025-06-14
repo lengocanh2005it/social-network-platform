@@ -1,6 +1,7 @@
 import axios from "@/lib/axios";
 import {
   CreateCommentDto,
+  CreateCommentReplyDto,
   CreatePostDto,
   CreatePostShare,
   DeleteCommentDto,
@@ -69,6 +70,21 @@ export const createComment = async (createCommentDto: CreateCommentDto) => {
   const { post_id, ...res } = createCommentDto;
 
   const response = await axios.post(`/posts/${post_id}/comment`, res);
+
+  return response.data;
+};
+
+export const createCommentReply = async (
+  createCommentReplyDto: CreateCommentReplyDto,
+) => {
+  const { parent_comment_id, post_id, contents } = createCommentReplyDto;
+
+  const response = await axios.post(
+    `/posts/${post_id}/comments/${parent_comment_id}/reply`,
+    {
+      contents,
+    },
+  );
 
   return response.data;
 };

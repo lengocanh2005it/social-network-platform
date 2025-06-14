@@ -9,15 +9,12 @@ import {
   useGetNotifications,
   useInfiniteScroll,
   useSSE,
-  useViewNotification,
 } from "@/hooks";
 import { getNotifications } from "@/lib/api/notifications";
 import { useNotificationStore, useUserStore } from "@/store";
 import { Notification, NotificationStatus } from "@/utils";
 import { Tooltip } from "@heroui/react";
-import { NotificationTypeEnum } from "@repo/db";
 import { BellIcon, TrashIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -48,8 +45,6 @@ const NotificationsTab: React.FC = () => {
     Set<string>
   >(new Set());
   const { mutate: mutateDeleteNotification } = useDeleteNotification();
-  const router = useRouter();
-  const { mutate: mutateViewNotification } = useViewNotification();
   const [notificationQueue, setNotificationQueue] = useState<Notification[]>(
     [],
   );
@@ -61,15 +56,22 @@ const NotificationsTab: React.FC = () => {
   };
 
   useEffect(() => {
-    if (visibleNotifications.length < 3 && notificationQueue.length > 0) {
-      const nextNotifications = notificationQueue.slice(
-        0,
-        3 - visibleNotifications.length,
-      );
+    if (
+      visibleNotifications.length >= 3 ||
+      notificationQueue.length === 0 ||
+      !user?.id
+    )
+      return;
+
+    const nextNotifications = notificationQueue
+      .filter((nn) => nn.sender?.id !== user.id)
+      .slice(0, 3 - visibleNotifications.length);
+
+    if (nextNotifications.length > 0) {
       setVisibleNotifications((prev) => [...prev, ...nextNotifications]);
       setNotificationQueue((prev) => prev.slice(nextNotifications.length));
     }
-  }, [notificationQueue, visibleNotifications]);
+  }, [notificationQueue, visibleNotifications.length, user?.id]);
 
   useSSE({
     userId: user?.id ?? "",
@@ -185,28 +187,6 @@ const NotificationsTab: React.FC = () => {
     );
   };
 
-  const handleClickNotification = (notification: Notification) => {
-    if (!user || !user.profile || !notification.metadata) return;
-
-    mutateViewNotification(notification.id, {
-      onSuccess: (data: Notification) => {
-        if (data) {
-          if (notification.type === NotificationTypeEnum.post_liked) {
-            router.push(
-              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}`,
-            );
-          } else if (
-            notification.type === NotificationTypeEnum.post_commented
-          ) {
-            router.push(
-              `/${user.profile.username}/posts/${notification?.metadata?.post_id ?? ""}/?commentId=${notification?.metadata?.comment_id}`,
-            );
-          }
-        }
-      },
-    });
-  };
-
   return (
     <div className="relative">
       <div ref={iconRef}>
@@ -284,9 +264,6 @@ const NotificationsTab: React.FC = () => {
                                     <div
                                       key={notification.id}
                                       ref={isLast ? lastNotificationRef : null}
-                                      onClick={() =>
-                                        handleClickNotification(notification)
-                                      }
                                     >
                                       <NotificationItem
                                         notification={notification}
@@ -330,9 +307,6 @@ const NotificationsTab: React.FC = () => {
                                       notifications[activeTab].data.length - 1
                                         ? lastNotificationRef
                                         : null
-                                    }
-                                    onClick={() =>
-                                      handleClickNotification(notification)
                                     }
                                   >
                                     <NotificationItem

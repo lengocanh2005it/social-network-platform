@@ -839,6 +839,26 @@ export class UsersService implements OnModuleInit {
     );
   };
 
+  public handleCheckFriendship = async (userId1: string, userId2: string) => {
+    const friendship = await this.prismaService.friends.findFirst({
+      where: {
+        OR: [
+          {
+            initiator_id: userId1,
+            target_id: userId2,
+          },
+          {
+            initiator_id: userId2,
+            target_id: userId1,
+          },
+        ],
+        friendship_status: FriendShipEnum.accepted,
+      },
+    });
+
+    return !!friendship;
+  };
+
   public createFriendRequest = async (
     email: string,
     createFriendRequestDto: CreateFriendRequestDto,
@@ -889,12 +909,24 @@ export class UsersService implements OnModuleInit {
         initiator_id: user.id,
         target_id,
       },
+      include: {
+        initiator: {
+          include: {
+            profile: true,
+          },
+        },
+        target: {
+          include: {
+            profile: true,
+          },
+        },
+      },
     });
 
     const createNotificationDto: CreateNotificationDto = {
-      type: NotificationTypeEnum.post_commented,
+      type: NotificationTypeEnum.friend_request,
       content: generateNotificationMessage(
-        NotificationTypeEnum.post_commented,
+        NotificationTypeEnum.friend_request,
         {
           senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
         },
@@ -902,8 +934,14 @@ export class UsersService implements OnModuleInit {
       recipient_id: targetUser.id,
       sender_id: user.id,
       metadata: {
-        initiator_id: newFriendRequest.initiator_id,
-        target_id: newFriendRequest.target_id,
+        initiator: {
+          username: newFriendRequest.initiator.profile?.username ?? '',
+          id: newFriendRequest.initiator_id,
+        },
+        target: {
+          username: newFriendRequest.target.profile?.username ?? '',
+          id: newFriendRequest.target_id,
+        },
       },
     };
 
@@ -1020,8 +1058,7 @@ export class UsersService implements OnModuleInit {
       this.createFriendRequestResponsNotification(
         NotificationTypeEnum.friend_request_accepted,
         user,
-        initiator_id,
-        user.id,
+        initiatorUser,
       );
 
       return {
@@ -1045,8 +1082,7 @@ export class UsersService implements OnModuleInit {
       this.createFriendRequestResponsNotification(
         NotificationTypeEnum.friend_request_rejected,
         user,
-        initiator_id,
-        user.id,
+        initiatorUser,
       );
 
       return {
@@ -1914,19 +1950,24 @@ export class UsersService implements OnModuleInit {
   private createFriendRequestResponsNotification = (
     type: NotificationTypeEnum,
     user: any,
-    recipient_id: string,
-    sender_id: string,
+    recipient: any,
   ) => {
     const createNotificationDto: CreateNotificationDto = {
       type,
       content: generateNotificationMessage(type, {
         senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
       }),
-      recipient_id,
-      sender_id,
+      recipient_id: recipient.id,
+      sender_id: user.id,
       metadata: {
-        initiator_id: recipient_id,
-        target_id: user.id,
+        initiator: {
+          username: recipient.profile?.username ?? '',
+          id: recipient.id,
+        },
+        target: {
+          username: user.profile.username ?? '',
+          id: user.id,
+        },
       },
     };
 

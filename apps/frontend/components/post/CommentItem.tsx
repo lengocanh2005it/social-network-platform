@@ -7,7 +7,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
-  useCreateComment,
+  useCreateCommentReply,
   useDeleteComment,
   useLikeComment,
   useUnlikeComment,
@@ -19,12 +19,7 @@ import {
   usePostStore,
   useUserStore,
 } from "@/store";
-import {
-  CreateCommentDto,
-  CreateCommentTargetType,
-  formatDateTime,
-  GroupedComment,
-} from "@/utils";
+import { CreateCommentReplyDto, formatDateTime, GroupedComment } from "@/utils";
 import { Avatar, Spinner } from "@heroui/react";
 import { PostContentType, PostContentTypeEnum } from "@repo/db";
 import {
@@ -96,7 +91,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
   } = useCommentStore();
   const { updatePost } = usePostStore();
   const { mutate: mutateDeleteComment } = useDeleteComment();
-  const { mutate: mutateCreateComment } = useCreateComment();
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -104,6 +98,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   const [liked, setLiked] = useState(comment.likedByCurrentUser ?? false);
   const { mutate: mutateLikeComment } = useLikeComment();
   const { mutate: mutateUnlikeComment } = useUnlikeComment();
+  const { mutate: mutateCreateCommentReply } = useCreateCommentReply();
 
   useEffect(() => {
     setLiked(comment.likedByCurrentUser);
@@ -173,14 +168,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
       }
     }
 
-    const createCommentDto: CreateCommentDto = {
-      post_id: post.id,
-      targetType: CreateCommentTargetType.POST,
+    const createCommentReplyDto: CreateCommentReplyDto = {
       contents: textBlocks,
       parent_comment_id: comment.id,
+      post_id: post.id,
     };
 
-    mutateCreateComment(createCommentDto, {
+    mutateCreateCommentReply(createCommentReplyDto, {
       onSuccess: (data: {
         comments: GroupedComment[];
         parentComment?: GroupedComment;

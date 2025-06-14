@@ -19,6 +19,7 @@ export class StoriesService implements OnModuleInit {
       'get-stories',
       'get-viewers-of-story',
       'delete-story',
+      'get-story',
     ];
 
     patterns.forEach((pattern) =>
@@ -67,6 +68,15 @@ export class StoriesService implements OnModuleInit {
   public deleteStory = async (storyId: string, email: string) => {
     return firstValueFrom(
       this.storiesClient.send('delete-story', {
+        storyId,
+        email,
+      }),
+    );
+  };
+
+  public getStory = async (storyId: string, email: string) => {
+    return firstValueFrom(
+      this.storiesClient.send('get-story', {
         storyId,
         email,
       }),

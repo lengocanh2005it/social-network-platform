@@ -35,3 +35,9 @@ export const deleteStory = async (storyId: string) => {
 
   return response.data;
 };
+
+export const getStory = async (storyId: string) => {
+  const response = await axios.get(`/stories/${storyId}`);
+
+  return response.data;
+};

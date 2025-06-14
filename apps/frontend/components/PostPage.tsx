@@ -235,7 +235,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
     <>
       {post && (
         <>
-          <section className="flex flex-col md:gap-3 gap-2 relative max-w-2xl mx-auto">
+          <section className="flex flex-col md:gap-3 gap-2 relative max-w-2xl mx-auto md:pb-4 pb-3">
             <div className="flex flex-col border border-black/10 p-2 rounded-lg">
               <PostHeader homePost={post} shouldHiddenXCloseIcon />
               <PostContent homePost={post} />

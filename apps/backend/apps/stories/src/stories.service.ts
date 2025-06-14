@@ -25,6 +25,7 @@ export class StoriesService implements OnModuleInit {
   onModuleInit() {
     this.usersClient.subscribeToResponseOf('get-user-by-field');
     this.usersClient.subscribeToResponseOf('get-friends');
+    this.usersClient.subscribeToResponseOf('check-friendship-status');
   }
 
   public getStories = async (
@@ -289,6 +290,42 @@ export class StoriesService implements OnModuleInit {
   };
 
   public deleteStory = async (storyId: string, email: string) => {
+    const { user, story } = await this.validateUserStory(email, storyId);
+
+    if (story.user_id !== user.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You are only allowed to delete your own story.`,
+      });
+
+    await this.prismaService.stories.delete({
+      where: {
+        id: storyId,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Your story has been successfully deleted.`,
+    };
+  };
+
+  public getStory = async (storyId: string, email: string) => {
+    const { user, story } = await this.validateUserStory(email, storyId);
+
+    const isFriend = await firstValueFrom<boolean>(
+      this.usersClient.send('check-friendship-status', {
+        user_id_1: user.id,
+        user_id_2: story.user_id,
+      }),
+    );
+
+    if (!isFriend && user.id !== story.user_id) return null;
+
+    return this.getFormattedStory(storyId, user.id);
+  };
+
+  private validateUserStory = async (email: string, storyId: string) => {
     const user = await firstValueFrom<UsersType>(
       this.usersClient.send(
         'get-user-by-field',
@@ -311,21 +348,9 @@ export class StoriesService implements OnModuleInit {
         message: `Story not found.`,
       });
 
-    if (story.user_id !== user.id)
-      throw new RpcException({
-        statusCode: HttpStatus.FORBIDDEN,
-        message: `ou are only allowed to delete your own story.`,
-      });
-
-    await this.prismaService.stories.delete({
-      where: {
-        id: storyId,
-      },
-    });
-
     return {
-      success: true,
-      message: `Your story has been successfully deleted.`,
+      story,
+      user,
     };
   };
 

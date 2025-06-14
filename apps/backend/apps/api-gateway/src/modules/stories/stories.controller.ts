@@ -23,6 +23,23 @@ import { StoriesService } from './stories.service';
 export class StoriesController {
   constructor(private readonly storiesService: StoriesService) {}
 
+  @Get(':id')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getStory(
+    @Param('id', ParseUUIDPipe) storyId: string,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.storiesService.getStory(storyId, email);
+  }
+
   @Post()
   @Roles(RoleEnum.admin, RoleEnum.user)
   async createStory(
