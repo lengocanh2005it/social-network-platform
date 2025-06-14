@@ -1,10 +1,10 @@
 import Keyv from '@keyv/redis';
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import IORedis from 'ioredis';
 
 @Injectable()
-export class RedisService {
+export class RedisService implements OnModuleDestroy {
   private readonly redis: Keyv<any>;
   private readonly client: IORedis;
 
@@ -32,5 +32,9 @@ export class RedisService {
 
   public async getKeysByPrefix(prefix: string): Promise<string[]> {
     return this.client.keys(`${prefix}*`);
+  }
+
+  onModuleDestroy() {
+    this.client.quit();
   }
 }

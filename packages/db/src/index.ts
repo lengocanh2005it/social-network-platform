@@ -18,6 +18,7 @@ export type {
   Comments as CommentsType,
   ContentStoryType as ContentStoryType,
   NotificationType,
+  Notifications as NotificationsType,
 } from "@prisma/client";
 
 import type { Prisma } from "@prisma/client";

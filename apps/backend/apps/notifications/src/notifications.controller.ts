@@ -3,19 +3,32 @@ import {
   DeleteNotificationQueryDto,
   GetNotificationQueryDto,
 } from '@app/common/dtos/notifications';
+import { RedisPubSubProvider } from '@app/common/providers';
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { NotificationsService } from './notifications.service';
 
 @Controller()
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly redisPubSubProvider: RedisPubSubProvider,
+  ) {}
 
   @EventPattern('create-notification')
   async createNotification(
     @Payload() createNotificationDto: CreateNotificationDto,
   ) {
-    return this.notificationsService.createNotification(createNotificationDto);
+    const { recipient_id } = createNotificationDto;
+
+    const data = await this.notificationsService.createNotification(
+      createNotificationDto,
+    );
+
+    await this.redisPubSubProvider.publish('notifications', {
+      user_id: recipient_id,
+      data,
+    });
   }
 
   @MessagePattern('get-notifications')

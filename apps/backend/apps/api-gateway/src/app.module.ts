@@ -13,6 +13,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { FriendsModule } from './modules/friends/friends.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SseModule } from './modules/notifications/sse/sse.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { StoriesModule } from './modules/stories/stories.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
@@ -30,6 +31,7 @@ import { PresenceGateway } from './presence.gateway';
     ConversationsModule,
     StoriesModule,
     NotificationsModule,
+    SseModule,
   ],
   providers: [
     PresenceGateway,
@@ -47,10 +49,17 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(SessionMiddleware)
-      .exclude(...publicPaths, {
-        path: '/ws/*path',
-        method: RequestMethod.ALL,
-      })
+      .exclude(
+        ...publicPaths,
+        {
+          path: '/ws/*path',
+          method: RequestMethod.ALL,
+        },
+        {
+          path: '/notifications/sse/*path',
+          method: RequestMethod.ALL,
+        },
+      )
       .forRoutes('*');
   }
 }

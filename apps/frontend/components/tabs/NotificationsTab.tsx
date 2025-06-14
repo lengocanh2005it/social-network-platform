@@ -1,12 +1,14 @@
 "use client";
 import EmptyNotifications from "@/components/EmptyNotifications";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
+import NotificationModal from "@/components/modal/NotificationModal";
 import NotificationItem from "@/components/NotificationItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useDeleteNotification,
   useGetNotifications,
   useInfiniteScroll,
+  useSSE,
   useViewNotification,
 } from "@/hooks";
 import { getNotifications } from "@/lib/api/notifications";
@@ -38,6 +40,7 @@ const NotificationsTab: React.FC = () => {
     notifications,
     appendNotifications,
     removeNotifications,
+    addNewNotification,
   } = useNotificationStore();
   const iconRef = useRef<HTMLDivElement>(null);
   const [hasMore, setHasMore] = useState<boolean>(false);
@@ -47,6 +50,39 @@ const NotificationsTab: React.FC = () => {
   const { mutate: mutateDeleteNotification } = useDeleteNotification();
   const router = useRouter();
   const { mutate: mutateViewNotification } = useViewNotification();
+  const [notificationQueue, setNotificationQueue] = useState<Notification[]>(
+    [],
+  );
+  const [visibleNotifications, setVisibleNotifications] = useState<
+    Notification[]
+  >([]);
+  const handleClose = (id: string) => {
+    setVisibleNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  useEffect(() => {
+    if (visibleNotifications.length < 3 && notificationQueue.length > 0) {
+      const nextNotifications = notificationQueue.slice(
+        0,
+        3 - visibleNotifications.length,
+      );
+      setVisibleNotifications((prev) => [...prev, ...nextNotifications]);
+      setNotificationQueue((prev) => prev.slice(nextNotifications.length));
+    }
+  }, [notificationQueue, visibleNotifications]);
+
+  useSSE({
+    userId: user?.id ?? "",
+    onMessage: (data) => {
+      if (data) {
+        setNotificationQueue((prev) => [...prev, data]);
+        addNewNotification(NotificationStatus.UNREAD, data);
+      }
+    },
+    onError: (err) => {
+      console.error(err);
+    },
+  });
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -325,6 +361,17 @@ const NotificationsTab: React.FC = () => {
           </div>
         </div>
       )}
+
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3 max-w-sm w-full">
+        {visibleNotifications.map((notification) => (
+          <NotificationModal
+            key={notification.id}
+            notification={notification}
+            show={true}
+            setShow={() => handleClose(notification.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };

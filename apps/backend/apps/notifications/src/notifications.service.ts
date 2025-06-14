@@ -26,9 +26,11 @@ export class NotificationsService implements OnModuleInit {
   public createNotification = async (
     createNotificationDto: CreateNotificationDto,
   ) => {
-    await this.prismaService.notifications.create({
+    const newNotification = await this.prismaService.notifications.create({
       data: createNotificationDto,
     });
+
+    return this.getFormattedNotification(newNotification.id);
   };
 
   public getNotifications = async (

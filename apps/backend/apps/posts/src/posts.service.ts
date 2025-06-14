@@ -50,7 +50,7 @@ export class PostsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const postPatterns = ['get-me', 'get-user-by-field'];
+    const postPatterns = ['get-me', 'get-user-by-field', 'get-friends'];
 
     postPatterns.forEach((pp) => this.usersClient.subscribeToResponseOf(pp));
   }
