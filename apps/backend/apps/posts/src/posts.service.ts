@@ -661,7 +661,9 @@ export class PostsService implements OnModuleInit {
           id: post.id,
         },
         data: {
-          total_likes: post.total_likes + 1,
+          total_likes: {
+            increment: 1,
+          },
         },
       });
     }
@@ -729,7 +731,9 @@ export class PostsService implements OnModuleInit {
           id: post.id,
         },
         data: {
-          total_likes: post.total_likes - 1,
+          total_likes: {
+            decrement: 1,
+          },
         },
       });
     }
