@@ -9,9 +9,14 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 interface PostOptionsProps {
   post: PostDetails;
   setIsOpen?: Dispatch<SetStateAction<boolean>>;
+  shouldShowCommentOption?: boolean;
 }
 
-const PostOptions: React.FC<PostOptionsProps> = ({ setIsOpen, post }) => {
+const PostOptions: React.FC<PostOptionsProps> = ({
+  setIsOpen,
+  post,
+  shouldShowCommentOption,
+}) => {
   const [liked, setLiked] = useState(post.likedByCurrentUser);
   const [totalLikes, setTotalLikes] = useState(post.total_likes);
   const { mutate: mutateLikePost } = useLikePost();
@@ -100,7 +105,10 @@ const PostOptions: React.FC<PostOptionsProps> = ({ setIsOpen, post }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 text-gray-600">
+        <div
+          className={`grid ${shouldShowCommentOption ? "grid-cols-3 gap-4" : "grid-cols-2 gap-2"} 
+          text-gray-600`}
+        >
           <div
             className={`flex justify-center cursor-pointer items-center gap-2 p-3 
           rounded-lg transition-all duration-250 ease-in select-none ${
@@ -116,23 +124,27 @@ const PostOptions: React.FC<PostOptionsProps> = ({ setIsOpen, post }) => {
             <p className="text-md">{liked ? "Liked" : "Like"}</p>
           </div>
 
-          {setIsOpen ? (
-            <div
-              className="flex justify-center cursor-pointer items-center gap-2 p-3 rounded-lg
+          {shouldShowCommentOption && (
+            <>
+              {setIsOpen ? (
+                <div
+                  className="flex justify-center cursor-pointer items-center gap-2 p-3 rounded-lg
            hover:bg-gray-100 transition-all duration-250 ease-in select-none"
-              onClick={() => setIsOpen(true)}
-            >
-              <MessageCircle size={20} />
-              <p className="text-md">Comment</p>
-            </div>
-          ) : (
-            <div
-              className="flex justify-center cursor-pointer items-center gap-2 
+                  onClick={() => setIsOpen(true)}
+                >
+                  <MessageCircle size={20} />
+                  <p className="text-md">Comment</p>
+                </div>
+              ) : (
+                <div
+                  className="flex justify-center cursor-pointer items-center gap-2 
         p-3 rounded-lg hover:bg-gray-100 transition-all duration-250 ease-in select-none"
-            >
-              <MessageCircle size={20} />
-              <p className="text-md">Comment</p>
-            </div>
+                >
+                  <MessageCircle size={20} />
+                  <p className="text-md">Comment</p>
+                </div>
+              )}
+            </>
           )}
 
           <PostSharedModal post={post} />

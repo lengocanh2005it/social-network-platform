@@ -98,7 +98,7 @@ export class UsersController {
   async getUserByPhoneNumber(
     @Payload()
     payload: {
-      field: 'email' | 'phone_number' | 'id';
+      field: 'email' | 'phone_number' | 'id' | 'username';
       value: string;
       getUserQueryDto: GetUserQueryDto;
     },

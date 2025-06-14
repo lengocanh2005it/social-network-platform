@@ -278,7 +278,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   return (
-    <div className="relative" style={{ marginLeft: level > 0 ? 24 : 0 }}>
+    <div
+      className="relative"
+      id={comment.id}
+      style={{ marginLeft: level > 0 ? 24 : 0 }}
+    >
       <ContextMenu>
         <ContextMenuTrigger>
           <div className="flex gap-2 group relative w-fit">

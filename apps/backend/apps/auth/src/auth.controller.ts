@@ -1,3 +1,4 @@
+import { KafkaPayloadDto } from '@app/common/decorators';
 import {
   ChangePasswordDto,
   ForgotPasswordDto,
@@ -24,7 +25,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @MessagePattern('sign-in')
-  async signIn(@Payload() signInDto: SignInDto) {
+  async signIn(@KafkaPayloadDto(SignInDto) signInDto: SignInDto) {
     return this.authService.signIn(signInDto);
   }
 

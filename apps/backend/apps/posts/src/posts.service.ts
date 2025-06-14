@@ -1,3 +1,4 @@
+import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import {
   CreateCommentDto,
   CreateCommentReplyDto,
@@ -19,6 +20,7 @@ import {
   CreateCommentTargetType,
   decodeCursor,
   encodeCursor,
+  generateNotificationMessage,
   isToxic,
   PostMediaEnum,
 } from '@app/common/utils';
@@ -26,8 +28,10 @@ import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   CommentsType,
+  NotificationTypeEnum,
   PostPrivaciesEnum,
   PostsType,
+  Prisma,
   UsersType,
 } from '@repo/db';
 import { omit, pick } from 'lodash';
@@ -41,10 +45,12 @@ export class PostsService implements OnModuleInit {
     @Inject('USERS_SERVICE')
     private readonly usersClient: ClientKafka,
     private readonly huggingFaceProvider: HuggingFaceProvider,
+    @Inject('NOTIFICATIONS_SERVICE')
+    private readonly notificationsClient: ClientKafka,
   ) {}
 
   onModuleInit() {
-    const postPatterns = ['get-me', 'get-user-by-field'];
+    const postPatterns = ['get-me', 'get-user-by-field', 'get-friends'];
 
     postPatterns.forEach((pp) => this.usersClient.subscribeToResponseOf(pp));
   }
@@ -587,6 +593,25 @@ export class PostsService implements OnModuleInit {
 
     await this.createPostLike(user.id, existingPost);
 
+    const fullContent = existingPost.contents.map((c) => c.content).join(' ');
+
+    const postTitle = this.truncateWithEllipsis(fullContent);
+
+    const createNotificationDto: CreateNotificationDto = {
+      type: NotificationTypeEnum.post_liked,
+      content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
+        senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+        postTitle,
+      }),
+      sender_id: user.id,
+      recipient_id: existingPost.user_id,
+      metadata: {
+        post_id: existingPost.id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
+
     return {
       post: await this.getFormattedPost(postId, user.id),
       topUsers: await this.getTopUsersWhoLikedPost(postId, user.id),
@@ -643,12 +668,15 @@ export class PostsService implements OnModuleInit {
   };
 
   private verifyUserPost = async (email: string, postId: string) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -656,6 +684,14 @@ export class PostsService implements OnModuleInit {
     const existingPost = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+        contents: true,
       },
     });
 
@@ -853,33 +889,7 @@ export class PostsService implements OnModuleInit {
     postId: string,
     createCommentDto: CreateCommentDto,
   ) => {
-    const user = await firstValueFrom<UsersType>(
-      this.usersClient.send(
-        'get-user-by-field',
-        JSON.stringify({
-          field: 'email',
-          value: email,
-        }),
-      ),
-    );
-
-    if (!user)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `This email has not been registered.`,
-      });
-
-    const existingPost = await this.prismaService.posts.findUnique({
-      where: {
-        id: postId,
-      },
-    });
-
-    if (!existingPost)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `The post you're interacting with has been deleted. Please try again.`,
-      });
+    const { user, existingPost } = await this.verifyUserPost(email, postId);
 
     const { contents, media_id, targetType, parent_comment_id } =
       createCommentDto;
@@ -947,6 +957,32 @@ export class PostsService implements OnModuleInit {
         );
       }
     }
+
+    comments.forEach((comment) => {
+      if (user.id !== existingPost.user_id) {
+        const createNotificationDto: CreateNotificationDto = {
+          type: NotificationTypeEnum.post_commented,
+          content: generateNotificationMessage(
+            NotificationTypeEnum.post_commented,
+            {
+              senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+              commentContent: this.truncateWithEllipsis(comment.content),
+            },
+          ),
+          recipient_id: existingPost.user_id,
+          sender_id: user.id,
+          metadata: {
+            comment_id: comment.id,
+            post_id: existingPost.id,
+          },
+        };
+
+        this.notificationsClient.emit(
+          'create-notification',
+          createNotificationDto,
+        );
+      }
+    });
 
     return {
       post: await this.getFormattedPost(
@@ -1299,8 +1335,10 @@ export class PostsService implements OnModuleInit {
       }
     }
 
+    const newComments: any[] = [];
+
     for (const newContent of validContents) {
-      await this.prismaService.comments.create({
+      const newComment = await this.prismaService.comments.create({
         data: {
           user: {
             connect: {
@@ -1314,6 +1352,40 @@ export class PostsService implements OnModuleInit {
           },
           content: newContent,
         },
+        include: {
+          user: true,
+        },
+      });
+
+      newComments.push(newComment);
+    }
+
+    if (newComments.length) {
+      newComments.forEach((newComment) => {
+        if (user.id !== comment.user_id) {
+          const createNotificationDto: CreateNotificationDto = {
+            type: NotificationTypeEnum.comment_replied,
+            content: generateNotificationMessage(
+              NotificationTypeEnum.comment_replied,
+              {
+                senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+                commentContent: this.truncateWithEllipsis(comment.content),
+              },
+            ),
+            sender_id: user.id,
+            recipient_id: comment.user_id,
+            metadata: {
+              post_id: comment.post_id,
+              parent_comment_id: comment.id,
+              comment_id: newComment.id,
+            },
+          };
+
+          this.notificationsClient.emit(
+            'create-notification',
+            createNotificationDto,
+          );
+        }
       });
     }
 
@@ -1506,7 +1578,7 @@ export class PostsService implements OnModuleInit {
     commentId: string,
     email: string,
   ) => {
-    const { user } = await this.validateUserPostComment(
+    const { user, comment, post } = await this.validateUserPostComment(
       email,
       postId,
       commentId,
@@ -1527,6 +1599,26 @@ export class PostsService implements OnModuleInit {
         created_at: new Date(),
       },
     });
+
+    if (user.id !== comment.user_id) {
+      const createNotificationDto: CreateNotificationDto = {
+        type: NotificationTypeEnum.comment_liked,
+        content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
+          senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+        }),
+        sender_id: user.id,
+        recipient_id: comment.user_id,
+        metadata: {
+          comment_id: comment.id,
+          post_id: post.id,
+        },
+      };
+
+      this.notificationsClient.emit(
+        'create-notification',
+        createNotificationDto,
+      );
+    }
 
     return this.getFormattedComment(commentId, user.id);
   };
@@ -1602,12 +1694,15 @@ export class PostsService implements OnModuleInit {
     postId: string,
     commentId: string,
   ) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -1782,27 +1877,10 @@ export class PostsService implements OnModuleInit {
     email: string,
     createPostShareDto: CreatePostShareDto,
   ) => {
-    const user = await firstValueFrom<UsersType>(
-      this.usersClient.send(
-        'get-user-by-field',
-        JSON.stringify({
-          field: 'email',
-          value: email,
-        }),
-      ),
+    const { user, existingPost: post } = await this.verifyUserPost(
+      email,
+      postId,
     );
-
-    const post = await this.prismaService.posts.findUnique({
-      where: {
-        id: postId,
-      },
-    });
-
-    if (!post)
-      throw new RpcException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: `The post you're interacting with has been deleted. Please try again.`,
-      });
 
     const { contents, privacy, hashtags } = createPostShareDto;
 
@@ -1842,6 +1920,26 @@ export class PostsService implements OnModuleInit {
       );
 
     if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
+
+    if (user.id !== post.user_id) {
+      const createNotificationDto: CreateNotificationDto = {
+        type: NotificationTypeEnum.post_shared,
+        content: generateNotificationMessage(NotificationTypeEnum.post_shared, {
+          senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+        }),
+        sender_id: user.id,
+        recipient_id: post.user_id,
+        metadata: {
+          parent_post_id: postId,
+          post_id: newPost.id,
+        },
+      };
+
+      this.notificationsClient.emit(
+        'create-notification',
+        createNotificationDto,
+      );
+    }
 
     return this.getFormattedPost(newPost.id, user.id, postId);
   };
@@ -2153,4 +2251,75 @@ export class PostsService implements OnModuleInit {
 
     return this.getMediaOfPost(postId, mediaId, type, email);
   };
+
+  public getPostOfUser = async (
+    postId: string,
+    username: string,
+    email: string,
+  ) => {
+    const currentUser = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'username',
+          value: username,
+        }),
+      ),
+    ).catch((error) => {
+      throw new RpcException({
+        statusCode: error?.statusCode || 500,
+        message: error?.message || 'Microservice error',
+      });
+    });
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `The post could not be found.`,
+      });
+
+    if (post.user_id !== user.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `The post does not belong to this user.`,
+      });
+
+    const friendIds = await firstValueFrom<string[]>(
+      this.usersClient.send('get-friends', {
+        email: user.email,
+      }),
+    );
+
+    const isFriend = friendIds.some((friendId) => friendId === currentUser.id);
+
+    if (isFriend && post.privacy === PostPrivaciesEnum.only_me) return null;
+
+    if (
+      !isFriend &&
+      post.privacy !== PostPrivaciesEnum.public &&
+      currentUser.id !== user.id
+    )
+      return null;
+
+    return this.getFormattedPost(postId, currentUser.id);
+  };
+
+  private truncateWithEllipsis = (text: string, maxLength = 100) =>
+    text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
 }

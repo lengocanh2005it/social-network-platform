@@ -8,6 +8,7 @@ import {
   ContentStoryType,
   FriendShipStatusType,
   GenderType,
+  NotificationType,
   PostContentType,
   PostPrivaciesType,
   UserEducationsType,
@@ -595,3 +596,36 @@ export type StoryViewer = {
   avatar_url: string;
   username: string;
 };
+
+export type GetNotificationsQueryDto = GetFeedQueryDto & { is_read: boolean };
+
+export type DeleteNotificationQueryDto = {
+  notificationIds: string[];
+};
+
+export type Notification = {
+  id: string;
+  type: NotificationType;
+  content: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  is_read: boolean;
+  sender?: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  };
+};
+
+export enum NotificationStatus {
+  READ = "read",
+  UNREAD = "unread",
+}
+
+export interface NotificationGroupState {
+  data: Notification[];
+  loading: boolean;
+  error?: string;
+  nextCursor?: string;
+}

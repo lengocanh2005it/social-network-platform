@@ -15,7 +15,11 @@ export default function PostCard({ homePost }: { homePost: PostDetails }) {
 
       <PostContent homePost={homePost} />
 
-      <PostOptions setIsOpen={setIsOpen} post={homePost} />
+      <PostOptions
+        setIsOpen={setIsOpen}
+        post={homePost}
+        shouldShowCommentOption
+      />
 
       {isOpen && (
         <ViewPostModal

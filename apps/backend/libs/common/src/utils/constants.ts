@@ -112,6 +112,11 @@ export const KAFKA_SERVICES = [
     clientId: 'stories',
     groupId: 'stories-group',
   },
+  {
+    serviceName: 'NOTIFICATIONS_SERVICE',
+    clientId: 'notifications',
+    groupId: 'notifications-group',
+  },
 ] as const;
 
 export enum AuthMethod {
@@ -229,4 +234,19 @@ export type Message = {
     username: string;
   };
   parent_message?: Message;
+};
+
+export type NotificationParams = {
+  senderName?: string;
+  postTitle?: string;
+  commentContent?: string;
+};
+
+export const fieldDisplayMap: Record<string, string> = {
+  id: 'ID',
+  email: 'email',
+  phone_number: 'phone number',
+  username: 'username',
+  national_id: 'national ID',
+  nickname: 'nickname',
 };

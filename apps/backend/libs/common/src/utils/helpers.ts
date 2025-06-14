@@ -1,11 +1,13 @@
 import {
   ACCESS_TOKEN_LIFE,
   IS_PRODUCTION,
+  NotificationParams,
   REFRESH_TOKEN_LIFE,
   SignInResponse,
 } from '@app/common/utils/constants';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { NotificationType } from '@repo/db';
 import * as bcryptjs from 'bcryptjs';
 import { config } from 'dotenv';
 import { Response } from 'express';
@@ -249,3 +251,35 @@ export function isToxic(
 
   return toxicLabel.score > 0.7;
 }
+
+export const generateNotificationMessage = (
+  type: NotificationType,
+  params: NotificationParams = {},
+): string => {
+  switch (type) {
+    case 'friend_request':
+      return `${params.senderName} sent you a friend request.`;
+    case 'friend_request_accepted':
+      return `${params.senderName} accepted your friend request.`;
+    case 'friend_request_rejected':
+      return `${params.senderName} rejected your friend request.`;
+    case 'post_liked':
+      return `${params.senderName} liked your post: "${params.postTitle}".`;
+    case 'post_commented':
+      return `${params.senderName} commented on your post: "${params.commentContent}".`;
+    case 'comment_liked':
+      return `${params.senderName} liked your comment.`;
+    case 'comment_replied':
+      return `${params.senderName} replied to your comment: "${params.commentContent}".`;
+    case 'post_shared':
+      return `${params.senderName} shared your post.`;
+    case 'tagged_in_post':
+      return `${params.senderName} tagged you in a post.`;
+    case 'story_added_by_friend':
+      return `${params.senderName} added a new story.`;
+    case 'system_announcement':
+      return `There is a new system announcement.`;
+    default:
+      return `You have a new notification.`;
+  }
+};

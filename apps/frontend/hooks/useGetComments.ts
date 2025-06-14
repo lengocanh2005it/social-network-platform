@@ -11,5 +11,6 @@ export const useGetComments = (
     queryFn: () => getComments(postId, getCommentQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!postId,
   });
 };

@@ -243,7 +243,10 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                           shouldHiddenXCloseIcon
                         />
                         <PostContent homePost={homePost} />
-                        <PostOptions post={homePost} />
+                        <PostOptions
+                          post={homePost}
+                          shouldShowCommentOption={false}
+                        />
                       </div>
 
                       <Divider />
@@ -320,7 +323,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                     <div className="flex md:gap-3 gap-2">
                       <Avatar
                         src={user.profile.avatar_url}
-                        className="rounded-full w-10 h-10 select-none"
+                        className="cursor-pointer select-none w-10 h-10 flex-shrink-0 rounded-full"
                       />
 
                       <div className="w-full bg-gray-100 rounded-xl p-3">

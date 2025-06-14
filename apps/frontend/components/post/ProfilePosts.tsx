@@ -357,7 +357,11 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 />
               )}
 
-              <PostOptions post={post} setIsOpen={setIsShowPostModal} />
+              <PostOptions
+                post={post}
+                setIsOpen={setIsShowPostModal}
+                shouldShowCommentOption
+              />
             </div>
           </div>
 

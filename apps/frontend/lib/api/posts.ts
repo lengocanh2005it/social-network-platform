@@ -212,3 +212,13 @@ export const unlikeMediaOfPost = async (
 
   return response.data;
 };
+
+export const getPostOfUser = async (username: string, postId: string) => {
+  const response = await axios.get(`/posts/${postId}`, {
+    params: {
+      username,
+    },
+  });
+
+  return response.data;
+};

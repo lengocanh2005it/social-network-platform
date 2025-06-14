@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 
 export const useInfiniteScroll = (callback: () => void, hasMore: boolean) => {
   const observer = useRef<IntersectionObserver | null>(null);
+  const isFetchingRef = useRef(false);
 
   const lastElementRef = useRef<HTMLDivElement | null>(null);
 
@@ -11,8 +12,14 @@ export const useInfiniteScroll = (callback: () => void, hasMore: boolean) => {
 
       if (node && hasMore) {
         observer.current = new IntersectionObserver((entries) => {
-          if (entries[0].isIntersecting) {
+          const firstEntry = entries[0];
+          if (firstEntry.isIntersecting && !isFetchingRef.current) {
+            isFetchingRef.current = true;
             callback();
+
+            setTimeout(() => {
+              isFetchingRef.current = false;
+            }, 500);
           }
         });
 

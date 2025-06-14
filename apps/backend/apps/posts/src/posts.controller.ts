@@ -247,4 +247,13 @@ export class PostsController {
       unlikeMediaPostQueryDto,
     );
   }
+
+  @MessagePattern('get-post-of-user')
+  async getPostOfUser(
+    @Payload('postId') postId: string,
+    @Payload('username') username: string,
+    @Payload('email') email: string,
+  ) {
+    return this.postsService.getPostOfUser(postId, username, email);
+  }
 }

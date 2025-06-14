@@ -412,4 +412,22 @@ export class PostsController {
       unlikePostMediaQueryDto,
     );
   }
+
+  @Get(':id')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getPostOfUser(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Query('username') username: string,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.getPostOfUser(postId, username, email);
+  }
 }

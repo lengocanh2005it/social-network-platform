@@ -38,14 +38,11 @@ export class UploadsService implements OnModuleInit {
 
     const { fileUrl } = await this.uploadImage(file);
 
-    this.usersClient.emit(
-      'update-image',
-      JSON.stringify({
-        fileUrl,
-        uploadUserImageQueryDto,
-        user_id: user.id,
-      }),
-    );
+    this.usersClient.emit('update-image', {
+      fileUrl,
+      uploadUserImageQueryDto,
+      user_id: user.id,
+    });
 
     return {
       message: `Your ${

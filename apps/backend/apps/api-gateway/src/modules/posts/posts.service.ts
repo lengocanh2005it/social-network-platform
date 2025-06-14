@@ -44,6 +44,7 @@ export class PostsService implements OnModuleInit {
       'get-media-post',
       'unlike-media-post',
       'like-media-post',
+      'get-post-of-user',
     ];
 
     patterns.forEach((pattern) =>
@@ -323,6 +324,20 @@ export class PostsService implements OnModuleInit {
         mediaId,
         email,
         unlikeMediaPostQueryDto,
+      }),
+    );
+  };
+
+  public getPostOfUser = async (
+    postId: string,
+    username: string,
+    email: string,
+  ) => {
+    return firstValueFrom(
+      this.postsClient.send('get-post-of-user', {
+        postId,
+        username,
+        email,
       }),
     );
   };

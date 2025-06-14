@@ -1,5 +1,6 @@
 "use client";
 import SearchDropdown from "@/components/SearchDropdown";
+import NotificationsTab from "@/components/tabs/NotificationsTab";
 import { useSignOut } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
@@ -19,7 +20,6 @@ import {
   Tooltip,
 } from "@heroui/react";
 import {
-  BellIcon,
   Contact,
   Grid2X2,
   HomeIcon,
@@ -230,7 +230,8 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         <Grid2X2 className="cursor-pointer" />
 
         <MessageCircle className="cursor-pointer" />
-        <BellIcon className="cursor-pointer" />
+
+        <NotificationsTab />
 
         {user && (
           <Dropdown
