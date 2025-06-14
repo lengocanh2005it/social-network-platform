@@ -22,7 +22,7 @@ const ProfileFriendSection: React.FC = () => {
 
   useEffect(() => {
     if (data?.data) setFriends(data.data);
-    if (data?.total_friends) setTotalFriends(data.total_friends);
+    if (data?.total_friends !== 0) setTotalFriends(data?.total_friends);
   }, [data, setFriends, setTotalFriends]);
 
   return (
@@ -59,12 +59,15 @@ const ProfileFriendSection: React.FC = () => {
           ) : (
             <div className="text-center py-6 px-4 flex flex-col md:gap-2 gap-1">
               <h1 className="text-lg font-semibold text-gray-800 dark:text-white">
-                Your friends list is empty
+                {isCurrentUser
+                  ? " Your friends list is empty"
+                  : `${viewedUser?.profile?.first_name} ${viewedUser?.profile?.last_name} has no friends listed`}
               </h1>
 
               <p className="text-gray-600 dark:text-gray-300 text-sm">
-                Start connecting with others so you don&apos;t miss any fun
-                conversations.
+                {isCurrentUser
+                  ? `Start connecting with others so you don&apos;t miss any fun conversations.`
+                  : `Looks like ${viewedUser?.profile?.first_name} ${viewedUser?.profile?.last_name} hasn't connected with anyone yet.`}
               </p>
             </div>
           )}

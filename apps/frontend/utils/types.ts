@@ -351,6 +351,12 @@ export type CreateCommentDto = {
   post_id: string;
 };
 
+export type CreateCommentReplyDto = {
+  contents: CreatePostContentDto[];
+  parent_comment_id: string;
+  post_id: string;
+};
+
 export type CreateTrustDeviceDto = DeviceDetails & {
   email: string;
 };

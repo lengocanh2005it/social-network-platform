@@ -31,7 +31,6 @@ import {
   NotificationTypeEnum,
   PostPrivaciesEnum,
   PostsType,
-  Prisma,
   UsersType,
 } from '@repo/db';
 import { omit, pick } from 'lodash';
@@ -597,20 +596,25 @@ export class PostsService implements OnModuleInit {
 
     const postTitle = this.truncateWithEllipsis(fullContent);
 
-    const createNotificationDto: CreateNotificationDto = {
-      type: NotificationTypeEnum.post_liked,
-      content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
-        senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-        postTitle,
-      }),
-      sender_id: user.id,
-      recipient_id: existingPost.user_id,
-      metadata: {
-        post_id: existingPost.id,
-      },
-    };
+    if (user.id !== existingPost.user_id) {
+      const createNotificationDto: CreateNotificationDto = {
+        type: NotificationTypeEnum.post_liked,
+        content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
+          senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+          postTitle,
+        }),
+        sender_id: user.id,
+        recipient_id: existingPost.user_id,
+        metadata: {
+          post_id: existingPost.id,
+        },
+      };
 
-    this.notificationsClient.emit('create-notification', createNotificationDto);
+      this.notificationsClient.emit(
+        'create-notification',
+        createNotificationDto,
+      );
+    }
 
     return {
       post: await this.getFormattedPost(postId, user.id),
@@ -1317,7 +1321,7 @@ export class PostsService implements OnModuleInit {
     createCommentReplyDto: CreateCommentReplyDto,
     email: string,
   ) => {
-    const { user, comment } = await this.validateUserPostComment(
+    const { user, comment, post } = await this.validateUserPostComment(
       email,
       postId,
       commentId,
@@ -1342,26 +1346,17 @@ export class PostsService implements OnModuleInit {
     const newComments: any[] = [];
 
     for (const newContent of validContents) {
-      const newComment = await this.prismaService.comments.create({
-        data: {
-          user: {
-            connect: {
-              id: user.id,
-            },
-          },
-          comment: {
-            connect: {
-              id: commentId,
-            },
-          },
-          content: newContent,
-        },
-        include: {
-          user: true,
-        },
-      });
+      const baseData = {
+        user_id: user.id,
+        content: newContent,
+      };
 
-      newComments.push(newComment);
+      newComments.push(
+        await this.createCommentForPost({
+          ...baseData,
+          parent_comment_id: comment.id,
+        }),
+      );
     }
 
     if (newComments.length) {
@@ -1373,15 +1368,16 @@ export class PostsService implements OnModuleInit {
               NotificationTypeEnum.comment_replied,
               {
                 senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-                commentContent: this.truncateWithEllipsis(comment.content),
+                commentContent: this.truncateWithEllipsis(newComment.content),
               },
             ),
             sender_id: user.id,
             recipient_id: comment.user_id,
             metadata: {
-              post_id: comment.post_id,
-              parent_comment_id: comment.id,
+              post_id: postId,
+              parent_comment_id: commentId,
               comment_id: newComment.id,
+              post_username: post.user.profile?.username ?? '',
             },
           };
 
@@ -1393,7 +1389,18 @@ export class PostsService implements OnModuleInit {
       });
     }
 
-    return this.getFormattedComment(comment.id, user.id);
+    return {
+      post: await this.getFormattedPost(
+        postId,
+        user.id === post.user_id ? user.id : post.user_id,
+      ),
+      comments: await Promise.all(
+        newComments.map(async (comment) =>
+          this.getFormattedComment(comment.id, user.id),
+        ),
+      ),
+      parentComment: await this.getFormattedComment(commentId, user.id),
+    };
   };
 
   public getCommentReplies = async (
@@ -1607,14 +1614,18 @@ export class PostsService implements OnModuleInit {
     if (user.id !== comment.user_id) {
       const createNotificationDto: CreateNotificationDto = {
         type: NotificationTypeEnum.comment_liked,
-        content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
-          senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-        }),
+        content: generateNotificationMessage(
+          NotificationTypeEnum.comment_liked,
+          {
+            senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+          },
+        ),
         sender_id: user.id,
         recipient_id: comment.user_id,
         metadata: {
           comment_id: comment.id,
           post_id: post.id,
+          post_username: post.user.profile?.username ?? '',
         },
       };
 
@@ -1714,6 +1725,13 @@ export class PostsService implements OnModuleInit {
     const post = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
+      },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
       },
     });
 
@@ -1910,6 +1928,13 @@ export class PostsService implements OnModuleInit {
           },
         },
       },
+      include: {
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
     });
 
     if (contents?.length)
@@ -1936,6 +1961,8 @@ export class PostsService implements OnModuleInit {
         metadata: {
           parent_post_id: postId,
           post_id: newPost.id,
+          post_username: newPost.user.profile?.username ?? '',
+          parent_post_username: post.user.profile?.username ?? '',
         },
       };
 
@@ -2321,7 +2348,11 @@ export class PostsService implements OnModuleInit {
     )
       return null;
 
-    return this.getFormattedPost(postId, currentUser.id);
+    return this.getFormattedPost(
+      postId,
+      currentUser.id,
+      post.parent_post_id ? post.parent_post_id : undefined,
+    );
   };
 
   private truncateWithEllipsis = (text: string, maxLength = 100) =>

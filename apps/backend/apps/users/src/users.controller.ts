@@ -248,4 +248,12 @@ export class UsersController {
   async getUsersByIds(@Payload() userIds: string[]) {
     return this.usersService.getUsersByIds(userIds);
   }
+
+  @MessagePattern('check-friendship-status')
+  async handleCheckFriendship(
+    @Payload('user_id_1') userId1: string,
+    @Payload('user_id_2') userId2: string,
+  ) {
+    return this.usersService.handleCheckFriendship(userId1, userId2);
+  }
 }

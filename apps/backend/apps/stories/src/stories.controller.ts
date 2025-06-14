@@ -48,4 +48,12 @@ export class StoriesController {
   ) {
     return this.storiesService.deleteStory(storyId, email);
   }
+
+  @MessagePattern('get-story')
+  async getStory(
+    @Payload('storyId') storyId: string,
+    @Payload('email') email: string,
+  ) {
+    return this.storiesService.getStory(storyId, email);
+  }
 }

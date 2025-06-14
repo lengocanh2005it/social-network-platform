@@ -1,6 +1,6 @@
 "use client";
 import { useCreatePostShare } from "@/hooks";
-import { PostDetails, usePostStore } from "@/store";
+import { PostDetails, usePostStore, useUserStore } from "@/store";
 import { CreatePostShare, extractHashtags, formatDateTime } from "@/utils";
 import {
   Avatar,
@@ -33,6 +33,7 @@ interface PostShareModalProps {
 
 const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const { user, viewedUser } = useUserStore();
   const [content, setContent] = useState<string>("");
   const [selectedKey, setSelectedKey] = useState<Set<PostPrivaciesType>>(
     new Set([PostPrivaciesEnum.public]),
@@ -90,7 +91,7 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
     mutateCreatePostShare(createPostShareDto, {
       onSuccess: (data: PostDetails) => {
         if (data) {
-          addNewPost(data);
+          if (viewedUser?.id === user?.id) addNewPost(data);
           setContent("");
           window.scrollTo({ top: 0, behavior: "smooth" });
           toast.success("Post shared successfully.", {
