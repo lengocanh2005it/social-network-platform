@@ -3,6 +3,7 @@ import PostSharedModal from "@/components/modal/PostSharedModal";
 import ViewLikedUsersDetaiModal from "@/components/modal/ViewLikedUsersDetaiModal";
 import { useLikePost, useUnlikePost } from "@/hooks";
 import { PostDetails, usePostStore } from "@/store";
+import { TopLikedUserType } from "@/utils";
 import { MessageCircle, ThumbsUpIcon } from "lucide-react";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 
@@ -23,6 +24,9 @@ const PostOptions: React.FC<PostOptionsProps> = ({
   const { mutate: mutateUnlikePost } = useUnlikePost();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const { updatePost } = usePostStore();
+  const [topLikedUsers, setTopLikedUsers] = useState<TopLikedUserType[]>(
+    post?.topLikedUsers,
+  );
 
   useEffect(() => {
     setTotalLikes(post.total_likes);
@@ -37,7 +41,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
   const renderLikedUsersText = () => {
     const likes = typeof totalLikes === "number" ? totalLikes : 0;
 
-    const users = post.topLikedUsers ?? [];
+    const users = topLikedUsers ?? [];
 
     const displayed = users.slice(0, 3).map((u) => u.full_name);
 
@@ -58,6 +62,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
             setLiked(false);
             setTotalLikes(data.post.total_likes);
             updatePost(post.id, data.post);
+            setTopLikedUsers(data.post.topLikedUsers);
           }
         },
       });
@@ -67,6 +72,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
           setLiked(true);
           setTotalLikes(data.post.total_likes);
           updatePost(post.id, data.post);
+          setTopLikedUsers(data.post.topLikedUsers);
         },
       });
     }
@@ -75,7 +81,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
   return (
     <>
       <div
-        className={`flex flex-col relativ md:gap-3 gap-2 border-t border-black/10 
+        className={`flex flex-col relative md:gap-3 gap-2 border-t border-black/10 
           ${!setIsOpen && "pb-2"} ${post.topLikedUsers?.length !== 0 ? "pt-3" : "pt-2"}`}
       >
         <div className="flex items-center justify-between md:gap-3 gap-2">
