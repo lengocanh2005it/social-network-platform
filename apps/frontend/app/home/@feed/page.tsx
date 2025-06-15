@@ -1,23 +1,61 @@
 "use client";
+import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import CreatePost from "@/components/post/CreatePost";
 import PostCard from "@/components/post/PostCard";
 import StorySlider from "@/components/sliders/StoriesSlider";
-import { useGetPosts } from "@/hooks";
+import { useGetPosts, useInfiniteScroll } from "@/hooks";
+import { getHomePosts } from "@/lib/api/posts";
 import { usePostStore } from "@/store";
 import { ScrollShadow, Spinner } from "@heroui/react";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const FeedPage = () => {
   const { data, isLoading } = useGetPosts();
-  const { homePosts, setHomePosts } = usePostStore();
+  const { homePosts, setHomePosts, appendOldHomePosts } = usePostStore();
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
   useEffect(() => {
     if (data && data?.data) setHomePosts(data?.data, data?.nextCursor);
-  }, [data, setHomePosts]);
+    setNextCursor(data?.nextCursor ? data.nextCursor : null);
+  }, [data, setHomePosts, setNextCursor]);
+
+  const loadMore = useCallback(async () => {
+    if (!nextCursor || hasMore) return;
+
+    setHasMore(true);
+
+    try {
+      const res = await getHomePosts({ after: nextCursor });
+
+      if (res?.data) {
+        appendOldHomePosts(res.data);
+        setNextCursor(res.nextCursor ?? null);
+      }
+    } finally {
+      setHasMore(false);
+    }
+  }, [nextCursor, hasMore, appendOldHomePosts]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 100
+      ) {
+        loadMore();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadMore]);
+
+  const lastPostRef = useInfiniteScroll(loadMore, !!nextCursor);
 
   return (
     <ScrollShadow
-      className="h-screen flex flex-col md:gap-3 gap-2 pr-2"
+      className="flex flex-col md:gap-3 gap-2 relative"
       hideScrollBar
       offset={0}
       size={0}
@@ -39,9 +77,16 @@ const FeedPage = () => {
         <>
           {homePosts?.length !== 0 ? (
             <section className="flex flex-col md:gap-2 gap-1">
-              {homePosts.map((post) => (
-                <PostCard key={post.id} homePost={post} />
+              {homePosts.map((post, index) => (
+                <div
+                  key={post.id}
+                  ref={index === homePosts.length - 1 ? lastPostRef : null}
+                >
+                  <PostCard homePost={post} />
+                </div>
               ))}
+
+              {hasMore && <PrimaryLoading />}
             </section>
           ) : (
             <div

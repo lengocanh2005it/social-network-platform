@@ -279,6 +279,18 @@ export class AuthService implements OnModuleInit {
         message: `Your phone number has already been registered.`,
       });
 
+    const existingUsername = await this.prismaService.userProfiles.findUnique({
+      where: {
+        username: res.username,
+      },
+    });
+
+    if (existingUsername)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Your username has already been registered.`,
+      });
+
     const newUser = await this.prismaService.users.create({
       data: {
         email,

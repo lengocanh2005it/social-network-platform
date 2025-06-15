@@ -21,6 +21,7 @@ interface PostStore {
   homePosts: PostDetails[];
   nextHomeCursor: string | null;
   setHomePosts: (posts: PostDetails[], nextHomeCursor: string | null) => void;
+  appendOldHomePosts: (posts: PostDetails[]) => void;
   hideHomePosts: (postId: string) => void;
   restoreHomePostAtIndex: (post: PostDetails, index: number) => void;
 }
@@ -82,5 +83,9 @@ export const usePostStore = create<PostStore>((set) => ({
   hideHomePosts: (postId) =>
     set((state) => ({
       homePosts: state.homePosts.filter((post) => post.id !== postId),
+    })),
+  appendOldHomePosts: (oldPosts) =>
+    set((state) => ({
+      homePosts: [...state.homePosts, ...oldPosts],
     })),
 }));
