@@ -35,7 +35,7 @@ const CreatePost = () => {
             <div className="flex items-center space-x-3">
               <Avatar
                 src={user.profile.avatar_url}
-                className="select-none cursor-pointer"
+                className="select-none cursor-pointer flex-shrink-0"
               />
 
               <div

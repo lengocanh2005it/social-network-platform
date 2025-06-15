@@ -119,7 +119,7 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
   const lastPostRef = useInfiniteScroll(handleLoadMore, !!nextCursor);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center w-full">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
