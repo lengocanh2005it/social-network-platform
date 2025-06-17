@@ -13,6 +13,8 @@ interface FriendState {
   closeChat: (friendId: string) => void;
   clearOpenChats: () => void;
   updateOnlineStatus: (onlineIds: string[]) => void;
+  addFriends: (newFriends: Friend[]) => void;
+  removeFriend: (friendId: string) => void;
 }
 
 export const useFriendStore = create<FriendState>()(
@@ -66,6 +68,18 @@ export const useFriendStore = create<FriendState>()(
         }));
         set({ friends: updatedFriends });
       },
+
+      addFriends: (newFriends) =>
+        set((state) => ({
+          friends: [...state.friends, ...newFriends],
+        })),
+
+      removeFriend: (friendId: string) =>
+        set((state) => ({
+          friends: state.friends.filter(
+            (friend) => friend.user_id !== friendId,
+          ),
+        })),
     }),
     {
       name: "friend-storage",

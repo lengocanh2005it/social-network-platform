@@ -440,7 +440,7 @@ const ProfileHeaderSection = () => {
                       </>
                     ) : (
                       <>
-                        {user?.total_friends && user.total_friends > 0 && (
+                        {user && user?.total_friends > 0 && (
                           <p className="text-gray-600">
                             {user?.total_friends ?? 0} friends
                           </p>

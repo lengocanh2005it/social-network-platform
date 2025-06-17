@@ -1,6 +1,7 @@
 import {
   AuthMethod,
   CreateCommentTargetType,
+  FriendListType,
   ResponseFriendRequestAction,
 } from "@/utils/constants";
 import { ZonedDateTime } from "@internationalized/date";
@@ -476,6 +477,7 @@ export type GetFriendRequestsQueryDto = {
 export type GetFriendsListQueryDto = GetFriendRequestsQueryDto & {
   username: string;
   full_name?: string;
+  type: FriendListType;
 };
 
 export type FriendRequestsType = {
@@ -635,3 +637,11 @@ export interface NotificationGroupState {
   error?: string;
   nextCursor?: string;
 }
+
+export type FriendSuggestionType = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
+  mutual_friends: number;
+};

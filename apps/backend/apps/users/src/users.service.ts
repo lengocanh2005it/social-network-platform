@@ -23,6 +23,7 @@ import {
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
   fieldDisplayMap,
+  FriendListType,
   generateNotificationMessage,
   hashPassword,
   REFRESH_TOKEN_LIFE,
@@ -1351,7 +1352,7 @@ export class UsersService implements OnModuleInit {
     email: string,
     getFriendsListQueryDto: GetFriendsListQueryDto,
   ) => {
-    const { username } = getFriendsListQueryDto;
+    const { username, type } = getFriendsListQueryDto;
 
     const findUser = await this.prismaService.userProfiles.findUnique({
       where: {
@@ -1381,11 +1382,32 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    const limit = getFriendsListQueryDto?.limit ?? 10;
+    if (
+      (type === FriendListType.REQUESTS ||
+        type === FriendListType.SUGGESTIONS) &&
+      user.id !== findUser.user_id
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'You are not authorized to access this list for another user.',
+      });
 
-    const decodedCursor = getFriendsListQueryDto?.after
-      ? this.decodeCursor(getFriendsListQueryDto.after)
-      : null;
+    const limit = getFriendsListQueryDto?.limit ?? 10;
+    const after = getFriendsListQueryDto?.after;
+
+    if (type === FriendListType.REQUESTS)
+      return this.getFriendRequests(email, {
+        limit,
+        after,
+      });
+
+    if (type === FriendListType.SUGGESTIONS)
+      return this.getFriendSuggesstions(email, {
+        limit,
+        after,
+      });
+
+    const decodedCursor = after ? this.decodeCursor(after) : null;
 
     const blockedUserIds = Array.from(
       new Set([
@@ -1972,5 +1994,106 @@ export class UsersService implements OnModuleInit {
     };
 
     this.notificationsClient.emit('create-notification', createNotificationDto);
+  };
+
+  private getFriendSuggesstions = async (
+    email: string,
+    getFriendSuggestionsQueryDto?: {
+      limit?: number;
+      after?: string;
+    },
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    function encodeCursor(userId: string): string {
+      return Buffer.from(userId).toString('base64');
+    }
+
+    function decodeCursor(cursor: string): string {
+      return Buffer.from(cursor, 'base64').toString('utf8');
+    }
+
+    const userIds = [...(await this.getFriends(email)), user.id];
+
+    const pendingRequests = await this.prismaService.friends.findMany({
+      where: {
+        OR: [{ initiator_id: user.id }, { target_id: user.id }],
+        friendship_status: FriendShipEnum.pending,
+      },
+      select: {
+        initiator_id: true,
+        target_id: true,
+      },
+    });
+
+    const pendingUserIds = pendingRequests.map((f) =>
+      f.initiator_id === user.id ? f.target_id : f.initiator_id,
+    );
+
+    const excludedUserIds = [...userIds, ...pendingUserIds];
+
+    const limit = getFriendSuggestionsQueryDto?.limit ?? 10;
+
+    const decodedCursor = getFriendSuggestionsQueryDto?.after
+      ? decodeCursor(getFriendSuggestionsQueryDto.after)
+      : null;
+
+    const friendSuggestions = await this.prismaService.users.findMany({
+      where: {
+        id: {
+          not: {
+            in: excludedUserIds,
+          },
+        },
+      },
+      take: limit + 1,
+      orderBy: [
+        {
+          id: 'desc',
+        },
+      ],
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor,
+        },
+        skip: 1,
+      }),
+      include: {
+        profile: true,
+      },
+    });
+
+    const hasNextPage = friendSuggestions.length > limit;
+
+    const items = hasNextPage
+      ? friendSuggestions.slice(0, -1)
+      : friendSuggestions;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor(items[items.length - 1].id)
+      : null;
+
+    return {
+      data: await Promise.all(
+        items.map(async (item) => ({
+          user_id: item.id,
+          full_name: `${item.profile?.first_name ?? ''} ${item.profile?.last_name ?? ''}`,
+          avatar_url: `${item.profile?.avatar_url ?? ''}`,
+          username: item.profile?.username ?? '',
+          mutual_friends: await this.getMutualFriendsCount(user.id, item.id),
+        })),
+      ),
+      nextCursor,
+    };
   };
 }

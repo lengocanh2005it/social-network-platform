@@ -3,6 +3,7 @@ import FriendsList from "@/components/FriendsList";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useGetFriendsList } from "@/hooks";
 import { useFriendStore, useUserStore } from "@/store";
+import { FriendListType } from "@/utils";
 import Link from "next/link";
 import React, { useEffect } from "react";
 
@@ -17,6 +18,7 @@ const ProfileFriendSection: React.FC = () => {
       username: isCurrentUser
         ? (user?.profile?.username ?? "")
         : (viewedUser?.profile?.username ?? ""),
+      type: FriendListType.FRIENDS,
     },
   );
 
@@ -66,7 +68,7 @@ const ProfileFriendSection: React.FC = () => {
 
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {isCurrentUser
-                  ? `Start connecting with others so you don&apos;t miss any fun conversations.`
+                  ? `Start connecting with others so you don't miss any fun conversations.`
                   : `Looks like ${viewedUser?.profile?.first_name} ${viewedUser?.profile?.last_name} hasn't connected with anyone yet.`}
               </p>
             </div>

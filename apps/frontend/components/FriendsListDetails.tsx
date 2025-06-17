@@ -4,7 +4,7 @@ import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useGetFriendsList } from "@/hooks";
 import { getFriendsList } from "@/lib/api/users";
 import { useUserStore } from "@/store";
-import { handleAxiosError } from "@/utils";
+import { FriendListType, handleAxiosError } from "@/utils";
 import React, { useEffect, useState } from "react";
 
 interface FriendsListDetailsProps {
@@ -21,6 +21,7 @@ const FriendsListDetails: React.FC<FriendsListDetailsProps> = ({ mode }) => {
         viewedUser?.id !== user?.id
           ? (viewedUser?.profile.username ?? "")
           : (user?.profile.username ?? ""),
+      type: FriendListType.FRIENDS,
     },
   );
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -49,6 +50,7 @@ const FriendsListDetails: React.FC<FriendsListDetailsProps> = ({ mode }) => {
           viewedUser?.id !== user?.id
             ? (viewedUser?.profile.username ?? "")
             : (user?.profile.username ?? ""),
+        type: FriendListType.FRIENDS,
       });
 
       if (res?.data) addOldFriends(res.data);

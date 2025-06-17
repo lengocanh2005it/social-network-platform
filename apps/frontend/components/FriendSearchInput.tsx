@@ -1,6 +1,7 @@
 "use client";
 import { getFriendsList } from "@/lib/api/users";
 import { useUserStore } from "@/store";
+import { FriendListType } from "@/utils";
 import { Input } from "@heroui/react";
 import { debounce } from "lodash";
 import { Ellipsis, SearchIcon } from "lucide-react";
@@ -24,6 +25,7 @@ const FriendSearchInput: React.FC<FriendSearchInputProps> = ({ setMode }) => {
             ? (viewedUser?.profile.username ?? "")
             : (user?.profile.username ?? ""),
         ...(value.trim() !== "" && { full_name: value }),
+        type: FriendListType.FRIENDS,
       });
 
       if (res?.data) setFriends(res.data);
@@ -43,7 +45,7 @@ const FriendSearchInput: React.FC<FriendSearchInputProps> = ({ setMode }) => {
   };
 
   return (
-    <div className="md:w-[300px] w-full flex items-center md:gap-2 gap-1">
+    <div className="md:w-[320px] w-full flex items-center md:gap-2 gap-1">
       <Input
         startContent={<SearchIcon />}
         placeholder="Search your friend's name..."

@@ -38,11 +38,13 @@ export function createKafkaOptions(
       },
       consumer: {
         groupId: newGroupId,
+        allowAutoTopicCreation: true,
       },
       producer: {
         createPartitioner: Partitioners.LegacyPartitioner,
         maxInFlightRequests: KAFKA_MAX_FLIGHT_REQUESTS_DEFAULT,
         metadataMaxAge: KAFKA_METADATA_MAX_AGE,
+        allowAutoTopicCreation: true,
       },
     },
   };

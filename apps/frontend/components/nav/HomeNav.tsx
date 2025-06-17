@@ -34,7 +34,14 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { usePathname } from "next/navigation";
 
 interface HomeNavProps {
   shouldShowIndicator?: boolean;
@@ -42,6 +49,7 @@ interface HomeNavProps {
 
 const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
@@ -53,15 +61,18 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
 
   const menuItems = ["Profile", "Dashboard", "Activity", "Log Out"];
 
-  const navItems = [
-    { icon: HomeIcon, label: "Home", redirectTo: "/home" },
-    { icon: Contact, label: "Friends", redirectTo: "/" },
-    { icon: TvMinimal, label: "Video", redirectTo: "/" },
-    { icon: MapPinHouse, label: "Marketplace", redirectTo: "/" },
-    { icon: UsersRound, label: "Groups", redirectTo: "/" },
-  ];
+  const navItems = useMemo(
+    () => [
+      { icon: HomeIcon, label: "Home", redirectTo: "/home" },
+      { icon: Contact, label: "Friends", redirectTo: "/friends" },
+      { icon: UsersRound, label: "Communities", redirectTo: "/communities" },
+      { icon: TvMinimal, label: "Video", redirectTo: "/video" },
+      { icon: MapPinHouse, label: "Marketplace", redirectTo: "/marketplace" },
+    ],
+    [],
+  );
 
-  const updateIndicator = (element: HTMLElement | null) => {
+  const updateIndicator = useCallback((element: HTMLElement | null) => {
     if (!element) return;
 
     const { offsetLeft, clientWidth } = element;
@@ -69,7 +80,23 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
       left: offsetLeft,
       width: clientWidth,
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    const foundIndex = navItems.findIndex((item) =>
+      pathname.startsWith(item.redirectTo),
+    );
+    if (foundIndex !== -1) {
+      setActiveIndex(foundIndex);
+    }
+  }, [pathname, navItems]);
+
+  useEffect(() => {
+    const el = itemsRef.current[activeIndex];
+    if (el) {
+      updateIndicator(el);
+    }
+  }, [activeIndex, updateIndicator]);
 
   const handleMouseEnter = (index: number) => {
     isHoveringRef.current = true;
@@ -86,13 +113,6 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
       }
     }, 500);
   };
-
-  useEffect(() => {
-    if (itemsRef.current[0]) {
-      updateIndicator(itemsRef.current[0]);
-      setActiveIndex(0);
-    }
-  }, []);
 
   const setItemRef = (index: number) => (el: HTMLDivElement | null) => {
     itemsRef.current[index] = el;
@@ -123,20 +143,6 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             className="rounded-full cursor-pointer select-none"
           />
         </NavbarBrand>
-
-        {/* <Input
-          classNames={{
-            base: "w-[84%] h-10",
-            mainWrapper: "h-full",
-            input: "text-small",
-            inputWrapper:
-              "h-full font-normal text-default-500 bg-default-400/20 dark:bg-default-500/20 rounded-xl",
-          }}
-          placeholder="Type to search..."
-          size="sm"
-          startContent={<SearchIcon size={18} />}
-          type="search"
-        /> */}
         <SearchDropdown />
       </NavbarContent>
 
