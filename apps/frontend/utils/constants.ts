@@ -31,6 +31,12 @@ export enum SocketNamespace {
   NOTIFICATIONS = "notifications",
 }
 
+export enum FriendListType {
+  FRIENDS = "friends",
+  REQUESTS = "requests",
+  SUGGESTIONS = "suggestions",
+}
+
 export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;
 export const MAX_DISPLAY_FRIEND_LISTS = 9;

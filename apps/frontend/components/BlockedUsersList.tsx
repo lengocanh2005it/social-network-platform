@@ -91,7 +91,7 @@ const BlockedUsersList: React.FC = () => {
                   <Avatar
                     src={user.avatar_url}
                     alt={user.full_name}
-                    className="w-13 h-13 select-none rounded-full"
+                    className="w-13 h-13 select-none rounded-full flex-shrink-0"
                   />
 
                   <div className="flex flex-col relative gap-1">

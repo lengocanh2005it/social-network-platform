@@ -250,3 +250,9 @@ export const fieldDisplayMap: Record<string, string> = {
   national_id: 'national ID',
   nickname: 'nickname',
 };
+
+export enum FriendListType {
+  FRIENDS = 'friends',
+  REQUESTS = 'requests',
+  SUGGESTIONS = 'suggestions',
+}

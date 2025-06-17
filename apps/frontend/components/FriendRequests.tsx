@@ -10,6 +10,7 @@ import {
   ResponseFriendRequestType,
 } from "@/utils";
 import { Button, ScrollShadow, Tooltip, User } from "@heroui/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -102,7 +103,20 @@ const FriendRequests: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-1">
-      <h2 className="text-medium font-medium text-black/70">Friend Requests</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-medium font-medium text-black/70">
+          Friend Requests
+        </h2>
+
+        {friendRequests?.length !== 0 && (
+          <Link
+            href={"/friends/?tab=requests"}
+            className="text-blue-600 hover:underline"
+          >
+            See all
+          </Link>
+        )}
+      </div>
 
       {isLoading ? (
         <PrimaryLoading />

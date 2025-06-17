@@ -1,5 +1,13 @@
+import { FriendListType } from '@app/common/utils';
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class GetFriendsListQueryDto {
   @IsOptional()
@@ -21,4 +29,7 @@ export class GetFriendsListQueryDto {
   @IsString()
   @IsNotEmpty()
   readonly full_name?: string;
+
+  @IsEnum(FriendListType)
+  readonly type!: FriendListType;
 }

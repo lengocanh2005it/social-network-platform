@@ -19,7 +19,8 @@
     "db:generate": "npx prisma generate",
     "db:migrate:prod": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
-    "db:migrate:no-seed": "npx prisma migrate dev --skip-seed"
+    "db:migrate:no-seed": "npx prisma migrate dev --skip-seed",
+    "db:migrate:deploy": "npx prisma migrate deploy"
   },
   "exports": {
     ".": "./dist/index.js"

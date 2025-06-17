@@ -4,7 +4,7 @@ import FriendRequests from "@/components/FriendRequests";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useGetFriendsList, useSocket } from "@/hooks";
 import { useFriendStore, useUserStore } from "@/store";
-import { SocketNamespace } from "@/utils";
+import { FriendListType, SocketNamespace } from "@/utils";
 import {
   Avatar,
   Divider,
@@ -18,6 +18,7 @@ import {
   Ellipsis,
   MessageSquareWarning,
   SearchIcon,
+  Users,
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -67,6 +68,7 @@ const SideBarPage: React.FC = () => {
 
   const { data, isLoading } = useGetFriendsList(user?.id ?? "", {
     username: user?.profile.username ?? "",
+    type: FriendListType.FRIENDS,
   });
 
   useEffect(() => {
@@ -77,17 +79,19 @@ const SideBarPage: React.FC = () => {
   }, [data, setFriends, setTotalFriends, clearOpenChats]);
 
   return (
-    <main className="flex flex-col md:gap-1">
+    <main className="flex flex-col md:gap-1 flex-1 h-full">
       <FriendRequests />
 
       <Divider className="md:my-3 my-2" />
 
-      <div className="flex flex-col md:gap-2 gap-1">
+      <div className="flex flex-col md:gap-2 gap-1 h-full">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium text-black/70">Contacts</h2>
 
           <div className="flex items-center md:gap-4 gap-2">
-            <SearchIcon size={20} className="cursor-pointer" />
+            {friends?.length !== 0 && (
+              <SearchIcon size={20} className="cursor-pointer" />
+            )}
 
             <Dropdown
               placement="bottom-end"
@@ -119,7 +123,7 @@ const SideBarPage: React.FC = () => {
         {isLoading ? (
           <PrimaryLoading />
         ) : (
-          <>
+          <div className="h-full relative flex-1 flex flex-col">
             {friends?.length > 0 ? (
               <>
                 <ul className="space-y-3">
@@ -157,9 +161,18 @@ const SideBarPage: React.FC = () => {
                 </ul>
               </>
             ) : (
-              <p>Empty Users</p>
+              <div
+                className="flex flex-col items-center text-center justify-center 
+              flex-1 space-y-2"
+              >
+                <Users className="w-10 h-10 text-gray-400" />
+                <h1 className="text-xl font-semibold">No Friends</h1>
+                <p className="text-sm text-gray-500">
+                  Add some friends to get started!
+                </p>
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
