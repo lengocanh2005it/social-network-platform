@@ -1,4 +1,4 @@
-import { Post, TopLikedUserType } from "@/utils";
+import { Post, TaggedUserType, TopLikedUserType } from "@/utils";
 import { create } from "zustand";
 
 export interface PostDetails extends Post {
@@ -6,6 +6,11 @@ export interface PostDetails extends Post {
   topLikedUsers: TopLikedUserType[];
   parent_post_id?: string;
   parent_post?: PostDetails;
+  total_tagged_users: number;
+  tagged_users: {
+    data: TaggedUserType[];
+    nextCursor?: string;
+  };
 }
 
 interface PostStore {
@@ -24,9 +29,10 @@ interface PostStore {
   appendOldHomePosts: (posts: PostDetails[]) => void;
   hideHomePosts: (postId: string) => void;
   restoreHomePostAtIndex: (post: PostDetails, index: number) => void;
+  getPostById: (postId: string) => PostDetails | undefined;
 }
 
-export const usePostStore = create<PostStore>((set) => ({
+export const usePostStore = create<PostStore>((set, get) => ({
   posts: [],
   nextCursor: null,
   homePosts: [],
@@ -88,4 +94,8 @@ export const usePostStore = create<PostStore>((set) => ({
     set((state) => ({
       homePosts: [...state.homePosts, ...oldPosts],
     })),
+  getPostById: (postId) => {
+    const state = get();
+    return state.posts.find((post) => post.id === postId);
+  },
 }));

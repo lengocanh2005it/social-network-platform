@@ -10,6 +10,7 @@ import {
   GetCommentQueryDto,
   GetCommentRepliesQueryDto,
   GetFeedQueryDto,
+  GetTaggedUsersQueryDto,
   LikeMediaPostPayload,
   UnlikeMediaPostPayload,
   UpdatePostType,
@@ -234,6 +235,17 @@ export const getPostOfUser = async (username: string, postId: string) => {
     params: {
       username,
     },
+  });
+
+  return response.data;
+};
+
+export const getTaggedUsersOfPost = async (
+  postId: string,
+  getTaggedUsersQueryDto?: GetTaggedUsersQueryDto,
+) => {
+  const response = await axios.get(`/posts/${postId}/tagged-users`, {
+    params: getTaggedUsersQueryDto,
   });
 
   return response.data;

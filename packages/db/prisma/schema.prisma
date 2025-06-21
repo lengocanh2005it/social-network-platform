@@ -269,6 +269,7 @@ model PostTags {
   user           Users  @relation(fields: [tagged_user_id], references: [id], onDelete: Cascade)
 
   @@id([post_id, tagged_user_id])
+  @@unique([post_id, tagged_user_id])
 }
 
 model Comments {

@@ -256,4 +256,12 @@ export class UsersController {
   ) {
     return this.usersService.handleCheckFriendship(userId1, userId2);
   }
+
+  @MessagePattern('get-mututal-friends')
+  async getMututalFriends(
+    @Payload('currentUserId') currentUserId: string,
+    @Payload('targetId') targetId: string,
+  ) {
+    return this.usersService.getMutualFriendsCount(currentUserId, targetId);
+  }
 }

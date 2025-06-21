@@ -284,7 +284,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               <Avatar
                 src={comment.user.avatar_url}
                 alt={comment.user.full_name}
-                className="select-none cursor-pointer"
+                className="select-none cursor-pointer flex-shrink-0"
               />
             </div>
 

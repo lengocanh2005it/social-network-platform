@@ -6,6 +6,7 @@ import {
   GetCommentsMediaQueryDto,
   GetMediaPostQueryDto,
   GetPostQueryDto,
+  GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
   UnlikeMediaPostQueryDto,
@@ -429,5 +430,27 @@ export class PostsController {
       );
 
     return this.postsService.getPostOfUser(postId, username, email);
+  }
+
+  @Get(':id/tagged-users')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getTaggedUsersOfPost(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @KeycloakUser() user: any,
+    @Query() getTaggedUsersQueryDto?: GetTaggedUsersQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.getTaggedUsersOfPost(
+      postId,
+      email,
+      getTaggedUsersQueryDto,
+    );
   }
 }

@@ -5,13 +5,14 @@ import {
   CreatePostShareDto,
   GetCommentsMediaQueryDto,
   GetPostQueryDto,
+  GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
 import { PostMediaEnum } from '@app/common/utils';
-import { Controller } from '@nestjs/common';
+import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { PostsService } from './posts.service';
 
@@ -255,5 +256,19 @@ export class PostsController {
     @Payload('email') email: string,
   ) {
     return this.postsService.getPostOfUser(postId, username, email);
+  }
+
+  @MessagePattern('get-tagged-users-of-post')
+  async getTaggedUsersOfPost(
+    @Payload('postId', ParseUUIDPipe) postId: string,
+    @Payload('userId') userId: string,
+    @Payload('getTaggedUsersQueryDto')
+    getTaggedUsersQueryDto?: GetTaggedUsersQueryDto,
+  ) {
+    return this.postsService.getTaggedUsersOfPost(
+      postId,
+      userId,
+      getTaggedUsersQueryDto,
+    );
   }
 }

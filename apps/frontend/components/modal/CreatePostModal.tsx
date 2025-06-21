@@ -41,7 +41,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
 }) => {
   const [privacy, setPrivacy] = useState<PostPrivaciesType | null>(null);
   const { mediaFiles, clearMediaFiles, clearNewMediaFiles } = useMediaStore();
-  const { user } = useUserStore();
+  const { user, selectedTaggedUsers, clearSelectedTaggedUsers } =
+    useUserStore();
   const { mutate: mutateCreatePost, isSuccess, isPending } = useCreatePost();
   const [content, setContent] = useState("");
   const [isUploadingMedia, setIsUploadingMedia] = useState<boolean>(false);
@@ -125,6 +126,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
       ...(images?.length !== 0 && { images }),
       ...(videos?.length !== 0 && { videos }),
       ...(textBlocks?.length !== 0 && { contents: textBlocks }),
+      ...(selectedTaggedUsers?.length !== 0 && {
+        tags: selectedTaggedUsers?.map((st) => st.user_id),
+      }),
     };
 
     mutateCreatePost(createPostDto);
@@ -142,6 +146,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 setContent("");
                 clearMediaFiles();
                 clearNewMediaFiles();
+                clearSelectedTaggedUsers();
               }, 1000);
             }}
             backdrop="opaque"

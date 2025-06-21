@@ -2,8 +2,12 @@
 import CreatePostHeader from "@/components/post/CreatePostHeader";
 import CreatePostOptions from "@/components/post/CreatePostOptions";
 import SelectedMedia from "@/components/SelectedMedia";
-import { useMediaStore } from "@/store";
-import { Post } from "@/utils";
+import {
+  PostDetails,
+  useMediaStore,
+  usePostStore,
+  useUserStore,
+} from "@/store";
 import {
   Button,
   Modal,
@@ -20,12 +24,13 @@ import React, { useEffect, useState } from "react";
 interface UpdatePostModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  post: Post;
+  post: PostDetails;
   onUpdate: (data: {
     content: string;
     images: File[];
     videos: File[];
     privacy: PostPrivaciesType;
+    tags?: string[];
   }) => Promise<void>;
 }
 
@@ -39,6 +44,8 @@ const UpdatePostModal: React.FC<UpdatePostModalProps> = ({
   const { mediaFiles, addMediaFromUrl, newMediaFiles } = useMediaStore();
   const [content, setContent] = useState<string>("");
   const [newPrivacy, setNewPrivacy] = useState<PostPrivaciesType | null>(null);
+  const { getPostById } = usePostStore();
+  const { selectedTaggedUsers, originalTaggedUsers } = useUserStore();
 
   useEffect(() => {
     if (!open || !post) return;
@@ -76,6 +83,16 @@ const UpdatePostModal: React.FC<UpdatePostModalProps> = ({
 
     setIsLoading(true);
 
+    const getSortedIds = (arr: { user_id: string }[]) =>
+      arr.map((u) => u.user_id).sort();
+
+    const originalIds = getSortedIds(originalTaggedUsers);
+    const selectedIds = getSortedIds(selectedTaggedUsers);
+
+    const tagsAreSame =
+      originalIds.length === selectedIds.length &&
+      originalIds.every((id, index) => id === selectedIds[index]);
+
     try {
       await onUpdate({
         content,
@@ -86,6 +103,10 @@ const UpdatePostModal: React.FC<UpdatePostModalProps> = ({
           .filter((mf) => mf.type === "video")
           .map((mf) => mf.file),
         privacy: newPrivacy,
+        ...(selectedTaggedUsers?.length > 0 &&
+          !tagsAreSame && {
+            tags: selectedTaggedUsers.map((st) => st.user_id),
+          }),
       });
     } finally {
       onOpenChange(false);
@@ -128,6 +149,7 @@ const UpdatePostModal: React.FC<UpdatePostModalProps> = ({
               <CreatePostHeader
                 privacy={post.privacy}
                 onChange={(key) => setNewPrivacy(key)}
+                post={post}
               />
 
               <Textarea
@@ -149,7 +171,9 @@ const UpdatePostModal: React.FC<UpdatePostModalProps> = ({
                 </ScrollShadow>
               )}
 
-              <CreatePostOptions />
+              <CreatePostOptions
+                post={getPostById(post.id) ? getPostById(post.id) : undefined}
+              />
             </ModalBody>
 
             <ModalFooter className="flex items-center justify-center">

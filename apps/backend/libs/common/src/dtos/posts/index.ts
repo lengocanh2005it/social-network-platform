@@ -8,6 +8,7 @@ export * from './create-post.dto';
 export * from './get-comments-media-query.dto';
 export * from './get-media-post-query.dto';
 export * from './get-post-query.dto';
+export * from './get-tagged-users-query.dto';
 export * from './get-user-likes-query.dto';
 export * from './like-post-media.dto';
 export * from './unlike-media-post.dto-query.dto';

@@ -28,6 +28,21 @@ interface UserState {
   viewedUser: FullUserType | null;
   educationsHistory: UserEducationsType[][];
   workPlacesHistory: UserWorkPlacesType[][];
+  selectedTaggedUsers: Friend[];
+  originalTaggedUsers: Friend[];
+  tempSelectedTaggedUsers: Friend[];
+  totalTaggedUsers: number;
+  setTotalTaggedUsers: (totalTaggedUsers: number) => void;
+  setTempSelectedTaggedUsers: (
+    payload: Friend[] | ((prev: Friend[]) => Friend[]),
+  ) => void;
+  setOriginalTaggedUsers: (
+    payload: Friend[] | ((prev: Friend[]) => Friend[]),
+  ) => void;
+  setSelectedTaggedUsers: (
+    payload: Friend[] | ((prev: Friend[]) => Friend[]),
+  ) => void;
+  clearSelectedTaggedUsers: () => void;
   setUser: (user: FullUserType | null) => void;
   setViewedUser: (user: FullUserType | null) => void;
   resetUser: () => void;
@@ -58,6 +73,10 @@ const initialUserState: Pick<
   | "viewedUser"
   | "relationship"
   | "friends"
+  | "selectedTaggedUsers"
+  | "originalTaggedUsers"
+  | "tempSelectedTaggedUsers"
+  | "totalTaggedUsers"
 > = {
   user: null,
   viewedUser: null,
@@ -65,12 +84,39 @@ const initialUserState: Pick<
   educationsHistory: [],
   workPlacesHistory: [],
   friends: [],
+  selectedTaggedUsers: [],
+  originalTaggedUsers: [],
+  tempSelectedTaggedUsers: [],
+  totalTaggedUsers: 0,
 };
 
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       ...initialUserState,
+      setTotalTaggedUsers: (totalTaggedUsers) => set({ totalTaggedUsers }),
+      setTempSelectedTaggedUsers: (payload) =>
+        set((state) => ({
+          tempSelectedTaggedUsers:
+            typeof payload === "function"
+              ? payload(state.tempSelectedTaggedUsers)
+              : payload,
+        })),
+      setOriginalTaggedUsers: (payload) =>
+        set((state) => ({
+          originalTaggedUsers:
+            typeof payload === "function"
+              ? payload(state.originalTaggedUsers)
+              : payload,
+        })),
+      setSelectedTaggedUsers: (payload) =>
+        set((state) => ({
+          selectedTaggedUsers:
+            typeof payload === "function"
+              ? payload(state.selectedTaggedUsers)
+              : payload,
+        })),
+      clearSelectedTaggedUsers: () => set({ selectedTaggedUsers: [] }),
       setFriends: (friends) => set({ friends }),
       setRelationship: (relationship) => set({ relationship }),
       setViewedUser: (user) => set({ viewedUser: user }),
