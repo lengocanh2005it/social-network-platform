@@ -1,5 +1,5 @@
 import { updatePost } from "@/lib/api/posts";
-import { useMediaStore, usePostStore } from "@/store";
+import { useMediaStore, usePostStore, useUserStore } from "@/store";
 import { handleAxiosError } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -8,6 +8,11 @@ export const useUpdatePost = () => {
   const { updatePost: updatePostStore } = usePostStore();
   const { clearDeletedMediaFiles, clearMediaFiles, clearNewMediaFiles } =
     useMediaStore();
+  const {
+    setOriginalTaggedUsers,
+    setSelectedTaggedUsers,
+    setTempSelectedTaggedUsers,
+  } = useUserStore();
 
   return useMutation({
     mutationFn: updatePost,
@@ -20,6 +25,9 @@ export const useUpdatePost = () => {
         clearDeletedMediaFiles();
         clearMediaFiles();
         clearNewMediaFiles();
+        setOriginalTaggedUsers([]);
+        setSelectedTaggedUsers([]);
+        setTempSelectedTaggedUsers([]);
       }
     },
     onError: (error) => handleAxiosError(error),

@@ -5,6 +5,7 @@ import {
   CreatePostShareDto,
   GetCommentsMediaQueryDto,
   GetPostQueryDto,
+  GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
   UnlikeMediaPostQueryDto,
@@ -45,6 +46,7 @@ export class PostsService implements OnModuleInit {
       'unlike-media-post',
       'like-media-post',
       'get-post-of-user',
+      'get-tagged-users-of-post',
     ];
 
     patterns.forEach((pattern) =>
@@ -52,6 +54,7 @@ export class PostsService implements OnModuleInit {
     );
 
     this.usersClient.subscribeToResponseOf('get-friends');
+    this.usersClient.subscribeToResponseOf('get-user-by-field');
   }
 
   public createPost = async (email: string, createPostDto: CreatePostDto) => {
@@ -338,6 +341,29 @@ export class PostsService implements OnModuleInit {
         postId,
         username,
         email,
+      }),
+    );
+  };
+
+  public getTaggedUsersOfPost = async (
+    postId: string,
+    email: string,
+    getTaggedUsersQueryDto?: GetTaggedUsersQueryDto,
+  ) => {
+    const payload = {
+      field: 'email',
+      value: email,
+    };
+
+    const user = await firstValueFrom(
+      this.usersClient.send('get-user-by-field', JSON.stringify(payload)),
+    );
+
+    return firstValueFrom(
+      this.postsClient.send('get-tagged-users-of-post', {
+        postId,
+        userId: user.id,
+        getTaggedUsersQueryDto,
       }),
     );
   };

@@ -283,3 +283,6 @@ export const generateNotificationMessage = (
       return `You have a new notification.`;
   }
 };
+
+export const truncateWithEllipsis = (text: string, maxLength = 100) =>
+  text.length > maxLength ? text.slice(0, maxLength) + '...' : text;

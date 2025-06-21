@@ -1541,7 +1541,7 @@ export class UsersService implements OnModuleInit {
     };
   };
 
-  private getMutualFriendsCount = async (
+  public getMutualFriendsCount = async (
     currentUserId: string,
     targetId: string,
   ) => {

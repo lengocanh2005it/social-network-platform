@@ -2,6 +2,7 @@
 import ConfirmModal from "@/components/modal/ConfirmModal";
 import UpdatePostModal from "@/components/modal/UpdatePostModal";
 import ViewPostModal from "@/components/modal/ViewPostModal";
+import ViewTaggedUsersModal from "@/components/modal/ViewTaggedUsersModal";
 import ParentPostDetails from "@/components/post/ParentPostDetails";
 import PostMediaItem from "@/components/post/PostMediaItem";
 import PostOptions from "@/components/post/PostOptions";
@@ -45,7 +46,13 @@ interface ProfilePostsProps {
 }
 
 const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
-  const { user, viewedUser } = useUserStore();
+  const {
+    user,
+    viewedUser,
+    setSelectedTaggedUsers,
+    setOriginalTaggedUsers,
+    setTempSelectedTaggedUsers,
+  } = useUserStore();
   const { hidePost, posts, restorePostAtIndex } = usePostStore();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const {
@@ -66,6 +73,8 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
   const [isShowParentPostModal, setIsShowParentPostModal] =
     useState<boolean>(false);
   const router = useRouter();
+  const [isShowTaggedUsersModal, setIsShowTaggedUsersModal] =
+    useState<boolean>(false);
 
   const handleConfirmClick = async (postId: string) => {
     mutateDeletePost(postId);
@@ -132,6 +141,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     privacy: PostPrivaciesType,
     images?: File[],
     videos?: File[],
+    tags?: string[],
   ) => {
     const hashtags: string[] = [];
 
@@ -199,12 +209,40 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
       }),
       contents: textBlocks,
       ...(hashtags?.length !== 0 && { hashtags }),
+      ...(tags && tags?.length > 0 && { tags }),
     };
 
     mutateUpdatePost({
       updatePostDto,
       postId: post.id,
     });
+  };
+
+  const renderTaggedUsersText = () => {
+    const taggedUsersLength = post.total_tagged_users;
+
+    return (
+      <div className="relative text-sm">
+        <span className="text-gray-600">with</span>{" "}
+        <span
+          className="hover:underline cursor-pointer"
+          onClick={() => viewProfileClick(post.tagged_users.data[0].username)}
+        >
+          {post.tagged_users.data[0].full_name}
+        </span>
+        {taggedUsersLength > 1 && (
+          <>
+            <span className="text-gray-600"> and </span>
+            <span
+              className="hover:underline cursor-pointer"
+              onClick={() => setIsShowTaggedUsersModal(true)}
+            >
+              {`${taggedUsersLength - 1} other${taggedUsersLength > 2 ? "s" : ""}`}
+            </span>
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -222,21 +260,26 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                       " " +
                       post.user.profile.last_name
                     }
-                    className="object-cover cursor-pointer select-none"
+                    className="object-cover cursor-pointer select-none flex-shrink-0 w-10 h-10"
                     onClick={() => viewProfileClick(post.user.profile.username)}
                   />
 
                   <div className="flex flex-col relative">
-                    <h4
-                      className="font-semibold cursor-pointer hover:underline"
-                      onClick={() =>
-                        viewProfileClick(post.user.profile.username)
-                      }
-                    >
-                      {post.user.profile.first_name +
-                        " " +
-                        post.user.profile.last_name}
-                    </h4>
+                    <div className="flex items-center gap-1">
+                      <h4
+                        className="font-semibold cursor-pointer hover:underline"
+                        onClick={() =>
+                          viewProfileClick(post.user.profile.username)
+                        }
+                      >
+                        {post.user.profile.first_name +
+                          " " +
+                          post.user.profile.last_name}
+                      </h4>
+
+                      {post.tagged_users?.data?.length > 0 &&
+                        renderTaggedUsersText()}
+                    </div>
 
                     <div className="flex items-center gap-1 text-sm text-gray-500">
                       <span className="leading-none">
@@ -285,7 +328,32 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                         </DropdownItem>
                         <DropdownItem
                           key="update-post"
-                          onClick={() => setOpenUpdateModal(true)}
+                          onClick={() => {
+                            setOpenUpdateModal(true);
+                            if (post?.tagged_users?.data) {
+                              setSelectedTaggedUsers(
+                                post.tagged_users.data.map((tu) => ({
+                                  user_id: tu.user_id,
+                                  username: tu.username,
+                                  avatar_url: tu.avatar_url,
+                                  mutual_friends: tu.mutual_friends,
+                                  is_friend: tu.is_friend,
+                                  full_name: tu.full_name,
+                                })),
+                              );
+
+                              setOriginalTaggedUsers(
+                                post.tagged_users.data.map((tu) => ({
+                                  user_id: tu.user_id,
+                                  username: tu.username,
+                                  avatar_url: tu.avatar_url,
+                                  mutual_friends: tu.mutual_friends,
+                                  is_friend: tu.is_friend,
+                                  full_name: tu.full_name,
+                                })),
+                              );
+                            }
+                          }}
                           startContent={<SquarePen />}
                         >
                           Update post
@@ -388,10 +456,13 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 clearMediaFiles();
                 clearDeletedMediaFiles();
                 clearNewMediaFiles();
+                setSelectedTaggedUsers([]);
+                setOriginalTaggedUsers([]);
+                setTempSelectedTaggedUsers([]);
               }}
               post={post}
-              onUpdate={async ({ content, images, videos, privacy }) =>
-                handleUpdate(content, privacy, images, videos)
+              onUpdate={async ({ content, images, videos, privacy, tags }) =>
+                handleUpdate(content, privacy, images, videos, tags)
               }
             />
           )}
@@ -409,6 +480,14 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
               homePost={post.parent_post}
               isOpen={isShowParentPostModal}
               setIsOpen={setIsShowParentPostModal}
+            />
+          )}
+
+          {isShowTaggedUsersModal && post && (
+            <ViewTaggedUsersModal
+              isOpen={isShowTaggedUsersModal}
+              setIsOpen={setIsShowTaggedUsersModal}
+              post={post}
             />
           )}
         </>

@@ -25,7 +25,7 @@ const activities = [
 
 const CreatePost = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { user } = useUserStore();
+  const { user, clearSelectedTaggedUsers } = useUserStore();
 
   return (
     <>
@@ -39,7 +39,10 @@ const CreatePost = () => {
               />
 
               <div
-                onClick={() => setIsOpen(true)}
+                onClick={() => {
+                  setIsOpen(true);
+                  clearSelectedTaggedUsers();
+                }}
                 className="bg-gray-200 text-gray-500 rounded-full px-4 py-2 w-full 
             cursor-pointer hover:bg-gray-200 transition select-none"
               >

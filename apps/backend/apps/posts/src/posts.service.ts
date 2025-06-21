@@ -8,6 +8,7 @@ import {
   CreatePostVideoDto,
   GetCommentsMediaQueryDto,
   GetPostQueryDto,
+  GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
   UnlikeMediaPostQueryDto,
@@ -23,6 +24,7 @@ import {
   generateNotificationMessage,
   isToxic,
   PostMediaEnum,
+  truncateWithEllipsis,
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
@@ -34,7 +36,7 @@ import {
   UsersType,
 } from '@repo/db';
 import { omit, pick } from 'lodash';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom, timeout } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -49,7 +51,13 @@ export class PostsService implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    const postPatterns = ['get-me', 'get-user-by-field', 'get-friends'];
+    const postPatterns = [
+      'get-me',
+      'get-user-by-field',
+      'get-friends',
+      'get-mututal-friends',
+      'check-friendship-status',
+    ];
 
     postPatterns.forEach((pp) => this.usersClient.subscribeToResponseOf(pp));
   }
@@ -84,6 +92,11 @@ export class PostsService implements OnModuleInit {
         tags: { include: { user: true } },
         contents: true,
         hashtags: { include: { hashtag: true } },
+        _count: {
+          select: {
+            tags: true,
+          },
+        },
       },
     });
 
@@ -184,12 +197,15 @@ export class PostsService implements OnModuleInit {
   };
 
   public createPost = async (email: string, createPostDto: CreatePostDto) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -230,7 +246,7 @@ export class PostsService implements OnModuleInit {
 
     await this.createMediaOfPost(newPost.id, images, videos);
 
-    if (tags?.length) await this.createPostTags(tags, newPost.id);
+    if (tags?.length) await this.createPostTags(tags, newPost.id, user);
 
     if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
 
@@ -307,7 +323,7 @@ export class PostsService implements OnModuleInit {
         },
       });
 
-      await this.createPostTags(tags, postId);
+      await this.createPostTags(tags, postId, user);
     }
 
     if (hashtags?.length) {
@@ -387,6 +403,11 @@ export class PostsService implements OnModuleInit {
         tags: { include: { user: true } },
         contents: true,
         hashtags: { include: { hashtag: true } },
+        _count: {
+          select: {
+            tags: true,
+          },
+        },
       },
     });
 
@@ -394,12 +415,15 @@ export class PostsService implements OnModuleInit {
   };
 
   private verifyModifyPost = async (email: string, postId: string) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -450,7 +474,11 @@ export class PostsService implements OnModuleInit {
     });
   };
 
-  private createPostTags = async (tags: string[], post_id: string) => {
+  private createPostTags = async (
+    tags: string[],
+    post_id: string,
+    user: any,
+  ) => {
     await Promise.all(
       tags.map((tag) =>
         this.prismaService.postTags.create({
@@ -461,6 +489,28 @@ export class PostsService implements OnModuleInit {
         }),
       ),
     );
+
+    tags.forEach((tag) => {
+      const createNotificationDto: CreateNotificationDto = {
+        type: NotificationTypeEnum.tagged_in_post,
+        content: generateNotificationMessage(
+          NotificationTypeEnum.tagged_in_post,
+          {
+            senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
+          },
+        ),
+        sender_id: user.id,
+        recipient_id: tag,
+        metadata: {
+          post_id,
+        },
+      };
+
+      this.notificationsClient.emit(
+        'create-notification',
+        createNotificationDto,
+      );
+    });
   };
 
   private createPostHashTags = async (hashtags: string[], post_id: string) => {
@@ -528,8 +578,15 @@ export class PostsService implements OnModuleInit {
   ) {
     const likedByCurrentUser = await this.checkUserLikePost(item.id, userId);
 
+    const taggedUsersData = await this.getTaggedUsersOfPost(item.id, userId);
+
+    const taggedUsers = {
+      data: taggedUsersData?.data ?? [],
+      nextCursor: taggedUsersData?.nextCursor ?? null,
+    };
+
     return {
-      ...item,
+      ...omit(item, ['_count', 'tags']),
       contents: this.transformContent(item.contents),
       images: this.transformImages(item.images),
       videos: this.transformVideos(item.videos),
@@ -545,6 +602,8 @@ export class PostsService implements OnModuleInit {
       ),
       likedByCurrentUser,
       topLikedUsers: await this.getTopUsersWhoLikedPost(item.id, userId),
+      total_tagged_users: item._count.tags,
+      tagged_users: taggedUsers,
       ...(parent_post_id &&
         parent_post_id?.trim() !== '' && {
           parent_post: await this.getTransformedParentPost(
@@ -594,7 +653,7 @@ export class PostsService implements OnModuleInit {
 
     const fullContent = existingPost.contents.map((c) => c.content).join(' ');
 
-    const postTitle = this.truncateWithEllipsis(fullContent);
+    const postTitle = truncateWithEllipsis(fullContent);
 
     if (user.id !== existingPost.user_id) {
       const createNotificationDto: CreateNotificationDto = {
@@ -617,7 +676,11 @@ export class PostsService implements OnModuleInit {
     }
 
     return {
-      post: await this.getFormattedPost(postId, user.id),
+      post: await this.getFormattedPost(
+        postId,
+        user.id,
+        existingPost?.parent_post_id ? existingPost.parent_post_id : undefined,
+      ),
       topUsers: await this.getTopUsersWhoLikedPost(postId, user.id),
     };
   };
@@ -628,7 +691,11 @@ export class PostsService implements OnModuleInit {
     await this.deletePostLike(user.id, existingPost);
 
     return {
-      post: await this.getFormattedPost(postId, user.id),
+      post: await this.getFormattedPost(
+        postId,
+        user.id,
+        existingPost?.parent_post_id ? existingPost.parent_post_id : undefined,
+      ),
       topUsers: await this.getTopUsersWhoLikedPost(postId, user.id),
     };
   };
@@ -698,6 +765,7 @@ export class PostsService implements OnModuleInit {
           },
         },
         contents: true,
+        tags: true,
       },
     });
 
@@ -974,7 +1042,7 @@ export class PostsService implements OnModuleInit {
             NotificationTypeEnum.post_commented,
             {
               senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-              commentContent: this.truncateWithEllipsis(comment.content),
+              commentContent: truncateWithEllipsis(comment.content),
             },
           ),
           recipient_id: existingPost.user_id,
@@ -996,6 +1064,7 @@ export class PostsService implements OnModuleInit {
       post: await this.getFormattedPost(
         postId,
         user.id === existingPost.user_id ? user.id : existingPost.user_id,
+        existingPost?.parent_post_id ? existingPost.parent_post_id : undefined,
       ),
       comments: await Promise.all(
         comments.map(async (comment) =>
@@ -1368,7 +1437,7 @@ export class PostsService implements OnModuleInit {
               NotificationTypeEnum.comment_replied,
               {
                 senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-                commentContent: this.truncateWithEllipsis(newComment.content),
+                commentContent: truncateWithEllipsis(newComment.content),
               },
             ),
             sender_id: user.id,
@@ -1393,6 +1462,7 @@ export class PostsService implements OnModuleInit {
       post: await this.getFormattedPost(
         postId,
         user.id === post.user_id ? user.id : post.user_id,
+        post?.parent_post_id ? post.parent_post_id : undefined,
       ),
       comments: await Promise.all(
         newComments.map(async (comment) =>
@@ -2351,10 +2421,90 @@ export class PostsService implements OnModuleInit {
     return this.getFormattedPost(
       postId,
       currentUser.id,
-      post.parent_post_id ? post.parent_post_id : undefined,
+      post?.parent_post_id ? post.parent_post_id : undefined,
     );
   };
 
-  private truncateWithEllipsis = (text: string, maxLength = 100) =>
-    text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+  public getTaggedUsersOfPost = async (
+    postId: string,
+    userId: string,
+    getTaggedUsersQueryDto?: GetTaggedUsersQueryDto,
+  ) => {
+    try {
+      const existingPost = await this.prismaService.posts.findUnique({
+        where: {
+          id: postId,
+        },
+      });
+
+      if (!existingPost)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: `Post not found.`,
+        });
+
+      if (
+        existingPost.user_id !== userId &&
+        existingPost.privacy === PostPrivaciesEnum.only_me
+      )
+        throw new RpcException({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: `This post is set to private, so you don't have permission to view the list of users tagged in it.`,
+        });
+
+      const limit = getTaggedUsersQueryDto?.limit ?? 10;
+
+      const decodedCursor = getTaggedUsersQueryDto?.after
+        ? decodeCursor(getTaggedUsersQueryDto.after)
+        : null;
+
+      const taggedUsers: any[] = await this.prismaService.postTags.findMany({
+        where: {
+          post_id: postId,
+        },
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+        take: limit + 1,
+        ...(decodedCursor && {
+          cursor: {
+            post_id_tagged_user_id: {
+              post_id: decodedCursor.post_id,
+              tagged_user_id: decodedCursor.tagged_user_id,
+            },
+          },
+          skip: 1,
+        }),
+      });
+
+      const hasNextPage = taggedUsers.length > limit;
+
+      const items = hasNextPage ? taggedUsers.slice(0, -1) : taggedUsers;
+
+      const nextCursor = hasNextPage
+        ? encodeCursor({
+            post_id: items[items.length - 1].post_id,
+            tagged_user_id: items[items.length - 1].tagged_user_id,
+          })
+        : null;
+
+      return {
+        data: items.map((item) => ({
+          user_id: item.tagged_user_id,
+          full_name: `${item.user.profile?.first_name ?? ''} ${item.user.profile?.last_name ?? ''}`,
+          avatar_url: item.user.profile?.avatar_url ?? '',
+          username: item?.user?.profile?.username ?? '',
+          mutual_friends: 0,
+          is_friend: true,
+        })),
+        nextCursor,
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  };
 }

@@ -645,3 +645,14 @@ export type FriendSuggestionType = {
   username: string;
   mutual_friends: number;
 };
+
+export type GetTaggedUsersQueryDto = GetFeedQueryDto;
+
+export type TaggedUserType = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string;
+  username: string;
+  mutual_friends: number;
+  is_friend: boolean;
+};
