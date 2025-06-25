@@ -1,5 +1,6 @@
 import {
   CreateMessageDto,
+  GetConversationsQueryDto,
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
@@ -126,6 +127,26 @@ export class ConversationsController {
       conversationId,
       messageId,
       email,
+    );
+  }
+
+  @Get()
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getConversations(
+    @KeycloakUser() user: any,
+    @Query() getConversationsQueryDto?: GetConversationsQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.conversationsService.getConversations(
+      email,
+      getConversationsQueryDto,
     );
   }
 }

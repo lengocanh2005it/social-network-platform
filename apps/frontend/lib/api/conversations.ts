@@ -2,6 +2,7 @@ import axios from "@/lib/axios";
 import {
   CreateMessageDto,
   DeleteMessageDto,
+  GetConversationsQueryDto,
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from "@/utils";
@@ -54,6 +55,16 @@ export const deleteMessage = async (deleteMessageDto: DeleteMessageDto) => {
   const response = await axios.delete(
     `/conversations/${conversationId}/messages/${messageId}`,
   );
+
+  return response.data;
+};
+
+export const getConversations = async (
+  getConversationsQueryDto?: GetConversationsQueryDto,
+) => {
+  const response = await axios.get(`/conversations`, {
+    params: getConversationsQueryDto,
+  });
 
   return response.data;
 };

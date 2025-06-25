@@ -368,31 +368,38 @@ model Blocks {
 }
 
 model Conversations {
-  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  created_at DateTime   @default(now())
-  user_1_id  String     @db.Uuid
-  user_2_id  String     @db.Uuid
-  messages   Messages[]
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at      DateTime  @default(now())
+  user_1_id       String    @db.Uuid
+  user_2_id       String    @db.Uuid
+  last_message_id String?   @unique @db.Uuid
+  last_message_at DateTime?
 
-  user_1 Users @relation("User1", fields: [user_1_id], references: [id], onDelete: Cascade)
-  user_2 Users @relation("User2", fields: [user_2_id], references: [id], onDelete: Cascade)
+  messages     Messages[] @relation("ConversationMessages")
+  last_message Messages?  @relation("ConversationLastMessage", fields: [last_message_id], references: [id], onDelete: Cascade)
+  user_1       Users      @relation("User1", fields: [user_1_id], references: [id], onDelete: Cascade)
+  user_2       Users      @relation("User2", fields: [user_2_id], references: [id], onDelete: Cascade)
 
   @@unique([user_1_id, user_2_id])
 }
 
 model Messages {
-  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content             String
-  created_at          DateTime      @default(now())
-  updated_at          DateTime      @default(now())
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @default(now())
+  is_read_by_receiver Boolean   @default(false)
   deleted_at          DateTime?
-  conversation_id     String        @db.Uuid
-  reply_to_message_id String?       @db.Uuid
-  user_id             String        @db.Uuid
-  conversation        Conversations @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
-  parent_message      Messages?     @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: Cascade)
-  replies             Messages[]    @relation("MessageReplies")
-  user                Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  conversation_id     String    @db.Uuid
+  reply_to_message_id String?   @db.Uuid
+  user_id             String    @db.Uuid
+
+  conversation   Conversations @relation("ConversationMessages", fields: [conversation_id], references: [id], onDelete: Cascade)
+  parent_message Messages?     @relation("MessageReplies", fields: [reply_to_message_id], references: [id], onDelete: Cascade)
+  replies        Messages[]    @relation("MessageReplies")
+  user           Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  used_as_last_message_for Conversations? @relation("ConversationLastMessage")
 }
 
 enum Role {

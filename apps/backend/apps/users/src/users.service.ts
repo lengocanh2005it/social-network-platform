@@ -28,6 +28,7 @@ import {
   hashPassword,
   REFRESH_TOKEN_LIFE,
   ResponseFriendRequestAction,
+  sendWithTimeout,
   SyncOptions,
   toPascalCase,
   UploadUserImageTypeEnum,
@@ -778,13 +779,11 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
-    return firstValueFrom(
-      this.postsClient.send('get-profile-posts', {
-        user_id: userProfile.user.id,
-        getPostQueryDto,
-        current_user_id: user.id,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-profile-posts', {
+      user_id: userProfile.user.id,
+      getPostQueryDto,
+      current_user_id: user.id,
+    });
   };
 
   public getFriends = async (email: string) => {
@@ -2095,5 +2094,28 @@ export class UsersService implements OnModuleInit {
       ),
       nextCursor,
     };
+  };
+
+  public getUsersByFullName = async (full_name: string) => {
+    const userProfiles = await this.prismaService.userProfiles.findMany({
+      where: {
+        OR: [
+          {
+            first_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+          {
+            last_name: {
+              contains: full_name,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+    });
+
+    return userProfiles;
   };
 }

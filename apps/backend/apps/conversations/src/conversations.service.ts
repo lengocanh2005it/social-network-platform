@@ -1,16 +1,23 @@
 import {
   CreateMessageDto,
+  GetConversationsQueryDto,
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import { HuggingFaceProvider } from '@app/common/providers';
-import { isToxic } from '@app/common/utils';
+import {
+  decodeCursor,
+  encodeCursor,
+  isToxic,
+  sendWithTimeout,
+} from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { UsersType } from '@repo/db';
+import { UserProfilesType, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
+import { promiseHooks } from 'v8';
 
 @Injectable()
 export class ConversationsService implements OnModuleInit {
@@ -22,6 +29,8 @@ export class ConversationsService implements OnModuleInit {
 
   onModuleInit() {
     this.usersClient.subscribeToResponseOf('get-user-by-field');
+    this.usersClient.subscribeToResponseOf('get-users-by-full-name');
+    this.usersClient.subscribeToResponseOf('get-mututal-friends');
   }
 
   public createMessage = async (
@@ -223,6 +232,23 @@ export class ConversationsService implements OnModuleInit {
     const nextCursor = hasNextPage
       ? this.encodeCursor(reversedItems[0].id, reversedItems[0].created_at)
       : null;
+
+    if (reversedItems?.length) {
+      await Promise.all(
+        reversedItems.map(async (item) => {
+          if (user.id !== item.user_id) {
+            await this.prismaService.messages.update({
+              where: {
+                id: item.id,
+              },
+              data: {
+                is_read_by_receiver: true,
+              },
+            });
+          }
+        }),
+      );
+    }
 
     return {
       data: await Promise.all(
@@ -433,6 +459,16 @@ export class ConversationsService implements OnModuleInit {
       },
     });
 
+    await this.prismaService.conversations.update({
+      where: {
+        id: conversation_id,
+      },
+      data: {
+        last_message_id: newMessage.id,
+        last_message_at: newMessage.created_at,
+      },
+    });
+
     return this.getFormattedMessage(
       newMessage,
       reply_to_message_id ? reply_to_message_id : undefined,
@@ -479,6 +515,7 @@ export class ConversationsService implements OnModuleInit {
       ...(parentMessage && {
         parent_message: await this.getFormattedMessage(parentMessage),
       }),
+      is_read_by_receiver: item.is_read_by_receiver,
     };
   };
 
@@ -495,6 +532,135 @@ export class ConversationsService implements OnModuleInit {
     return {
       messageId,
       createdAt: new Date(createdAtStr),
+    };
+  };
+
+  public getConversations = async (
+    email: string,
+    getConversationsQueryDto?: GetConversationsQueryDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const limit = getConversationsQueryDto?.limit ?? 10;
+
+    const decodedCursor = getConversationsQueryDto?.after
+      ? decodeCursor(getConversationsQueryDto.after)
+      : null;
+
+    const full_name = getConversationsQueryDto?.full_name;
+    let userProfileIds: string[] = [];
+
+    if (full_name) {
+      const userProfiles = await sendWithTimeout<UserProfilesType[]>(
+        this.usersClient,
+        'get-users-by-full-name',
+        { full_name },
+      );
+
+      userProfileIds = userProfiles.map((profile) => profile.user_id);
+
+      if (userProfileIds.length === 0) {
+        return {
+          data: [],
+          nextCursor: null,
+        };
+      }
+    }
+
+    const conversations = await this.prismaService.conversations.findMany({
+      where: {
+        AND: [
+          {
+            OR: [{ user_1_id: user.id }, { user_2_id: user.id }],
+          },
+          ...(userProfileIds.length > 0
+            ? [
+                {
+                  OR: [
+                    {
+                      user_1_id: user.id,
+                      user_2_id: { in: userProfileIds },
+                    },
+                    {
+                      user_2_id: user.id,
+                      user_1_id: { in: userProfileIds },
+                    },
+                  ],
+                },
+              ]
+            : []),
+          {
+            messages: {
+              some: {},
+            },
+          },
+        ],
+      },
+      include: {
+        user_1: { include: { profile: true } },
+        user_2: { include: { profile: true } },
+        last_message: {
+          include: {
+            user: { include: { profile: true } },
+          },
+        },
+      },
+      take: limit + 1,
+      orderBy: [{ last_message_at: 'desc' }, { id: 'desc' }],
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          last_message_at: decodedCursor.last_message_at,
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = conversations?.length > limit;
+
+    const items: any[] = hasNextPage
+      ? conversations.slice(0, -1)
+      : conversations;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({
+          id: items[items.length - 1].id,
+          last_message_at:
+            items[items.length - 1]?.last_message_at ?? new Date(),
+        })
+      : null;
+
+    return {
+      data: await Promise.all(
+        items.map(async (item) => {
+          const targetUser =
+            item.user_1_id === user.id ? item.user_2 : item.user_1;
+
+          return {
+            id: item.id,
+            last_message_at: item.last_message_at,
+            last_message: await this.getFormattedMessage(item.last_message),
+            target_user: {
+              user_id: targetUser.id,
+              avatar_url: targetUser.profile.avatar_url,
+              full_name: `${targetUser.profile.first_name ?? ''} ${targetUser.profile.last_name ?? ''}`,
+              username: targetUser.profile.username,
+              is_friend: true,
+              is_online: false,
+              mutual_friends: 0,
+            },
+          };
+        }),
+      ),
+      nextCursor,
     };
   };
 }

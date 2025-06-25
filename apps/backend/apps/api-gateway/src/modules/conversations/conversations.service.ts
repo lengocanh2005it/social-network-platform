@@ -1,8 +1,10 @@
 import {
   CreateMessageDto,
+  GetConversationsQueryDto,
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
+import { sendWithTimeout } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -21,6 +23,7 @@ export class ConversationsService implements OnModuleInit {
       'get-conversation-with-target-user',
       'update-message',
       'delete-message',
+      'get-conversations',
     ];
 
     patterns.forEach((pattern) =>
@@ -87,12 +90,20 @@ export class ConversationsService implements OnModuleInit {
     messageId: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.conversationsClient.send('delete-message', {
-        conversationId,
-        messageId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.conversationsClient, 'delete-message', {
+      conversationId,
+      messageId,
+      email,
+    });
+  };
+
+  public getConversations = async (
+    email: string,
+    getConversationsQueryDto?: GetConversationsQueryDto,
+  ) => {
+    return sendWithTimeout(this.conversationsClient, 'get-conversations', {
+      email,
+      getConversationsQueryDto,
+    });
   };
 }
