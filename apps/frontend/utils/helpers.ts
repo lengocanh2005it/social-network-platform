@@ -205,3 +205,20 @@ export function formatDateTime(date: Date | string) {
     ? format(d, "d MMM 'at' HH:mm")
     : format(d, "d MMM, yyyy 'at' HH:mm");
 }
+
+export function formatDateTimeFacebookStyle(date: Date | string): string {
+  const d = new Date(date);
+  const now = new Date();
+
+  const minutes = differenceInMinutes(now, d);
+  const hours = differenceInHours(now, d);
+
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m`;
+  if (hours < 24 && isToday(d)) return `${hours}h`;
+  if (isYesterday(d)) return "Yesterday";
+
+  const sameYear = now.getFullYear() === d.getFullYear();
+
+  return sameYear ? format(d, "d MMM") : format(d, "d MMM yyyy");
+}

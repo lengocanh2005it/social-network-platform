@@ -264,4 +264,9 @@ export class UsersController {
   ) {
     return this.usersService.getMutualFriendsCount(currentUserId, targetId);
   }
+
+  @MessagePattern('get-users-by-full-name')
+  async getUsersByFullName(@Payload('full_name') full_name: string) {
+    return this.usersService.getUsersByFullName(full_name);
+  }
 }

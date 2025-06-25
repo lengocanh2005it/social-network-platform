@@ -1,4 +1,5 @@
 "use client";
+import ConversationsDropdown from "@/components/ConversationsDropdown";
 import SearchDropdown from "@/components/SearchDropdown";
 import NotificationsTab from "@/components/tabs/NotificationsTab";
 import { useSignOut } from "@/hooks";
@@ -26,14 +27,13 @@ import {
   LaptopMinimal,
   MapPinHouse,
   Menu,
-  MessageCircle,
   MoonIcon,
   Sun,
   TvMinimal,
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, {
   useCallback,
   useEffect,
@@ -41,7 +41,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 
 interface HomeNavProps {
   shouldShowIndicator?: boolean;
@@ -235,7 +234,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
 
         <Grid2X2 className="cursor-pointer" />
 
-        <MessageCircle className="cursor-pointer" />
+        <ConversationsDropdown />
 
         <NotificationsTab />
 

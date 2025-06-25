@@ -6,12 +6,20 @@ import {
   SignInResponse,
 } from '@app/common/utils/constants';
 import { HttpService } from '@nestjs/axios';
+import { RequestTimeoutException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ClientProxy } from '@nestjs/microservices';
 import { NotificationType } from '@repo/db';
 import * as bcryptjs from 'bcryptjs';
 import { config } from 'dotenv';
 import { Response } from 'express';
-import { firstValueFrom } from 'rxjs';
+import {
+  catchError,
+  firstValueFrom,
+  throwError,
+  timeout,
+  TimeoutError,
+} from 'rxjs';
 
 config();
 
@@ -286,3 +294,22 @@ export const generateNotificationMessage = (
 
 export const truncateWithEllipsis = (text: string, maxLength = 100) =>
   text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
+
+export async function sendWithTimeout<T = any>(
+  client: ClientProxy,
+  pattern: string,
+  payload: any,
+  ms = 10000,
+): Promise<T> {
+  return firstValueFrom(
+    client.send<T>(pattern, payload).pipe(
+      timeout(ms),
+      catchError((err) => {
+        if (err instanceof TimeoutError) {
+          throw new RequestTimeoutException(`Timeout for pattern "${pattern}"`);
+        }
+        return throwError(() => err);
+      }),
+    ),
+  );
+}

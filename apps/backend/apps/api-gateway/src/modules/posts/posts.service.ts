@@ -11,7 +11,7 @@ import {
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
-import { PostMediaEnum } from '@app/common/utils';
+import { PostMediaEnum, sendWithTimeout } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -99,13 +99,11 @@ export class PostsService implements OnModuleInit {
       }),
     );
 
-    return firstValueFrom(
-      this.postsClient.send('get-home-posts', {
-        email,
-        getPostQueryDto,
-        friendIds,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-home-posts', {
+      email,
+      getPostQueryDto,
+      friendIds,
+    });
   };
 
   public likePost = async (email: string, postId: string) => {

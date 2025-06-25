@@ -1,11 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
-import { ConversationsService } from './conversations.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
 import {
   CreateMessageDto,
+  GetConversationsQueryDto,
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
+import { Controller } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
+import { ConversationsService } from './conversations.service';
 
 @Controller()
 export class ConversationsController {
@@ -69,6 +70,18 @@ export class ConversationsController {
       conversationId,
       messageId,
       email,
+    );
+  }
+
+  @MessagePattern('get-conversations')
+  async getConversations(
+    @Payload('email') email: string,
+    @Payload('getConversationsQueryDto')
+    getConversationsQueryDto?: GetConversationsQueryDto,
+  ) {
+    return this.conversationsService.getConversations(
+      email,
+      getConversationsQueryDto,
     );
   }
 }

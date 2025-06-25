@@ -554,6 +554,7 @@ export type Message = {
     username: string;
   };
   parent_message?: Message;
+  is_read_by_receiver: boolean;
 };
 
 export type GetMessagesQueryDto = GetFeedQueryDto;
@@ -655,4 +656,15 @@ export type TaggedUserType = {
   username: string;
   mutual_friends: number;
   is_friend: boolean;
+};
+
+export type GetConversationsQueryDto = GetFeedQueryDto & {
+  full_name?: string;
+};
+
+export type ConversationDropdownType = {
+  id: string;
+  target_user: Friend;
+  last_message_at: string;
+  last_message: Message;
 };
