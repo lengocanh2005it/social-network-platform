@@ -1,5 +1,9 @@
 import { UploadUserImageQueryDto } from '@app/common/dtos/users';
-import { formatFileSize, UploadUserImageTypeEnum } from '@app/common/utils';
+import {
+  formatFileSize,
+  sendWithTimeout,
+  UploadUserImageTypeEnum,
+} from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { UsersType } from '@repo/db';
@@ -26,14 +30,13 @@ export class UploadsService implements OnModuleInit {
     uploadUserImageQueryDto: UploadUserImageQueryDto,
     file: Express.Multer.File,
   ) => {
-    const user = await firstValueFrom<UsersType>(
-      this.usersClient.send(
-        'get-user-by-field',
-        JSON.stringify({
-          field: 'email',
-          value: email,
-        }),
-      ),
+    const user = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
     );
 
     const { fileUrl } = await this.uploadImage(file);

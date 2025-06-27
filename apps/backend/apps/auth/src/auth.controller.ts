@@ -44,6 +44,8 @@ export class AuthController {
 
   @MessagePattern('forgot-password')
   async forgotPassword(@Payload() forgotPasswordDto: ForgotPasswordDto) {
+    console.log('Forgot PAssword Dto: ', forgotPasswordDto);
+
     return this.authService.forgotPassword(forgotPasswordDto);
   }
 

@@ -11,10 +11,9 @@ import {
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
-import { PostMediaEnum, sendWithTimeout } from '@app/common/utils';
+import { PostMediaEnum, sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class PostsService implements OnModuleInit {
@@ -58,21 +57,17 @@ export class PostsService implements OnModuleInit {
   }
 
   public createPost = async (email: string, createPostDto: CreatePostDto) => {
-    return firstValueFrom(
-      this.postsClient.send('create-post', {
-        email,
-        createPostDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'create-post', {
+      email,
+      createPostDto: toPlain(createPostDto),
+    });
   };
 
   public deletePost = async (postId: string, email: string) => {
-    return firstValueFrom(
-      this.postsClient.send('delete-post', {
-        postId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'delete-post', {
+      postId,
+      email,
+    });
   };
 
   public updatePost = async (
@@ -80,45 +75,44 @@ export class PostsService implements OnModuleInit {
     updatePostDto: UpdatePostDto,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('update-post', {
-        postId,
-        email,
-        updatePostDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'update-post', {
+      postId,
+      email,
+      updatePostDto: toPlain(updatePostDto),
+    });
   };
 
   public getPosts = async (
     email: string,
     getPostQueryDto?: GetPostQueryDto,
   ) => {
-    const friendIds = await firstValueFrom<string[]>(
-      this.usersClient.send('get-friends', {
+    const friendIds = await sendWithTimeout<string[]>(
+      this.usersClient,
+      'get-friends',
+      {
         email,
-      }),
+      },
     );
 
     return sendWithTimeout(this.postsClient, 'get-home-posts', {
       email,
-      getPostQueryDto,
+      getPostQueryDto: toPlain(getPostQueryDto),
       friendIds,
     });
   };
 
   public likePost = async (email: string, postId: string) => {
-    return firstValueFrom(
-      this.postsClient.send('like-post', { email, postId }),
-    );
+    return sendWithTimeout(this.postsClient, 'like-post', {
+      email,
+      postId,
+    });
   };
 
   public unlikePost = async (email: string, postId: string) => {
-    return firstValueFrom(
-      this.postsClient.send('unlike-post', {
-        email,
-        postId,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'unlike-post', {
+      email,
+      postId,
+    });
   };
 
   public getLikes = async (
@@ -126,13 +120,11 @@ export class PostsService implements OnModuleInit {
     postId: string,
     getUserLikesQueryDto?: GetUserLikesQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-likes', {
-        email,
-        postId,
-        getUserLikesQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-likes', {
+      email,
+      postId,
+      getUserLikesQueryDto: toPlain(getUserLikesQueryDto),
+    });
   };
 
   public createComment = async (
@@ -140,13 +132,11 @@ export class PostsService implements OnModuleInit {
     postId: string,
     createCommentDto: CreateCommentDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('create-comment', {
-        email,
-        postId,
-        createCommentDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'create-comment', {
+      email,
+      postId,
+      createCommentDto: toPlain(createCommentDto),
+    });
   };
 
   public getComments = async (
@@ -154,13 +144,11 @@ export class PostsService implements OnModuleInit {
     email: string,
     getCommentQueryDto?: GetPostQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-comments', {
-        postId,
-        email,
-        getCommentQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-comments', {
+      postId,
+      email,
+      getCommentQueryDto,
+    });
   };
 
   public deleteComment = async (
@@ -168,13 +156,11 @@ export class PostsService implements OnModuleInit {
     commentId: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('delete-comment', {
-        postId,
-        commentId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'delete-comment', {
+      postId,
+      commentId,
+      email,
+    });
   };
 
   public createCommentReply = async (
@@ -183,14 +169,12 @@ export class PostsService implements OnModuleInit {
     createCommentReplyDto: CreateCommentReplyDto,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('create-comment-reply', {
-        postId,
-        commentId,
-        createCommentReplyDto,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'create-comment-reply', {
+      postId,
+      commentId,
+      createCommentReplyDto: toPlain(createCommentReplyDto),
+      email,
+    });
   };
 
   public getCommentReplies = async (
@@ -199,14 +183,12 @@ export class PostsService implements OnModuleInit {
     email: string,
     getCommentQueryDto?: GetPostQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-comment-replies', {
-        postId,
-        commentId,
-        email,
-        getCommentQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-comment-replies', {
+      postId,
+      commentId,
+      email,
+      getCommentQueryDto: toPlain(getCommentQueryDto),
+    });
   };
 
   public likeComment = async (
@@ -214,13 +196,11 @@ export class PostsService implements OnModuleInit {
     commentId: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('like-comment', {
-        postId,
-        commentId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'like-comment', {
+      postId,
+      commentId,
+      email,
+    });
   };
 
   public unlikeComment = async (
@@ -228,13 +208,11 @@ export class PostsService implements OnModuleInit {
     commentId: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('unlike-comment', {
-        postId,
-        commentId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'unlike-comment', {
+      postId,
+      commentId,
+      email,
+    });
   };
 
   public getLikesOfComment = async (
@@ -242,13 +220,11 @@ export class PostsService implements OnModuleInit {
     commentId: string,
     getCommentLikeQueryDto?: GetPostQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-likes-comment', {
-        postId,
-        commentId,
-        getCommentLikeQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-likes-comment', {
+      postId,
+      commentId,
+      getCommentLikeQueryDto: toPlain(getCommentLikeQueryDto),
+    });
   };
 
   public createPostShare = async (
@@ -256,13 +232,11 @@ export class PostsService implements OnModuleInit {
     email: string,
     createPostShareDto: CreatePostShareDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('create-post-share', {
-        postId,
-        email,
-        createPostShareDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'create-post-share', {
+      postId,
+      email,
+      createPostShareDto: toPlain(createPostShareDto),
+    });
   };
 
   public getMediaOfPost = async (
@@ -271,14 +245,12 @@ export class PostsService implements OnModuleInit {
     type: PostMediaEnum,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-media-post', {
-        mediaId,
-        postId,
-        type,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-media-post', {
+      mediaId,
+      postId,
+      type,
+      email,
+    });
   };
 
   public getCommentsOfMedia = async (
@@ -287,14 +259,12 @@ export class PostsService implements OnModuleInit {
     email: string,
     getCommentsMediaQueryDto: GetCommentsMediaQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-comments-media', {
-        postId,
-        mediaId,
-        email,
-        getCommentsMediaQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-comments-media', {
+      postId,
+      mediaId,
+      email,
+      getCommentsMediaQueryDto: toPlain(getCommentsMediaQueryDto),
+    });
   };
 
   public likeMediaOfPost = async (
@@ -303,14 +273,12 @@ export class PostsService implements OnModuleInit {
     email: string,
     likePostMediaDto: LikePostMediaDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('like-media-post', {
-        postId,
-        mediaId,
-        email,
-        likePostMediaDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'like-media-post', {
+      postId,
+      mediaId,
+      email,
+      likePostMediaDto: toPlain(likePostMediaDto),
+    });
   };
 
   public unlikeMediaOfPost = async (
@@ -319,14 +287,12 @@ export class PostsService implements OnModuleInit {
     email: string,
     unlikeMediaPostQueryDto: UnlikeMediaPostQueryDto,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('unlike-media-post', {
-        postId,
-        mediaId,
-        email,
-        unlikeMediaPostQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'unlike-media-post', {
+      postId,
+      mediaId,
+      email,
+      unlikeMediaPostQueryDto: toPlain(unlikeMediaPostQueryDto),
+    });
   };
 
   public getPostOfUser = async (
@@ -334,13 +300,11 @@ export class PostsService implements OnModuleInit {
     username: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.postsClient.send('get-post-of-user', {
-        postId,
-        username,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-post-of-user', {
+      postId,
+      username,
+      email,
+    });
   };
 
   public getTaggedUsersOfPost = async (
@@ -353,16 +317,16 @@ export class PostsService implements OnModuleInit {
       value: email,
     };
 
-    const user = await firstValueFrom(
-      this.usersClient.send('get-user-by-field', JSON.stringify(payload)),
+    const user = await sendWithTimeout(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify(payload),
     );
 
-    return firstValueFrom(
-      this.postsClient.send('get-tagged-users-of-post', {
-        postId,
-        userId: user.id,
-        getTaggedUsersQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.postsClient, 'get-tagged-users-of-post', {
+      postId,
+      userId: user.id,
+      getTaggedUsersQueryDto: toPlain(getTaggedUsersQueryDto),
+    });
   };
 }

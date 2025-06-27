@@ -5,9 +5,9 @@ import {
   SearchUserQueryDto,
   UpdateUserProfileDto,
 } from '@app/common/dtos/users';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -36,24 +36,20 @@ export class UsersService implements OnModuleInit {
   }
 
   async getMe(email: string, getUserQueryDto: GetUserQueryDto): Promise<any> {
-    return firstValueFrom(
-      this.userClient.send('get-me', {
-        email,
-        getUserQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'get-me', {
+      email,
+      getUserQueryDto: toPlain(getUserQueryDto),
+    });
   }
 
   async updateUserProfile(
     updateUserProfileDto: UpdateUserProfileDto,
     email: string,
   ): Promise<any> {
-    return firstValueFrom(
-      this.userClient.send('update-profile', {
-        updateUserProfileDto,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'update-profile', {
+      updateUserProfileDto: toPlain(updateUserProfileDto),
+      email,
+    });
   }
 
   async getFeed(
@@ -61,13 +57,11 @@ export class UsersService implements OnModuleInit {
     username: string,
     email: string,
   ) {
-    return firstValueFrom(
-      this.userClient.send('get-feed', {
-        username,
-        getPostQueryDto,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'get-feed', {
+      username,
+      getPostQueryDto: toPlain(getPostQueryDto),
+      email,
+    });
   }
 
   public getProfile = async (
@@ -75,54 +69,44 @@ export class UsersService implements OnModuleInit {
     email: string,
     getUserQueryDto: GetUserQueryDto,
   ) => {
-    return firstValueFrom(
-      this.userClient.send('get-profile', {
-        username,
-        email,
-        getUserQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'get-profile', {
+      username,
+      email,
+      getUserQueryDto: toPlain(getUserQueryDto),
+    });
   };
 
   public blockUser = async (targetUserId: string, email: string) => {
-    return firstValueFrom(
-      this.userClient.send('block-user', {
-        targetUserId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'block-user', {
+      targetUserId,
+      email,
+    });
   };
 
   public getBlockedUsersList = async (
     email: string,
     getBlockedUsersListQueryDto?: GetBlockedUsersListQueryDto,
   ) => {
-    return firstValueFrom(
-      this.userClient.send('get-blocked-users', {
-        email,
-        getBlockedUsersListQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'get-blocked-users', {
+      email,
+      getBlockedUsersListQueryDto: toPlain(getBlockedUsersListQueryDto),
+    });
   };
 
   public unblockUser = async (email: string, targetId: string) => {
-    return firstValueFrom(
-      this.userClient.send('unblock-user', {
-        email,
-        targetId,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'unblock-user', {
+      email,
+      targetId,
+    });
   };
 
   public getUsers = async (
     email: string,
     searchUserQueryDto: SearchUserQueryDto,
   ) => {
-    return firstValueFrom(
-      this.userClient.send('get-users', {
-        email,
-        searchUserQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.userClient, 'get-users', {
+      email,
+      searchUserQueryDto: toPlain(searchUserQueryDto),
+    });
   };
 }

@@ -4,7 +4,7 @@ import {
   GetMessagesQueryDto,
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
-import { sendWithTimeout } from '@app/common/utils';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -35,23 +35,23 @@ export class ConversationsService implements OnModuleInit {
     email: string,
     createMessageDto: CreateMessageDto,
   ) => {
-    return firstValueFrom(
-      this.conversationsClient.send('create-message', {
-        email,
-        createMessageDto,
-      }),
-    );
+    return sendWithTimeout(this.conversationsClient, 'create-message', {
+      email,
+      createMessageDto: toPlain(createMessageDto),
+    });
   };
 
   public getConversationWithTargetUser = async (
     targetUserId: string,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.conversationsClient.send('get-conversation-with-target-user', {
+    return sendWithTimeout(
+      this.conversationsClient,
+      'get-conversation-with-target-user',
+      {
         targetUserId,
         email,
-      }),
+      },
     );
   };
 
@@ -60,12 +60,14 @@ export class ConversationsService implements OnModuleInit {
     conversationId: string,
     getMessagesQueryDto?: GetMessagesQueryDto,
   ) => {
-    return firstValueFrom(
-      this.conversationsClient.send('get-messages-of-conversation', {
+    return sendWithTimeout(
+      this.conversationsClient,
+      'get-messages-of-conversation',
+      {
         email,
         conversationId,
-        getMessagesQueryDto,
-      }),
+        getMessagesQueryDto: toPlain(getMessagesQueryDto),
+      },
     );
   };
 
@@ -75,14 +77,12 @@ export class ConversationsService implements OnModuleInit {
     updateMessageDto: UpdateMessageDto,
     email: string,
   ) => {
-    return firstValueFrom(
-      this.conversationsClient.send('update-message', {
-        conversationId,
-        messageId,
-        updateMessageDto,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.conversationsClient, 'update-message', {
+      conversationId,
+      messageId,
+      updateMessageDto: toPlain(updateMessageDto),
+      email,
+    });
   };
 
   public deleteMessage = async (
@@ -103,7 +103,7 @@ export class ConversationsService implements OnModuleInit {
   ) => {
     return sendWithTimeout(this.conversationsClient, 'get-conversations', {
       email,
-      getConversationsQueryDto,
+      getConversationsQueryDto: toPlain(getConversationsQueryDto),
     });
   };
 }

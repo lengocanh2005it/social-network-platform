@@ -3,10 +3,9 @@ import {
   GetStoryQueryDto,
   GetStoryViewersQueryDto,
 } from '@app/common/dtos/stories';
-import { sendWithTimeout } from '@app/common/utils';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class StoriesService implements OnModuleInit {
@@ -32,12 +31,10 @@ export class StoriesService implements OnModuleInit {
     email: string,
     createStoryDto: CreateStoryDto,
   ) => {
-    return firstValueFrom(
-      this.storiesClient.send('create-story', {
-        email,
-        createStoryDto,
-      }),
-    );
+    return sendWithTimeout(this.storiesClient, 'create-story', {
+      email,
+      createStoryDto: toPlain(createStoryDto),
+    });
   };
 
   public getStories = async (
@@ -46,7 +43,7 @@ export class StoriesService implements OnModuleInit {
   ) => {
     return sendWithTimeout(this.storiesClient, 'get-stories', {
       email,
-      getStoryQueryDto,
+      getStoryQueryDto: toPlain(getStoryQueryDto),
     });
   };
 
@@ -55,30 +52,24 @@ export class StoriesService implements OnModuleInit {
     storyId: string,
     getStoryViewersQueryDto?: GetStoryViewersQueryDto,
   ) => {
-    return firstValueFrom(
-      this.storiesClient.send('get-viewers-of-story', {
-        email,
-        storyId,
-        getStoryViewersQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.storiesClient, 'get-viewers-of-story', {
+      email,
+      storyId,
+      getStoryViewersQueryDto: toPlain(getStoryViewersQueryDto),
+    });
   };
 
   public deleteStory = async (storyId: string, email: string) => {
-    return firstValueFrom(
-      this.storiesClient.send('delete-story', {
-        storyId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.storiesClient, 'delete-story', {
+      storyId,
+      email,
+    });
   };
 
   public getStory = async (storyId: string, email: string) => {
-    return firstValueFrom(
-      this.storiesClient.send('get-story', {
-        storyId,
-        email,
-      }),
-    );
+    return sendWithTimeout(this.storiesClient, 'get-story', {
+      storyId,
+      email,
+    });
   };
 }
