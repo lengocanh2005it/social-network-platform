@@ -4,9 +4,9 @@ import {
   GetFriendsListQueryDto,
   ResponseFriendRequestDto,
 } from '@app/common/dtos/friends';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class FriendsService implements OnModuleInit {
@@ -32,56 +32,46 @@ export class FriendsService implements OnModuleInit {
     email: string,
     createFriendRequestDto: CreateFriendRequestDto,
   ) => {
-    return firstValueFrom(
-      this.usersClient.send('create-friend-request', {
-        email,
-        createFriendRequestDto,
-      }),
-    );
+    return sendWithTimeout(this.usersClient, 'create-friend-request', {
+      email,
+      createFriendRequestDto: toPlain(createFriendRequestDto),
+    });
   };
 
   public responseFriendRequest = async (
     email: string,
     responseFriendRequestDto: ResponseFriendRequestDto,
   ) => {
-    return firstValueFrom(
-      this.usersClient.send('response-friend-request', {
-        email,
-        responseFriendRequestDto,
-      }),
-    );
+    return sendWithTimeout(this.usersClient, 'response-friend-request', {
+      email,
+      responseFriendRequestDto: toPlain(responseFriendRequestDto),
+    });
   };
 
   public deleteFriendRequest = async (email: string, target_id: string) => {
-    return firstValueFrom(
-      this.usersClient.send('delete-friend-request', {
-        email,
-        target_id,
-      }),
-    );
+    return sendWithTimeout(this.usersClient, 'delete-friend-request', {
+      email,
+      target_id,
+    });
   };
 
   public getFriendRequests = async (
     email: string,
     getFriendRequestsQueryDto?: GetFriendRequestsQueryDto,
   ) => {
-    return firstValueFrom(
-      this.usersClient.send('get-friend-requests', {
-        email,
-        getFriendRequestsQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.usersClient, 'get-friend-requests', {
+      email,
+      getFriendRequestsQueryDto: toPlain(getFriendRequestsQueryDto),
+    });
   };
 
   public getFriendsList = async (
     email: string,
     getFriendsListQueryDto: GetFriendsListQueryDto,
   ) => {
-    return firstValueFrom(
-      this.usersClient.send('get-friends-list', {
-        email,
-        getFriendsListQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.usersClient, 'get-friends-list', {
+      email,
+      getFriendsListQueryDto: toPlain(getFriendsListQueryDto),
+    });
   };
 }

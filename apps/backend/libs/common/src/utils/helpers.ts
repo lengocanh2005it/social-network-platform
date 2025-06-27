@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
 import { NotificationType } from '@repo/db';
 import * as bcryptjs from 'bcryptjs';
+import { instanceToPlain } from 'class-transformer';
 import { config } from 'dotenv';
 import { Response } from 'express';
 import {
@@ -312,4 +313,8 @@ export async function sendWithTimeout<T = any>(
       }),
     ),
   );
+}
+
+export function toPlain<T>(dto: T): Record<string, any> {
+  return instanceToPlain(dto);
 }

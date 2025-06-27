@@ -2,9 +2,9 @@ import {
   DeleteNotificationQueryDto,
   GetNotificationQueryDto,
 } from '@app/common/dtos/notifications';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class NotificationsService implements OnModuleInit {
@@ -27,32 +27,26 @@ export class NotificationsService implements OnModuleInit {
     email: string,
     getNotificationQueryDto: GetNotificationQueryDto,
   ) => {
-    return firstValueFrom(
-      this.notificationsClient.send('get-notifications', {
-        email,
-        getNotificationQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.notificationsClient, 'get-notifications', {
+      email,
+      getNotificationQueryDto: toPlain(getNotificationQueryDto),
+    });
   };
 
   public viewNotification = async (email: string, notificationId: string) => {
-    return firstValueFrom(
-      this.notificationsClient.send('view-notification', {
-        email,
-        notificationId,
-      }),
-    );
+    return sendWithTimeout(this.notificationsClient, 'view-notification', {
+      email,
+      notificationId,
+    });
   };
 
   public deleteNotifications = async (
     email: string,
     deleteNotificationQueryDto: DeleteNotificationQueryDto,
   ) => {
-    return firstValueFrom(
-      this.notificationsClient.send('delete-notifications', {
-        email,
-        deleteNotificationQueryDto,
-      }),
-    );
+    return sendWithTimeout(this.notificationsClient, 'delete-notifications', {
+      email,
+      deleteNotificationQueryDto: toPlain(deleteNotificationQueryDto),
+    });
   };
 }

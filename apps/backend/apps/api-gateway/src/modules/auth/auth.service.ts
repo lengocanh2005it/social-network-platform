@@ -15,10 +15,9 @@ import {
   VerifyOwnershipOtpDto,
   VerifyTokenDto,
 } from '@app/common/dtos/auth';
+import { sendWithTimeout, toPlain } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { instanceToPlain } from 'class-transformer';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -53,67 +52,79 @@ export class AuthService implements OnModuleInit {
   }
 
   public signIn = async (signInDto: SignInDto) => {
-    return firstValueFrom(
-      this.authClient.send('sign-in', instanceToPlain(signInDto)),
-    );
+    return sendWithTimeout(this.authClient, 'sign-in', toPlain(signInDto));
   };
 
   public signUp = async (signUpDto: SignUpDto, userIp?: string) => {
-    return firstValueFrom(
-      this.authClient.send('sign-up', {
-        signUpDto,
-        userIp,
-      }),
-    );
+    return sendWithTimeout(this.authClient, 'sign-up', {
+      signUpDto: toPlain(signUpDto),
+      userIp,
+    });
   };
 
   public verifyOtp = async (verifyOtpDto: VerifyOtpDto) => {
-    return firstValueFrom(this.authClient.send('verify-otp', verifyOtpDto));
+    return sendWithTimeout(
+      this.authClient,
+      'verify-otp',
+      toPlain(verifyOtpDto),
+    );
   };
 
   public forgotPassword = async (forgotPasswordDto: ForgotPasswordDto) => {
-    return firstValueFrom(
-      this.authClient.send('forgot-password', forgotPasswordDto),
+    return sendWithTimeout(
+      this.authClient,
+      'forgot-password',
+      toPlain(forgotPasswordDto),
     );
   };
 
   public resetPassword = async (resetPasswordDto: ResetPasswordDto) => {
-    return firstValueFrom(
-      this.authClient.send('reset-password', resetPasswordDto),
+    return sendWithTimeout(
+      this.authClient,
+      'reset-password',
+      toPlain(resetPasswordDto),
     );
   };
 
   public oAuthCallback = async (oAuthCallbackDto: OAuthCallbackDto) => {
-    return firstValueFrom(
-      this.authClient.send('oauth-callback', oAuthCallbackDto),
+    return sendWithTimeout(
+      this.authClient,
+      'oauth-callback',
+      toPlain(oAuthCallbackDto),
     );
   };
 
   public getInfoOAuthCallback = async (
     getInfoOAuthCallbackDto: GetInfoOAuthCallbackDto,
   ) => {
-    return firstValueFrom(
-      this.authClient.send('get-info-oauth-callback', getInfoOAuthCallbackDto),
+    return sendWithTimeout(
+      this.authClient,
+      'get-info-oauth-callback',
+      toPlain(getInfoOAuthCallbackDto),
     );
   };
 
   public handleGenerateToken = async (generateTokenDto: GenerateTokenDto) => {
-    return firstValueFrom(
-      this.authClient.send('generate-token', generateTokenDto),
+    return sendWithTimeout(
+      this.authClient,
+      'generate-token',
+      toPlain(generateTokenDto),
     );
   };
 
   public handleVerifyToken = async (verifyTokenDto: VerifyTokenDto) => {
-    return firstValueFrom(this.authClient.send('verify-token', verifyTokenDto));
+    return sendWithTimeout(
+      this.authClient,
+      'verify-token',
+      toPlain(verifyTokenDto),
+    );
   };
 
   public refreshToken = async (refreshToken: string, fingerPrint: string) => {
-    return firstValueFrom(
-      this.authClient.send('refresh-token', {
-        refreshToken,
-        fingerPrint,
-      }),
-    );
+    return sendWithTimeout(this.authClient, 'refresh-token', {
+      refreshToken,
+      fingerPrint,
+    });
   };
 
   public changePassword = async (
@@ -121,45 +132,43 @@ export class AuthService implements OnModuleInit {
     email: string,
     finger_print: string,
   ) => {
-    return firstValueFrom(
-      this.authClient.send('change-password', {
-        changePasswordDto,
-        email,
-        finger_print,
-      }),
-    );
+    return sendWithTimeout(this.authClient, 'change-password', {
+      changePasswordDto: toPlain(changePasswordDto),
+      email,
+      finger_print,
+    });
   };
 
   public signOut = async (signOutDto: SignOutDto) => {
-    return firstValueFrom(this.authClient.send('sign-out', signOutDto));
+    return sendWithTimeout(this.authClient, 'sign-out', toPlain(signOutDto));
   };
 
   public sendOtp = async (sendOtpDto: SendOtpDto) => {
-    return firstValueFrom(this.authClient.send('send-otp', sendOtpDto));
+    return sendWithTimeout(this.authClient, 'send-otp', toPlain(sendOtpDto));
   };
 
   public verifyAccountOwnership = async (
     verifyOwnershipOtpDto: VerifyOwnershipOtpDto,
   ) => {
-    return firstValueFrom(
-      this.authClient.send('verify-ownership-otp', verifyOwnershipOtpDto),
+    return sendWithTimeout(
+      this.authClient,
+      'verify-ownership-otp',
+      toPlain(verifyOwnershipOtpDto),
     );
   };
 
   public generate2FA = async (email: string) => {
-    return firstValueFrom(this.authClient.send('generate-2fa', email));
+    return sendWithTimeout(this.authClient, 'generate-2fa', email);
   };
 
   public verify2FA = async (
     verify2FaDto: Verify2FaDto,
     fingerprint: string,
   ) => {
-    return firstValueFrom(
-      this.authClient.send('verify-2fa', {
-        verify2FaDto,
-        fingerprint,
-      }),
-    );
+    return sendWithTimeout(this.authClient, 'verify-2fa', {
+      verify2FaDto: toPlain(verify2FaDto),
+      fingerprint,
+    });
   };
 
   public trustDevice = (
@@ -170,7 +179,7 @@ export class AuthService implements OnModuleInit {
       'create-trust-device',
       JSON.stringify({
         finger_print,
-        trustDeviceDto,
+        trustDeviceDto: toPlain(trustDeviceDto),
       }),
     );
   };
