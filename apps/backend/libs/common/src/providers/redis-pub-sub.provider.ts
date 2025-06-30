@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { SseService } from 'apps/api-gateway/src/modules/notifications/sse/sse.service';
+import { SseService } from 'apps/api-gateway/src/modules/sse/sse.service';
 import Redis from 'ioredis';
 
 @Injectable()

@@ -140,6 +140,7 @@ export const publicPaths = [
   '/auth/sign-up',
   '/auth/token/refresh',
   '/auth/forgot-password',
+  '/auth/reset-password',
   '/auth/verify-otp',
   '/auth/oauth/callback',
   '/auth/oauth/callback/get-info',
