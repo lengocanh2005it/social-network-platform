@@ -1,17 +1,23 @@
 import configuration from '@app/common/configs/configuration';
 import { JwtGuard, RoleGuard } from '@app/common/guards';
+import {
+  LoggingInterceptor,
+  PerformanceInterceptor,
+} from '@app/common/interceptors';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
   CloudfareProvider,
   HuggingFaceProvider,
   InfisicalProvider,
   KeycloakProvider,
+  MetricsProviders,
   TwoFactorAuthProvider,
 } from '@app/common/providers';
 import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import {
   KeycloakConnectModule,
   PolicyEnforcementMode,
@@ -67,6 +73,7 @@ import { CommonService } from './common.service';
         authToken: configService.get<string>('twilio.auth_token', ''),
       }),
     }),
+    PrometheusModule.register(),
   ],
   providers: [
     CommonService,
@@ -77,6 +84,9 @@ import { CommonService } from './common.service';
     TwoFactorAuthProvider,
     CloudfareProvider,
     HuggingFaceProvider,
+    LoggingInterceptor,
+    PerformanceInterceptor,
+    ...MetricsProviders,
   ],
   exports: [
     ConfigModule,
@@ -94,6 +104,10 @@ import { CommonService } from './common.service';
     TwoFactorAuthProvider,
     CloudfareProvider,
     HuggingFaceProvider,
+    PrometheusModule,
+    LoggingInterceptor,
+    PerformanceInterceptor,
+    ...MetricsProviders,
   ],
 })
 export class CommonModule {}

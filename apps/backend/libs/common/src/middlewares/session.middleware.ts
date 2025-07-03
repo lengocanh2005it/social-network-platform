@@ -1,4 +1,3 @@
-import { SessionStatus } from '.prisma/client';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import { KeycloakProvider } from '@app/common/providers';
 import {
@@ -93,7 +92,7 @@ export class SessionMiddleware implements NestMiddleware {
         const sessions = await this.prismaService.userSessions.findMany({
           where: {
             finger_print: fingerPrint,
-            status: SessionStatus.active,
+            status: SessionStatusEnum.active,
           },
           include: {
             user: true,
