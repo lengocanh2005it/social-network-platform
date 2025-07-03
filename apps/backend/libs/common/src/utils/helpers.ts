@@ -21,6 +21,10 @@ import {
   timeout,
   TimeoutError,
 } from 'rxjs';
+import { createLogger, format, transports } from 'winston';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
+import * as path from 'path';
+import * as fs from 'fs';
 
 config();
 
@@ -318,3 +322,38 @@ export async function sendWithTimeout<T = any>(
 export function toPlain<T>(dto: T): Record<string, any> {
   return instanceToPlain(dto);
 }
+
+const logDir = path.join(process.cwd(), 'apps', 'backend', 'logs');
+
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+
+export const appLogger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    format.printf(({ timestamp, level, message }) => {
+      return `[${timestamp as string}] ${level.toUpperCase()}: ${message as string}`;
+    }),
+  ),
+  transports: [
+    new transports.Console(),
+    new DailyRotateFile({
+      dirname: 'logs',
+      filename: 'app-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '10m',
+      maxFiles: '14d',
+    }),
+  ],
+  exceptionHandlers: [
+    new transports.File({ filename: 'logs/exceptions.log' }),
+    new transports.Console(),
+  ],
+  rejectionHandlers: [
+    new transports.File({ filename: 'logs/rejections.log' }),
+    new transports.Console(),
+  ],
+});

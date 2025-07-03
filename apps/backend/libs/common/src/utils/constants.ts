@@ -151,6 +151,7 @@ export const publicPaths = [
   '/auth/trust-device',
   '/socket.io',
   '/',
+  '/metrics',
 ];
 
 export enum VerifyOwnershipOtpMethodEnum {
