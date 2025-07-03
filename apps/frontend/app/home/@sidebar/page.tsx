@@ -1,5 +1,4 @@
 "use client";
-import ChatBox from "@/components/chatbox/ChatBox";
 import FriendRequests from "@/components/FriendRequests";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useGetFriendsList, useSocket } from "@/hooks";
@@ -41,14 +40,14 @@ const SideBarPage: React.FC = () => {
 
     const handleFriendOnline = ({ user_id }: { user_id: string }) => {
       const updated = friends.map((friend) =>
-        friend.user_id === user_id ? { ...friend, is_online: true } : friend,
+        friend.user_id === user_id ? { ...friend, is_online: true } : friend
       );
       setFriends(updated);
     };
 
     const handleFriendOffline = ({ user_id }: { user_id: string }) => {
       const updated = friends.map((friend) =>
-        friend.user_id === user_id ? { ...friend, is_online: false } : friend,
+        friend.user_id === user_id ? { ...friend, is_online: false } : friend
       );
       setFriends(updated);
     };
@@ -175,8 +174,6 @@ const SideBarPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      <ChatBox right={27} />
     </main>
   );
 };
