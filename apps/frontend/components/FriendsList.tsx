@@ -17,9 +17,12 @@ const FriendsList: React.FC<FriendsListProps> = ({ friends }) => {
   };
 
   return (
-    <div className="grid grid-cols-3 gap-1 md:gap-2 mt-2">
+    <div className="grid grid-cols-3 gap-1 md:gap-3 mt-2">
       {displayFriendsList.map((fl) => (
-        <div key={fl.user_id} className="flex flex-col md:gap-2 gap-1">
+        <div
+          key={fl.user_id}
+          className="flex flex-col md:gap-2 gap-1 p-2 rounded-lg shadow-sm hover:bg-gray-100 text-center"
+        >
           <div className="relative w-full pt-[100%] overflow-hidden rounded-md">
             <Image
               src={fl.avatar_url}
@@ -27,7 +30,7 @@ const FriendsList: React.FC<FriendsListProps> = ({ friends }) => {
               priority
               alt={fl.full_name}
               fill
-              className="object-cover select-none cursor-pointer"
+              className="object-cover select-none cursor-pointer flex-shrink-0"
             />
           </div>
 
