@@ -1,5 +1,4 @@
 "use client";
-import { useUploadImage } from "@/hooks";
 import { uploadUserImage } from "@/lib/api/uploads";
 import { getMe } from "@/lib/api/users";
 import { useUserStore } from "@/store";
@@ -23,7 +22,6 @@ export default function EditImageButton({
   const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const { mutate: mutateUploadImage } = useUploadImage();
   const [isLoaing, setIsLoading] = useState<boolean>(false);
   const { setUser, user } = useUserStore();
 
@@ -52,6 +50,8 @@ export default function EditImageButton({
   );
 
   const handleUpload = async () => {
+    console.log("Hello World!");
+
     if (!imageSrc || !croppedAreaPixels) return;
 
     const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
@@ -70,8 +70,6 @@ export default function EditImageButton({
           : UploadUserImageTypeEnum.COVER_PHOTO,
       file,
     };
-
-    mutateUploadImage(uploadUserImageDto);
 
     setIsLoading(true);
 

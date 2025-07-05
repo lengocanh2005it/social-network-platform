@@ -40,14 +40,14 @@ const SideBarPage: React.FC = () => {
 
     const handleFriendOnline = ({ user_id }: { user_id: string }) => {
       const updated = friends.map((friend) =>
-        friend.user_id === user_id ? { ...friend, is_online: true } : friend
+        friend.user_id === user_id ? { ...friend, is_online: true } : friend,
       );
       setFriends(updated);
     };
 
     const handleFriendOffline = ({ user_id }: { user_id: string }) => {
       const updated = friends.map((friend) =>
-        friend.user_id === user_id ? { ...friend, is_online: false } : friend
+        friend.user_id === user_id ? { ...friend, is_online: false } : friend,
       );
       setFriends(updated);
     };

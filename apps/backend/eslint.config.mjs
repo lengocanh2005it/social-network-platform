@@ -11,6 +11,7 @@ export default tseslint.config(
       'ecosystem.config.js',
       'scripts/build-all.js',
       'scripts/start-dev-all.js',
+      'scripts/watch-all.js',
     ],
   },
   eslint.configs.recommended,

@@ -31,12 +31,13 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   CommentsType,
   NotificationTypeEnum,
+  PhotoTypeEnum,
   PostPrivaciesEnum,
   PostsType,
   UsersType,
 } from '@repo/db';
 import { omit, pick } from 'lodash';
-import { firstValueFrom, lastValueFrom, timeout } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -238,13 +239,13 @@ export class PostsService implements OnModuleInit {
         contents.map((content) =>
           this.createPostRelation(
             this.prismaService.postContents,
-            newPost.id,
+            newPost,
             content,
           ),
         ),
       );
 
-    await this.createMediaOfPost(newPost.id, images, videos);
+    await this.createMediaOfPost(newPost, images, videos);
 
     if (tags?.length) await this.createPostTags(tags, newPost.id, user);
 
@@ -273,7 +274,7 @@ export class PostsService implements OnModuleInit {
     postId: string,
     updatePostDto: UpdatePostDto,
   ) => {
-    const { user } = await this.verifyModifyPost(email, postId);
+    const { user, post } = await this.verifyModifyPost(email, postId);
 
     const {
       images,
@@ -336,7 +337,7 @@ export class PostsService implements OnModuleInit {
       await this.createPostHashTags(hashtags, postId);
     }
 
-    await this.createMediaOfPost(postId, images, videos);
+    await this.createMediaOfPost(post, images, videos);
 
     if (deletedMediaDto?.length) {
       await Promise.all(
@@ -364,21 +365,21 @@ export class PostsService implements OnModuleInit {
   };
 
   private createMediaOfPost = async (
-    postId: string,
+    post: any,
     images?: CreatePostImageDto[],
     videos?: CreatePostVideoDto[],
   ) => {
     if (images?.length)
       await Promise.all(
         images.map((image) =>
-          this.createPostRelation(this.prismaService.postImages, postId, image),
+          this.createPostRelation(this.prismaService.postImages, post, image),
         ),
       );
 
     if (videos?.length)
       await Promise.all(
         videos.map((video) =>
-          this.createPostRelation(this.prismaService.postVideos, postId, video),
+          this.createPostRelation(this.prismaService.postVideos, post, video),
         ),
       );
   };
@@ -459,19 +460,39 @@ export class PostsService implements OnModuleInit {
     };
   };
 
-  private createPostRelation = async <T>(
+  private createPostRelation = async <T extends { id: string }>(
     model: { create: (args: { data: any }) => Promise<T> },
-    post_id: string,
+    post: any,
     dto: any,
   ): Promise<T> => {
-    return model.create({
+    const record = await model.create({
       data: {
         ...dto,
         post: {
-          connect: { id: post_id },
+          connect: { id: post.id },
         },
       },
     });
+
+    if (dto?.image_url?.trim() !== '') {
+      this.usersClient.emit(
+        'create-photo-of-user',
+        JSON.stringify({
+          createPhotoOfUserDto: {
+            url: dto?.image_url,
+            type: PhotoTypeEnum.POST,
+            metadata: {
+              post_image_id: record.id,
+              post_id: post.id,
+            },
+            privacy: post.privacy,
+          },
+          user_id: post.user_id,
+        }),
+      );
+    }
+
+    return record;
   };
 
   private createPostTags = async (
@@ -2012,7 +2033,7 @@ export class PostsService implements OnModuleInit {
         contents.map((content) =>
           this.createPostRelation(
             this.prismaService.postContents,
-            newPost.id,
+            newPost,
             content,
           ),
         ),

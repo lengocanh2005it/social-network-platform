@@ -1,33 +1,53 @@
+"use client";
 import ProfilePhotos from "@/components/ProfilePhotos";
+import { useGetPhotosOfUser } from "@/hooks";
+import { useUserStore } from "@/store";
+import { Photo } from "@/utils";
 import Link from "next/link";
+import React, { useEffect, useState } from "react";
 
-const images = [
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-  "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1743911620903-profile-2.png",
-];
+const ProfilePhotosSection: React.FC = () => {
+  const { viewedUser, user } = useUserStore();
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const { data, isLoading } = useGetPhotosOfUser(
+    (user?.id === viewedUser?.id ? user?.id : viewedUser?.id) ?? "",
+    {
+      username: viewedUser?.profile?.username ?? "",
+    },
+  );
 
-const ProfilePhotosSection = () => {
+  useEffect(() => {
+    if (data) {
+      setPhotos(data?.data);
+      setNextCursor(data?.nextCursor ?? null);
+    }
+  }, [data, setPhotos, setNextCursor]);
+
   return (
     <section className="w-full flex flex-col md:gap-2 gap-1">
       <div className="flex items-center justify-between">
         <h1 className="font-medium md:text-xl text-lg">Photos</h1>
 
-        <Link href={"/"} className="text-blue-700 hover:underline">
-          See all photos
-        </Link>
+        {!isLoading && nextCursor && (
+          <Link
+            href={
+              (viewedUser?.id === user?.id
+                ? `/profile/${user?.profile?.username}`
+                : `/profile/${viewedUser?.profile?.username}`) + "?tab=photos"
+            }
+            className="text-blue-700 hover:underline"
+          >
+            See all photos
+          </Link>
+        )}
       </div>
 
-      <ProfilePhotos images={images} />
+      <ProfilePhotos
+        photos={photos}
+        isLoading={isLoading}
+        nextCursor={nextCursor}
+      />
     </section>
   );
 };

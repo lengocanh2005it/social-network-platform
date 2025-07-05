@@ -6,6 +6,7 @@ import {
   GetFeedQueryDto,
   GetFriendRequestsQueryDto,
   GetFriendsListQueryDto,
+  GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   ResponseFriendRequestType,
   SearchUserQueryDto,
@@ -126,6 +127,19 @@ export const unblockUser = async (targetId: string) => {
 export const getUsers = async (searchUserQueryDto: SearchUserQueryDto) => {
   const response = await axios.get(`/users`, {
     params: searchUserQueryDto,
+  });
+
+  return response.data;
+};
+
+export const getPhotosOfUser = async (
+  getPhotosOfUserQueryDto: GetPhotosOfUserQueryDto,
+) => {
+  const response = await axios.get(`/users/photos`, {
+    params: getPhotosOfUserQueryDto,
+    paramsSerializer: {
+      indexes: null,
+    },
   });
 
   return response.data;

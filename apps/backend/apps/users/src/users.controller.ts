@@ -7,8 +7,10 @@ import {
 } from '@app/common/dtos/friends';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
+  CreatePhotoOfUserDto,
   CreateUserSessionDto,
   GetBlockedUsersListQueryDto,
+  GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
   UpdateUserProfileDto,
@@ -268,5 +270,22 @@ export class UsersController {
   @MessagePattern('get-users-by-full-name')
   async getUsersByFullName(@Payload('full_name') full_name: string) {
     return this.usersService.getUsersByFullName(full_name);
+  }
+
+  @EventPattern('create-photo-of-user')
+  async createPhotoOfUser(
+    @Payload('createPhotoOfUserDto') createPhotoOfUserDto: CreatePhotoOfUserDto,
+    @Payload('user_id') user_id: string,
+  ) {
+    return this.usersService.createPhotoOfUser(createPhotoOfUserDto, user_id);
+  }
+
+  @MessagePattern('get-photos-of-user')
+  async getPhotosOfUser(
+    @Payload('email') email: string,
+    @Payload('getPhotosOfUserQueryDto')
+    getPhotosOfUserQueryDto: GetPhotosOfUserQueryDto,
+  ) {
+    return this.usersService.getPhotosOfUser(email, getPhotosOfUserQueryDto);
   }
 }

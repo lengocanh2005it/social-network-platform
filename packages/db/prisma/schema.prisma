@@ -41,6 +41,7 @@ model Users {
   sessions              UserSessions[]
   socials               UserSocials[]
   work_places           UserWorkPlaces[]
+  photos                Photos[]
 }
 
 model UserProfiles {
@@ -400,6 +401,26 @@ model Messages {
   user           Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   used_as_last_message_for Conversations? @relation("ConversationLastMessage")
+}
+
+model Photos {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url        String        @db.Text
+  user_id    String        @db.Uuid
+  user       Users         @relation(fields: [user_id], references: [id])
+  type       PhotoType
+  metadata   Json?
+  privacy    PostPrivacies
+  created_at DateTime      @default(now())
+  updated_at DateTime      @default(now())
+  deleted_at DateTime?
+}
+
+enum PhotoType {
+  AVATAR
+  COVER
+  POST
+  STORY
 }
 
 enum Role {

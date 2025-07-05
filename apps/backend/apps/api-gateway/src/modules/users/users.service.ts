@@ -1,6 +1,7 @@
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   GetBlockedUsersListQueryDto,
+  GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
   UpdateUserProfileDto,
@@ -28,6 +29,7 @@ export class UsersService implements OnModuleInit {
       'get-blocked-users',
       'unblock-user',
       'get-users',
+      'get-photos-of-user',
     ];
 
     patterns.forEach((pattern) => {
@@ -107,6 +109,16 @@ export class UsersService implements OnModuleInit {
     return sendWithTimeout(this.userClient, 'get-users', {
       email,
       searchUserQueryDto: toPlain(searchUserQueryDto),
+    });
+  };
+
+  public getPhotosOfUser = async (
+    email: string,
+    getPhotosOfUserQueryDto: GetPhotosOfUserQueryDto,
+  ) => {
+    return sendWithTimeout(this.userClient, 'get-photos-of-user', {
+      email,
+      getPhotosOfUserQueryDto,
     });
   };
 }

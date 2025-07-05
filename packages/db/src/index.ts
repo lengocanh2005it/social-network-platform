@@ -1,8 +1,16 @@
 export { PrismaClient } from "@prisma/client";
 
 export type {
+  Comments as CommentsType,
+  ContentStoryType as ContentStoryType,
+  FriendShipStatus as FriendShipStatusType,
   Gender as GenderType,
+  Notifications as NotificationsType,
+  NotificationType,
+  PhotoType,
+  PostContentType as PostContentType,
   PostPrivacies as PostPrivaciesType,
+  Posts as PostsType,
   Role as RoleType,
   SessionStatus as SessionStatusType,
   UserDevices as UserDevicesType,
@@ -12,13 +20,6 @@ export type {
   UserSocials as UserSocialsType,
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
-  PostContentType as PostContentType,
-  FriendShipStatus as FriendShipStatusType,
-  Posts as PostsType,
-  Comments as CommentsType,
-  ContentStoryType as ContentStoryType,
-  NotificationType,
-  Notifications as NotificationsType,
 } from "@prisma/client";
 
 import type { Prisma } from "@prisma/client";
@@ -26,13 +27,14 @@ import type { Prisma } from "@prisma/client";
 export type { Prisma };
 
 export {
+  ContentStoryType as ContentStoryTypeEnum,
+  FriendShipStatus as FriendShipEnum,
   Gender as GenderEnum,
+  NotificationType as NotificationTypeEnum,
   OAuthProvider as OAuthProviderEnum,
+  PhotoType as PhotoTypeEnum,
+  PostContentType as PostContentTypeEnum,
   PostPrivacies as PostPrivaciesEnum,
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
-  PostContentType as PostContentTypeEnum,
-  FriendShipStatus as FriendShipEnum,
-  ContentStoryType as ContentStoryTypeEnum,
-  NotificationType as NotificationTypeEnum,
 } from "@prisma/client";

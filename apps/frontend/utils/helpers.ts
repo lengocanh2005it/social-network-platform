@@ -222,3 +222,7 @@ export function formatDateTimeFacebookStyle(date: Date | string): string {
 
   return sameYear ? format(d, "d MMM") : format(d, "d MMM yyyy");
 }
+
+export function capitalize(s: string) {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+}

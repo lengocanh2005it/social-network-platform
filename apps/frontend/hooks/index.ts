@@ -29,6 +29,7 @@ export * from "./useGetMe";
 export * from "./useGetMediaOfPost";
 export * from "./useGetMessagesOfConversation";
 export * from "./useGetNotifications";
+export * from "./useGetPhotosOfUser";
 export * from "./useGetPostLikes";
 export * from "./useGetPostOfUser";
 export * from "./useGetPosts";
