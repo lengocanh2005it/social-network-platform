@@ -91,7 +91,7 @@ const ProfileHeaderSection = () => {
       {
         key: 1,
         label: "Posts",
-        href: `/profile/${isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
+        href: `/profile/${!isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}`,
       },
       {
         key: 2,
@@ -101,12 +101,12 @@ const ProfileHeaderSection = () => {
       {
         key: 3,
         label: "Friends",
-        href: `/profile/${isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
+        href: `/profile/${!isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=friends`,
       },
       {
         key: 4,
         label: "Photos",
-        href: "/",
+        href: `/profile/${!isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=photos`,
       },
       {
         key: 5,

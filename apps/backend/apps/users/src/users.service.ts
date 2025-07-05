@@ -8,8 +8,10 @@ import {
 import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
+  CreatePhotoOfUserDto,
   CreateUserSessionDto,
   GetBlockedUsersListQueryDto,
+  GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
   UpdateEducationsDto,
@@ -22,6 +24,8 @@ import {
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import {
+  decodeCursor,
+  encodeCursor,
   fieldDisplayMap,
   FriendListType,
   generateNotificationMessage,
@@ -40,10 +44,11 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   FriendShipEnum,
   NotificationTypeEnum,
+  PhotoTypeEnum,
+  PostPrivaciesEnum,
   SessionStatusEnum,
 } from '@repo/db';
 import { omit } from 'lodash';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -745,6 +750,17 @@ export class UsersService implements OnModuleInit {
             }),
       },
     });
+
+    console.log('Hello World!');
+
+    await this.createPhotoOfUser(
+      {
+        url: fileUrl,
+        type: PhotoTypeEnum.AVATAR,
+        privacy: PostPrivaciesEnum.public,
+      },
+      user_id,
+    );
   };
 
   public getMyFeed = async (
@@ -2117,5 +2133,126 @@ export class UsersService implements OnModuleInit {
     });
 
     return userProfiles;
+  };
+
+  public createPhotoOfUser = async (
+    createPhotoOfUserDto: CreatePhotoOfUserDto,
+    user_id: string,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        id: user_id,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `User with id '${user_id} not found.'`,
+      });
+
+    await this.prismaService.photos.create({
+      data: {
+        ...createPhotoOfUserDto,
+        user: {
+          connect: {
+            id: user_id,
+          },
+        },
+      },
+    });
+  };
+
+  public getPhotosOfUser = async (
+    email: string,
+    getPhotosOfUserQueryDto: GetPhotosOfUserQueryDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Your email has not been registered.`,
+      });
+
+    const { username } = getPhotosOfUserQueryDto;
+
+    const findUser = await this.prismaService.userProfiles.findUnique({
+      where: {
+        username,
+      },
+    });
+
+    if (!findUser)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `User with username '${username}' not found.`,
+      });
+
+    const limit = getPhotosOfUserQueryDto?.limit ?? 10;
+
+    const decodedCursor = getPhotosOfUserQueryDto?.after
+      ? decodeCursor(getPhotosOfUserQueryDto.after)
+      : null;
+
+    const isOwner = findUser.user_id === user.id;
+
+    const isFriend = await this.handleCheckFriendship(user.id, findUser.id);
+
+    let privacyFilter: { privacy: { in: PostPrivaciesEnum[] } } | undefined;
+
+    if (!isOwner) {
+      privacyFilter = {
+        privacy: {
+          in: isFriend
+            ? [PostPrivaciesEnum.public, PostPrivaciesEnum.only_friend]
+            : [PostPrivaciesEnum.public],
+        },
+      };
+    }
+
+    const photos = await this.prismaService.photos.findMany({
+      where: {
+        user_id: findUser.user_id,
+        deleted_at: null,
+        ...(privacyFilter ?? {}),
+      },
+      take: limit + 1,
+      orderBy: [
+        {
+          created_at: 'desc',
+        },
+        {
+          user_id: 'desc',
+        },
+      ],
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = photos.length > limit;
+
+    const items = hasNextPage ? photos.slice(0, -1) : photos;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({
+          id: items[items.length - 1].id,
+          created_at: items[items.length - 1].created_at,
+        })
+      : null;
+
+    return {
+      data: items,
+      nextCursor,
+    };
   };
 }

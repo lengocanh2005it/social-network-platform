@@ -2,6 +2,7 @@
 import LoadingComponent from "@/components/loading/LoadingComponent";
 import HomeNav from "@/components/nav/HomeNav";
 import FriendsTab from "@/components/tabs/FriendsTab";
+import PhotosTab from "@/components/tabs/PhotosTab";
 import { useGetProfile } from "@/hooks";
 import { useUserStore } from "@/store";
 import { Button } from "@heroui/react";
@@ -106,7 +107,7 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
             </div>
 
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 px-4 mt-4">
-              {tab !== "friends" ? (
+              {tab === null && (
                 <>
                   <div className="w-full md:w-1/3 flex flex-col gap-4">
                     <div className="bg-white rounded-lg shadow p-4">
@@ -122,9 +123,9 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
 
                   <div className="w-full md:w-2/3">{posts}</div>
                 </>
-              ) : (
-                <FriendsTab />
               )}
+              {tab === "photos" && <PhotosTab />}
+              {tab == "friends" && <FriendsTab />}
             </div>
           </section>
         </main>

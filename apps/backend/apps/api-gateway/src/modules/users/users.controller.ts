@@ -1,6 +1,7 @@
 import { GetPostQueryDto } from '@app/common/dtos/posts';
 import {
   GetBlockedUsersListQueryDto,
+  GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
   UpdateUserProfileDto,
@@ -166,5 +167,21 @@ export class UsersController {
       );
 
     return this.usersService.getUsers(email, searchUserQueryDto);
+  }
+
+  @Get('photos')
+  async getPhotosOfUser(
+    @KeycloakUser() user: any,
+    @Query() getPhotosOfUserQueryDto: GetPhotosOfUserQueryDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.getPhotosOfUser(email, getPhotosOfUserQueryDto);
   }
 }

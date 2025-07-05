@@ -8,7 +8,12 @@ import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import { generateNotificationMessage } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { NotificationTypeEnum, UsersType } from '@repo/db';
+import {
+  NotificationTypeEnum,
+  PhotoTypeEnum,
+  PostPrivaciesEnum,
+  UsersType,
+} from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 
@@ -145,6 +150,20 @@ export class StoriesService implements OnModuleInit {
       },
     });
 
+    if (content_url?.trim()) {
+      this.usersClient.emit('create-photo-of-user', {
+        createPhotoOfUserDto: {
+          url: content_url,
+          type: PhotoTypeEnum.STORY,
+          metadata: {
+            story_id: newStory.id,
+          },
+          privacy: PostPrivaciesEnum.public,
+        },
+        user_id: user.id,
+      });
+    }
+
     const friendIds = await firstValueFrom<string[]>(
       this.usersClient.send('get-friends', {
         email,
@@ -203,19 +222,21 @@ export class StoriesService implements OnModuleInit {
         message: 'The story you are looking for could not be found.',
       });
 
-    await this.prismaService.storyViews.upsert({
-      where: {
-        story_id_viewer_id: {
+    if (new Date(story.expires_at).getTime() >= new Date().getTime()) {
+      await this.prismaService.storyViews.upsert({
+        where: {
+          story_id_viewer_id: {
+            story_id: storyId,
+            viewer_id: user.id,
+          },
+        },
+        create: {
           story_id: storyId,
           viewer_id: user.id,
         },
-      },
-      create: {
-        story_id: storyId,
-        viewer_id: user.id,
-      },
-      update: {},
-    });
+        update: {},
+      });
+    }
 
     function encodeCursor(viewer_id: string, story_id: string): string {
       const cursorStr = `${viewer_id}::${story_id}`;

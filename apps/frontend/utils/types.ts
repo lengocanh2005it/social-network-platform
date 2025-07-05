@@ -10,7 +10,9 @@ import {
   FriendShipStatusType,
   GenderType,
   NotificationType,
+  PhotoTypeEnum,
   PostContentType,
+  PostPrivaciesEnum,
   PostPrivaciesType,
   UserEducationsType,
   UserWorkPlacesType,
@@ -667,4 +669,20 @@ export type ConversationDropdownType = {
   target_user: Friend;
   last_message_at: string;
   last_message: Message;
+};
+
+export type GetPhotosOfUserQueryDto = GetFeedQueryDto & {
+  username: string;
+};
+
+export type Photo = {
+  id: string;
+  url: string;
+  user_id: string;
+  type: PhotoTypeEnum;
+  metadata?: Record<string, any>;
+  privacy: PostPrivaciesEnum;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at?: Date;
 };
