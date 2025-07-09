@@ -144,3 +144,9 @@ export const getPhotosOfUser = async (
 
   return response.data;
 };
+
+export const deleteMyAccount = async () => {
+  const response = await axios.delete("/users/me");
+
+  return response.data;
+};

@@ -10,6 +10,7 @@ export * from "./useCreateStory";
 export * from "./useDeleteComment";
 export * from "./useDeleteFriendRequest";
 export * from "./useDeleteMessage";
+export * from "./useDeleteMyAccount";
 export * from "./useDeleteNotification";
 export * from "./useDeletePost";
 export * from "./useDeleteStory";

@@ -176,6 +176,11 @@ export class PostsService implements OnModuleInit {
         tags: { include: { user: true } },
         contents: true,
         hashtags: { include: { hashtag: true } },
+        _count: {
+          select: {
+            tags: true,
+          },
+        },
       },
     });
 
@@ -648,6 +653,11 @@ export class PostsService implements OnModuleInit {
         tags: { include: { user: true } },
         contents: true,
         hashtags: { include: { hashtag: true } },
+        _count: {
+          select: {
+            tags: true,
+          },
+        },
       },
     });
 

@@ -17,10 +17,14 @@ import {
   ParseUUIDPipe,
   Patch,
   Query,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { RoleEnum } from '@repo/db';
 import { KeycloakUser, Roles } from 'nest-keycloak-connect';
 import { UsersService } from './users.service';
+import { Request, Response } from 'express';
+import { clearCookies } from '@app/common/utils';
 
 @Controller('users')
 export class UsersController {
@@ -183,5 +187,30 @@ export class UsersController {
       );
 
     return this.usersService.getPhotosOfUser(email, getPhotosOfUserQueryDto);
+  }
+
+  @Delete('me')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async deleteMyAccount(
+    @KeycloakUser() user: any,
+    @Res({
+      passthrough: true,
+    })
+    res: Response,
+    @Req() req: Request,
+  ) {
+    const refreshToken: string = req.cookies?.refresh_token;
+
+    clearCookies(res);
+
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.deleteMyAccount(email, refreshToken);
   }
 }

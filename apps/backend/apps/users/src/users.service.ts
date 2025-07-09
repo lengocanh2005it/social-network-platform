@@ -23,6 +23,7 @@ import {
   UploadUserImageQueryDto,
 } from '@app/common/dtos/users';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
+import { InfisicalProvider, KeycloakProvider } from '@app/common/providers';
 import {
   decodeCursor,
   encodeCursor,
@@ -57,6 +58,8 @@ export class UsersService implements OnModuleInit {
     @Inject('POSTS_SERVICE') private readonly postsClient: ClientKafka,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    private readonly keycloakProvider: KeycloakProvider,
+    private readonly infisicalProvider: InfisicalProvider,
   ) {}
 
   onModuleInit() {
@@ -2253,6 +2256,45 @@ export class UsersService implements OnModuleInit {
     return {
       data: items,
       nextCursor,
+    };
+  };
+
+  public deleteMyAccount = async (email: string, refreshToken: string) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Your email has not been registered.`,
+      });
+
+    const secret = await this.infisicalProvider.getSecret(
+      `TOTP_SECRET_${email}`,
+    );
+
+    if (!secret)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `We couldn't find your 2FA setup. Please try setting it up again.`,
+      });
+
+    await this.infisicalProvider.deleteSecret(`TOTP_SECRET_${email}`);
+
+    await this.prismaService.users.delete({
+      where: {
+        email,
+      },
+    });
+
+    await this.keycloakProvider.revokeToken(refreshToken, 'refresh_token');
+
+    return {
+      success: true,
+      message: 'Account deleted successfully',
     };
   };
 }
