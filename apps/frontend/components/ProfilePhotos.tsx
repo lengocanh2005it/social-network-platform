@@ -38,7 +38,7 @@ const ProfilePhotos: React.FC<ProfilePhotosProps> = ({ photos, isLoading }) => {
     ) {
       const res = await getPostOfUser(
         viewedUser?.profile?.username ?? "",
-        photo?.metadata.post_id
+        photo?.metadata.post_id,
       );
 
       if (res) setPost(res);

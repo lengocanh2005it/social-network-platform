@@ -12,8 +12,10 @@ import { toast } from "react-hot-toast";
 
 export default function EditImageButton({
   type,
+  classNames,
 }: {
   type: "avatar" | "cover_photo";
+  classNames?: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -108,8 +110,8 @@ export default function EditImageButton({
           <Button
             isIconOnly
             onPress={() => fileInputRef.current?.click()}
-            className="absolute bottom-3 right-3 bg-gray-400 text-white 
-          p-2 rounded-full hover:bg-gray-500 transition"
+            className={`absolute bottom-3 right-3 bg-gray-400 text-white 
+          p-2 rounded-full hover:bg-gray-500 transition ${classNames}`}
           >
             <CameraIcon />
           </Button>

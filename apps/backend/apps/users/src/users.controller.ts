@@ -288,4 +288,12 @@ export class UsersController {
   ) {
     return this.usersService.getPhotosOfUser(email, getPhotosOfUserQueryDto);
   }
+
+  @MessagePattern('delete-my-account')
+  async deleteMyAccount(
+    @Payload('email') email: string,
+    @Payload('refreshToken') refreshToken: string,
+  ) {
+    return this.usersService.deleteMyAccount(email, refreshToken);
+  }
 }

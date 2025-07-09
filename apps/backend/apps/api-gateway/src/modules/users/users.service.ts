@@ -30,6 +30,7 @@ export class UsersService implements OnModuleInit {
       'unblock-user',
       'get-users',
       'get-photos-of-user',
+      'delete-my-account',
     ];
 
     patterns.forEach((pattern) => {
@@ -119,6 +120,13 @@ export class UsersService implements OnModuleInit {
     return sendWithTimeout(this.userClient, 'get-photos-of-user', {
       email,
       getPhotosOfUserQueryDto,
+    });
+  };
+
+  public deleteMyAccount = async (email: string, refreshToken: string) => {
+    return sendWithTimeout(this.userClient, 'delete-my-account', {
+      email,
+      refreshToken,
     });
   };
 }

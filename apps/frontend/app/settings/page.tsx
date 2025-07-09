@@ -2,16 +2,12 @@
 import BlockedUsersSettings from "@/components/settings/BlockedUsersSettings";
 import DeleteAccountSettings from "@/components/settings/DeleteAccountSettings";
 import GeneralSettings from "@/components/settings/GeneralSettings";
-import NotificationsSettings from "@/components/settings/NotificationsSettings";
-import PrivaciesSettings from "@/components/settings/PrivaciesSettings";
 import SecuritySettings from "@/components/settings/SecuritySettings";
 import { useState } from "react";
 
 const tabs = [
   { key: "general", label: "General" },
   { key: "security", label: "Security" },
-  { key: "privacy", label: "Privacy" },
-  { key: "notification", label: "Notification" },
   { key: "blocked", label: "Blocked Users" },
   { key: "data", label: "Account Deletion" },
 ];
@@ -50,8 +46,6 @@ export default function SettingsPage() {
 
         <div className="md:w-3/4 w-full">
           {activeTab === "general" && <GeneralSettings />}
-          {activeTab === "privacy" && <PrivaciesSettings />}
-          {activeTab === "notification" && <NotificationsSettings />}
           {activeTab === "security" && <SecuritySettings />}
           {activeTab === "blocked" && <BlockedUsersSettings />}
           {activeTab === "data" && <DeleteAccountSettings />}

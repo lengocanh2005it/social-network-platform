@@ -55,28 +55,33 @@ export const useVerify2Fa = () => {
       }
 
       if (action === Verify2FaActionEnum.SIGN_IN) {
-        if (data && data?.access_token && data?.refresh_token && data?.role) {
-          if (user?.profile) {
-            const response = await getMe({
-              includeProfile: true,
-              includeEducations: true,
-              includeWorkPlaces: true,
-              includeSocials: true,
-              username: user.profile.username,
-            });
+        console.log(data);
+        if (
+          data &&
+          data?.access_token &&
+          data?.refresh_token &&
+          data?.role &&
+          data?.username
+        ) {
+          const response = await getMe({
+            includeProfile: true,
+            includeEducations: true,
+            includeWorkPlaces: true,
+            includeSocials: true,
+            username: data.username,
+          });
 
-            if (response) setUser(response);
+          if (response) setUser(response);
 
-            if (data?.role === "user") {
-              router.push("/home");
-            } else if (data?.role === "admin") {
-              router.push("/home/dashboard");
-            }
-
-            toast.success("Successfully logged in!", {
-              position: "bottom-right",
-            });
+          if (data?.role === "user") {
+            router.push("/home");
+          } else if (data?.role === "admin") {
+            router.push("/home/dashboard");
           }
+
+          toast.success("Successfully logged in!", {
+            position: "bottom-right",
+          });
         }
       }
 
