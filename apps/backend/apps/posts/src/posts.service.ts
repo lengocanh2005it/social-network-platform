@@ -479,12 +479,12 @@ export class PostsService implements OnModuleInit {
       },
     });
 
-    if (dto?.image_url?.trim() !== '') {
+    if (dto?.image_url?.trim()) {
       this.usersClient.emit(
         'create-photo-of-user',
         JSON.stringify({
           createPhotoOfUserDto: {
-            url: dto?.image_url,
+            url: dto.image_url,
             type: PhotoTypeEnum.POST,
             metadata: {
               post_image_id: record.id,

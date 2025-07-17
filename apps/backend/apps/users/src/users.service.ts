@@ -754,8 +754,6 @@ export class UsersService implements OnModuleInit {
       },
     });
 
-    console.log('Hello World!');
-
     await this.createPhotoOfUser(
       {
         url: fileUrl,
