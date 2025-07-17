@@ -304,7 +304,7 @@ export async function sendWithTimeout<T = any>(
   client: ClientProxy,
   pattern: string,
   payload: any,
-  ms = 10000,
+  ms = 20000,
 ): Promise<T> {
   return firstValueFrom(
     client.send<T>(pattern, payload).pipe(
