@@ -55,7 +55,6 @@ export const useVerify2Fa = () => {
       }
 
       if (action === Verify2FaActionEnum.SIGN_IN) {
-        console.log(data);
         if (
           data &&
           data?.access_token &&

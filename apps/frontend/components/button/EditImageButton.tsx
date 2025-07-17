@@ -52,8 +52,6 @@ export default function EditImageButton({
   );
 
   const handleUpload = async () => {
-    console.log("Hello World!");
-
     if (!imageSrc || !croppedAreaPixels) return;
 
     const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
