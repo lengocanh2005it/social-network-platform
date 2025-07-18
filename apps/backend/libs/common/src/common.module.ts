@@ -3,6 +3,7 @@ import { JwtGuard, RoleGuard } from '@app/common/guards';
 import {
   LoggingInterceptor,
   PerformanceInterceptor,
+  RpcToHttpExceptionInterceptor,
 } from '@app/common/interceptors';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
@@ -25,6 +26,7 @@ import {
 } from 'nest-keycloak-connect';
 import { TwilioModule } from 'nestjs-twilio';
 import { CommonService } from './common.service';
+import { SentryModule } from '@sentry/nestjs/setup';
 
 @Global()
 @Module({
@@ -74,6 +76,7 @@ import { CommonService } from './common.service';
       }),
     }),
     PrometheusModule.register(),
+    SentryModule.forRoot(),
   ],
   providers: [
     CommonService,
@@ -87,6 +90,7 @@ import { CommonService } from './common.service';
     LoggingInterceptor,
     PerformanceInterceptor,
     ...MetricsProviders,
+    RpcToHttpExceptionInterceptor,
   ],
   exports: [
     ConfigModule,
@@ -108,6 +112,7 @@ import { CommonService } from './common.service';
     LoggingInterceptor,
     PerformanceInterceptor,
     ...MetricsProviders,
+    SentryModule,
   ],
 })
 export class CommonModule {}
