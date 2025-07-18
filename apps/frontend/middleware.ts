@@ -1,6 +1,6 @@
 import { generateUUID } from "@/utils";
 import axios from "axios";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
         `${request.nextUrl.origin}/api/generate-token`,
         {
           payload: generateUUID(),
-        },
+        }
       );
 
       if (!res.data?.token) {
@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
       }
 
       return NextResponse.redirect(
-        new URL(`/auth/not-found/?token=${res.data.token}`, request.url),
+        new URL(`/auth/not-found/?token=${res.data.token}`, request.url)
       );
     }
 
@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
   if (accessToken) {
     try {
-      const decoded: any = jwt.decode(accessToken);
+      const decoded = decodeJwt(accessToken);
 
       if (decoded && decoded.exp && Date.now() < decoded.exp * 1000)
         return NextResponse.next();
@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/profile")
   ) {
     const response = NextResponse.redirect(
-      new URL("/auth/sign-in", request.url),
+      new URL("/auth/sign-in", request.url)
     );
     response.cookies.set("access_token", "", { maxAge: 0 });
     response.cookies.set("refresh_token", "", { maxAge: 0 });

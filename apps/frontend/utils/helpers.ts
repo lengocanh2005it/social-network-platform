@@ -3,7 +3,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
 import { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose";
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -23,7 +23,7 @@ export const formatDateToString = (date: SimpleDate): string => {
 export const isValidJWT = (token: string | null) => {
   if (!token) return false;
 
-  const payload = jwt.decode(token);
+  const payload = decodeJwt(token);
 
   return !!payload;
 };
@@ -67,7 +67,7 @@ export function getCookie(name: string): string | undefined {
 export function setCookie(
   name: string,
   value: string,
-  options?: Cookies.CookieAttributes,
+  options?: Cookies.CookieAttributes
 ) {
   Cookies.set(name, value, options);
 }
@@ -78,7 +78,7 @@ export function removeCookie(name: string, options?: Cookies.CookieAttributes) {
 
 export function toZonedDate(
   value: Date | string | undefined,
-  timeZone: string = "UTC",
+  timeZone: string = "UTC"
 ): ZonedDateTime | undefined {
   if (!value) return undefined;
 
@@ -144,7 +144,7 @@ export function formatPhoneNumber(phoneNumber: string): string {
 
 export default async function getCroppedImg(
   imageSrc: string,
-  pixelCrop: any,
+  pixelCrop: any
 ): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
@@ -161,7 +161,7 @@ export default async function getCroppedImg(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height,
+    pixelCrop.height
   );
 
   return new Promise((resolve) => {
