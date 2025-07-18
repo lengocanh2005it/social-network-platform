@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  install-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: "yarn"
+
+      - name: Enable Corepack (Yarn v4+)
+        run: corepack enable
+
+      - name: Install dependencies (immutable)
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn turbo run lint --filter=...[HEAD^] --cache-dir=.turbo
+
+      - name: Type check
+        run: yarn turbo run check-types --filter=...[HEAD^] --cache-dir=.turbo
+
+      - name: Run tests
+        run: yarn turbo run test --filter=...[HEAD^] --cache-dir=.turbo
+
+      - name: Build
+        run: yarn turbo run build --filter=...[HEAD^] --cache-dir=.turbo

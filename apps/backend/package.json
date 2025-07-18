@@ -42,6 +42,7 @@
     "@prisma/client": "^6.12.0",
     "@sentry/nestjs": "^9.40.0",
     "@willsoto/nestjs-prometheus": "^6.0.2",
+    "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.49.1",
     "class-transformer": "^0.5.1",
