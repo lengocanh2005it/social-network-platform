@@ -1,4 +1,4 @@
-export { PrismaClient } from "../@generated/index.js";
+export { PrismaClient } from "../@generated/default.js";
 
 export type {
   Comments as CommentsType,
@@ -21,9 +21,9 @@ export type {
   UserSocials as UserSocialsType,
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
-} from "../@generated/index.js";
+} from "../@generated/default.js";
 
-export type { Prisma } from "../@generated/index.js";
+export type { Prisma } from "../@generated/default.js";
 
 export {
   ContentStoryType as ContentStoryTypeEnum,
@@ -36,4 +36,4 @@ export {
   PostPrivacies as PostPrivaciesEnum,
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
-} from "../@generated/index.js";
+} from "../@generated/default.js";

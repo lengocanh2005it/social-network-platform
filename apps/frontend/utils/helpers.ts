@@ -67,7 +67,7 @@ export function getCookie(name: string): string | undefined {
 export function setCookie(
   name: string,
   value: string,
-  options?: Cookies.CookieAttributes
+  options?: Cookies.CookieAttributes,
 ) {
   Cookies.set(name, value, options);
 }
@@ -78,7 +78,7 @@ export function removeCookie(name: string, options?: Cookies.CookieAttributes) {
 
 export function toZonedDate(
   value: Date | string | undefined,
-  timeZone: string = "UTC"
+  timeZone: string = "UTC",
 ): ZonedDateTime | undefined {
   if (!value) return undefined;
 
@@ -144,7 +144,7 @@ export function formatPhoneNumber(phoneNumber: string): string {
 
 export default async function getCroppedImg(
   imageSrc: string,
-  pixelCrop: any
+  pixelCrop: any,
 ): Promise<Blob> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement("canvas");
@@ -161,7 +161,7 @@ export default async function getCroppedImg(
     0,
     0,
     pixelCrop.width,
-    pixelCrop.height
+    pixelCrop.height,
   );
 
   return new Promise((resolve) => {

@@ -13549,8 +13549,8 @@ __metadata:
     eslint-config-next: "npm:^15.3.1"
     framer-motion: "npm:^12.7.4"
     html2canvas: "npm:^1.4.1"
+    jose: "npm:^6.0.12"
     js-cookie: "npm:^3.0.5"
-    jsonwebtoken: "npm:^9.0.2"
     lucide-react: "npm:^0.503.0"
     next: "npm:15.3.1"
     react: "npm:^19.1.0"
@@ -15575,6 +15575,13 @@ __metadata:
   version: 4.15.9
   resolution: "jose@npm:4.15.9"
   checksum: 10c0/4ed4ddf4a029db04bd167f2215f65d7245e4dc5f36d7ac3c0126aab38d66309a9e692f52df88975d99429e357e5fd8bab340ff20baab544d17684dd1d940a0f4
+  languageName: node
+  linkType: hard
+
+"jose@npm:^6.0.12":
+  version: 6.0.12
+  resolution: "jose@npm:6.0.12"
+  checksum: 10c0/e5ca51b078b2443f6ca671e14d72e0ffd21b760dac0d77cabd7af649a127376ec90665c8b25f34dd88bb31094915ee662daf76e0b33a025d28dbc2bc17413dec
   languageName: node
   linkType: hard
 
