@@ -43,7 +43,6 @@ yarn-error.log*
 *.pem
 
 next-env.d.ts
-apps/backend/scripts
 
 # prisma generated
 packages/db/@generated
