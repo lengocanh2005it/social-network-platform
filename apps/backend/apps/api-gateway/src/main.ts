@@ -1,11 +1,15 @@
+import { HttpExceptionFilter } from '@app/common/filters';
 import {
   LoggingInterceptor,
   PerformanceInterceptor,
+  RpcToHttpExceptionInterceptor,
 } from '@app/common/interceptors';
+import { KeycloakProvider } from '@app/common/providers';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
+import '../../../libs/common/src/configs/sentry.config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -21,10 +25,17 @@ async function bootstrap() {
   });
 
   const loggingInterceptor = app.get(LoggingInterceptor);
-  app.useGlobalInterceptors(loggingInterceptor);
-
   const performanceInterceptor = app.get(PerformanceInterceptor);
-  app.useGlobalInterceptors(performanceInterceptor);
+
+  app.useGlobalInterceptors(
+    loggingInterceptor,
+    performanceInterceptor,
+    new RpcToHttpExceptionInterceptor(),
+  );
+
+  const keycloakProvider = app.get(KeycloakProvider);
+
+  app.useGlobalFilters(new HttpExceptionFilter(keycloakProvider));
 
   app.useGlobalPipes(
     new ValidationPipe({

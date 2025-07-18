@@ -1,39 +1,29 @@
+import { createKafkaOptions } from '@app/common/configs';
+import { KafkaRpcExceptionFilter } from '@app/common/filters';
 import { generateKafkaServiceMap, KAFKA_SERVICES } from '@app/common/utils';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions } from '@nestjs/microservices';
+import '../../../libs/common/src/configs/sentry.config';
 import { EmailsModule } from './emails.module';
-import { Partitioners } from 'kafkajs';
 
 async function bootstrap() {
   const appContext = await NestFactory.createApplicationContext(EmailsModule);
 
   const configService = appContext.get(ConfigService);
 
-  const kafkaBrokers = configService
-    .get<string>('kafka.brokers', 'localhost:9092')
-    ?.split(',');
+  const serviceMap = generateKafkaServiceMap(KAFKA_SERVICES);
+
+  const { clientId, groupId } = serviceMap['AUTH_SERVICE'];
+
+  const kafkaOptions = createKafkaOptions(configService, clientId, groupId);
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     EmailsModule,
-    {
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          clientId:
-            generateKafkaServiceMap(KAFKA_SERVICES)['EMAILS_SERVICE'].clientId,
-          brokers: kafkaBrokers,
-        },
-        consumer: {
-          groupId:
-            generateKafkaServiceMap(KAFKA_SERVICES)['EMAILS_SERVICE'].groupId,
-        },
-        producer: {
-          createPartitioner: Partitioners.LegacyPartitioner,
-        },
-      },
-    },
+    kafkaOptions,
   );
+
+  app.useGlobalFilters(new KafkaRpcExceptionFilter());
 
   await app.listen();
 }
