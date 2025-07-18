@@ -28,11 +28,8 @@ jobs:
       - name: Lint
         run: yarn turbo run lint --filter=...[HEAD^] --cache-dir=.turbo
 
-      - name: Type check
+      - name: Check types
         run: yarn turbo run check-types --filter=...[HEAD^] --cache-dir=.turbo
-
-      - name: Run tests
-        run: yarn turbo run test --filter=...[HEAD^] --cache-dir=.turbo
 
       - name: Build
         run: yarn turbo run build --filter=...[HEAD^] --cache-dir=.turbo

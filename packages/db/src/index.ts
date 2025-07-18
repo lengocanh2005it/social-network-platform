@@ -20,11 +20,10 @@ export type {
   UserSocials as UserSocialsType,
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
+  Photos as PhotosType,
 } from "@prisma/client";
 
-import type { Prisma } from "@prisma/client";
-
-export type { Prisma };
+export type { Prisma } from "@prisma/client";
 
 export {
   ContentStoryType as ContentStoryTypeEnum,

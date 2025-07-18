@@ -46,7 +46,7 @@ next-env.d.ts
 apps/backend/scripts
 
 # prisma generated
-packages/db/generated
+packages/db/@generated
 
 # data of prometheus
 apps/backend/data
