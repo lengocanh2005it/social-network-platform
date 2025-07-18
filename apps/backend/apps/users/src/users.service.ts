@@ -85,6 +85,8 @@ export class UsersService implements OnModuleInit {
         message: `This email has not been registered.`,
       });
 
+    type UserWithPosts = Awaited<ReturnType<typeof this.handleGetMe>>;
+
     await this.prismaService.users.update({
       where: {
         email,
@@ -1149,7 +1151,7 @@ export class UsersService implements OnModuleInit {
 
     let relationship: any;
 
-    let friendStatus: 'none' | FriendShipEnum = 'none';
+    let friendStatus: any = 'none';
 
     if (findUser.id !== user.id) {
       relationship = await this.getFriendRelationship(
@@ -1180,10 +1182,7 @@ export class UsersService implements OnModuleInit {
       };
   };
 
-  public getFriendRelationship = async (
-    initiator_id: string,
-    target_id: string,
-  ) => {
+  public getFriendRelationship = (initiator_id: string, target_id: string) => {
     return this.prismaService.friends.findFirst({
       where: {
         OR: [

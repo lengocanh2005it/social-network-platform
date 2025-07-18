@@ -1,6 +1,6 @@
 import { generateUUID } from "@/utils";
 import axios from "axios";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
   if (accessToken) {
     try {
-      const decoded: any = jwt.decode(accessToken);
+      const decoded = decodeJwt(accessToken);
 
       if (decoded && decoded.exp && Date.now() < decoded.exp * 1000)
         return NextResponse.next();

@@ -2,8 +2,13 @@
 
 # Dependencies
 node_modules
-.pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # Local env files
 .env
@@ -38,10 +43,9 @@ yarn-error.log*
 *.pem
 
 next-env.d.ts
-apps/backend/scripts
 
 # prisma generated
-packages/db/generated
+packages/db/@generated
 
 # data of prometheus
 apps/backend/data

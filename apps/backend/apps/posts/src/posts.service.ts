@@ -29,7 +29,6 @@ import {
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
-  CommentsType,
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
@@ -1673,9 +1672,7 @@ export class PostsService implements OnModuleInit {
     return comment;
   };
 
-  private findRootParentComment = async (
-    commentId: string,
-  ): Promise<CommentsType | null> => {
+  private findRootParentComment = async (commentId: string) => {
     const comment = await this.getCommentById(commentId);
 
     if (!comment) return null;

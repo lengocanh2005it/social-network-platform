@@ -3,7 +3,7 @@ import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
 import { AxiosError } from "axios";
 import Cookies from "js-cookie";
-import jwt from "jsonwebtoken";
+import { decodeJwt } from "jose";
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -23,7 +23,7 @@ export const formatDateToString = (date: SimpleDate): string => {
 export const isValidJWT = (token: string | null) => {
   if (!token) return false;
 
-  const payload = jwt.decode(token);
+  const payload = decodeJwt(token);
 
   return !!payload;
 };
