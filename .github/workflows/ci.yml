@@ -35,5 +35,15 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Build project
-        run: yarn build
+      - name: Lint
+        run: yarn turbo run lint --filter=...[HEAD^] --cache-dir=.turbo
+
+      - name: Check types
+        run: yarn turbo run check-types --filter=...[HEAD^] --cache-dir=.turbo
+
+      - name: Generate Prisma Client
+        working-directory: packages/db
+        run: yarn prisma generate
+
+      - name: Build
+        run: yarn turbo run build --filter=...[HEAD^] --cache-dir=.turbo
