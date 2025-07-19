@@ -43,6 +43,7 @@ model Users {
   socials               UserSocials[]
   work_places           UserWorkPlaces[]
   photos                Photos[]
+  book_marks            BookMarks[]
 }
 
 model UserProfiles {
@@ -167,6 +168,7 @@ model Posts {
   user           Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   parent         Posts?         @relation("PostShares", fields: [parent_post_id], references: [id])
   shares         Posts[]        @relation("PostShares")
+  book_marks     BookMarks[]
 }
 
 model PostLikes {
@@ -415,6 +417,18 @@ model Photos {
   created_at DateTime      @default(now())
   updated_at DateTime      @default(now())
   deleted_at DateTime?
+}
+
+model BookMarks {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id  String   @db.Uuid
+  post_id  String   @db.Uuid
+  saved_at DateTime @default(now())
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, post_id])
 }
 
 enum PhotoType {

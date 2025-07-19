@@ -29,7 +29,7 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
             " " +
             parentPost.user.profile.last_name
           }
-          className="object-cover cursor-pointer select-none"
+          className="object-cover cursor-pointer select-none flex-shrink-0"
         />
 
         <div className="flex flex-col relative">

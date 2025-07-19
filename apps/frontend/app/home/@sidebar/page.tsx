@@ -78,7 +78,7 @@ const SideBarPage: React.FC = () => {
   }, [data, setFriends, setTotalFriends, clearOpenChats]);
 
   return (
-    <main className="flex flex-col md:gap-1 flex-1 h-full">
+    <main className="flex flex-col md:gap-1 flex-1">
       <FriendRequests />
 
       <Divider className="md:my-3 my-2" />

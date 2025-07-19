@@ -11,6 +11,7 @@ export interface PostDetails extends Post {
     data: TaggedUserType[];
     nextCursor?: string;
   };
+  markedByCurrentUser: boolean;
 }
 
 interface PostStore {
@@ -30,6 +31,7 @@ interface PostStore {
   hideHomePosts: (postId: string) => void;
   restoreHomePostAtIndex: (post: PostDetails, index: number) => void;
   getPostById: (postId: string) => PostDetails | undefined;
+  updateHomePost: (postId: string, update: Partial<PostDetails>) => void;
 }
 
 export const usePostStore = create<PostStore>((set, get) => ({
@@ -66,6 +68,12 @@ export const usePostStore = create<PostStore>((set, get) => ({
   updatePost: (postId, update) =>
     set((state) => ({
       posts: state.posts.map((post) =>
+        post.id === postId ? { ...post, ...update } : post,
+      ),
+    })),
+  updateHomePost: (postId, update) =>
+    set((state) => ({
+      homePosts: state.homePosts.map((post) =>
         post.id === postId ? { ...post, ...update } : post,
       ),
     })),

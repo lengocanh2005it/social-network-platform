@@ -1,4 +1,5 @@
 export * from "./appStore";
+export * from "./bookMarkStore";
 export * from "./commentStore";
 export * from "./conversationStore";
 export * from "./friendStore";

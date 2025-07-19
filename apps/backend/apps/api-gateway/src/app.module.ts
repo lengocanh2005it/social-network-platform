@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
+import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { FriendsModule } from './modules/friends/friends.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -32,6 +33,7 @@ import { PresenceGateway } from './presence.gateway';
     StoriesModule,
     NotificationsModule,
     SseModule,
+    BookmarksModule,
   ],
   providers: [
     PresenceGateway,
