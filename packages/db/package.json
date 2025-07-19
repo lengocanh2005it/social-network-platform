@@ -23,7 +23,8 @@
     "db:migrate:deploy": "npx prisma migrate deploy"
   },
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./@generated": "./@generated/index.js"
   },
   "devDependencies": {
     "@repo/typescript-config": "0.0.0",

@@ -323,12 +323,6 @@ export function toPlain<T>(dto: T): Record<string, any> {
   return instanceToPlain(dto);
 }
 
-const logDir = path.join(process.cwd(), 'apps', 'backend', 'logs');
-
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
-
 export const appLogger = createLogger({
   level: 'info',
   format: format.combine(
