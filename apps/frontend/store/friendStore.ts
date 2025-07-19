@@ -30,6 +30,7 @@ export const useFriendStore = create<FriendState>()(
 
       openChat: (friend) => {
         const { openChats, hiddenChats } = get();
+
         const isAlreadyOpen =
           openChats.some((c) => c.user_id === friend.user_id) ||
           hiddenChats.some((c) => c.user_id === friend.user_id);
@@ -39,7 +40,12 @@ export const useFriendStore = create<FriendState>()(
         if (openChats.length < MAX_VISIBLE_CHATBOX) {
           set({ openChats: [...openChats, friend] });
         } else {
-          set({ hiddenChats: [...hiddenChats, friend] });
+          const movedToHidden = openChats[0];
+          const remainingChats = openChats.slice(1);
+          set({
+            openChats: [...remainingChats, friend],
+            hiddenChats: [...hiddenChats, movedToHidden],
+          });
         }
       },
 
