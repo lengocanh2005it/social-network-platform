@@ -1,6 +1,7 @@
 "use client";
 import EditImageButton from "@/components/button/EditImageButton";
 import ChatBox from "@/components/chatbox/ChatBox";
+import CreateStoryModal from "@/components/modal/CreateStoryModal";
 import PeopleKnow from "@/components/PeopleKnow";
 import {
   useBlockUser,
@@ -83,9 +84,8 @@ const ProfileHeaderSection = () => {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab");
   const { openChat } = useFriendStore();
-
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const isCurrentUser = viewedUser?.id === user?.id;
-
   const headersOptions = useMemo(
     () => [
       {
@@ -118,8 +118,23 @@ const ProfileHeaderSection = () => {
         label: "Check-ins",
         href: "/",
       },
+      ...(viewedUser?.id === user?.id
+        ? [
+            {
+              key: 7,
+              label: "Bookmarks",
+              href: `/profile/${!isCurrentUser ? `${viewedUser?.profile.username}` : `${user?.profile.username}`}/?tab=bookmarks`,
+            },
+          ]
+        : []),
     ],
-    [user?.profile?.username, viewedUser?.profile?.username, isCurrentUser],
+    [
+      user?.profile?.username,
+      viewedUser?.profile?.username,
+      isCurrentUser,
+      user?.id,
+      viewedUser?.id,
+    ],
   );
 
   useEffect(() => {
@@ -455,6 +470,7 @@ const ProfileHeaderSection = () => {
                         startContent={<Plus className="focus:outline-none" />}
                         className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 
                       rounded-md text-sm"
+                        onPress={() => setIsOpen(true)}
                       >
                         Add to story
                       </Button>
@@ -732,6 +748,8 @@ const ProfileHeaderSection = () => {
       )}
 
       <ChatBox right={10} />
+
+      <CreateStoryModal isOpen={isOpen} setIsOpen={setIsOpen} />
     </>
   );
 };

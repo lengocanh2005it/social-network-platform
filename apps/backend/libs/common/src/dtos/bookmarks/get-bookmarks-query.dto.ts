@@ -12,4 +12,9 @@ export class GetBookMarksQueryDto {
   @IsString()
   @IsNotEmpty()
   readonly after?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  readonly before?: string;
 }

@@ -2,7 +2,6 @@
 import BookMarksList from "@/components/BookMarksList";
 import { useGetBookMarks } from "@/hooks";
 import { useBookMarkStore, useUserStore } from "@/store";
-import { BookMark } from "@/utils";
 import { Divider, User } from "@heroui/react";
 import {
   BadgeHelp,
@@ -15,41 +14,9 @@ import {
   Newspaper,
   Settings,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-const categories = [
-  {
-    key: 1,
-    icon: <Contact />,
-    content: "Friends",
-  },
-  {
-    key: 2,
-    icon: <BookmarkIcon />,
-    content: "Bookmarks",
-  },
-  {
-    key: 3,
-    icon: <MessagesSquare />,
-    content: "Messages",
-  },
-  {
-    key: 5,
-    icon: <Bell />,
-    content: "Notifications",
-  },
-  {
-    key: 6,
-    icon: <MapPinHouse />,
-    content: "Marketplace",
-  },
-  {
-    key: 7,
-    icon: <Newspaper />,
-    content: "Feed",
-  },
-];
 
 const settings = [
   { key: 1, icon: <Settings />, content: "Settings & Privacy" },
@@ -69,14 +36,46 @@ const MenuPage = () => {
   const router = useRouter();
   const { user } = useUserStore();
   const { data } = useGetBookMarks(user?.id ?? "", {});
-  const { addBookmark, bookmarks } = useBookMarkStore();
+  const { bookmarks, setBookMarks } = useBookMarkStore();
 
   useEffect(() => {
     if (data) {
-      if (data?.data?.length)
-        data?.data.forEach((d: BookMark) => addBookmark(d));
+      if (data?.data?.length) setBookMarks(data?.data);
     }
-  }, [data, addBookmark]);
+  }, [data, setBookMarks]);
+
+  const categories = [
+    {
+      key: 1,
+      icon: <Contact />,
+      content: "Friends",
+    },
+    {
+      key: 2,
+      icon: <BookmarkIcon />,
+      content: "Bookmarks",
+    },
+    {
+      key: 3,
+      icon: <MessagesSquare />,
+      content: "Messages",
+    },
+    {
+      key: 5,
+      icon: <Bell />,
+      content: "Notifications",
+    },
+    {
+      key: 6,
+      icon: <MapPinHouse />,
+      content: "Marketplace",
+    },
+    {
+      key: 7,
+      icon: <Newspaper />,
+      content: "Feed",
+    },
+  ];
 
   return (
     <main className="flex flex-col w-full justify-between h-full">
@@ -123,7 +122,16 @@ const MenuPage = () => {
       <section className="flex flex-col justify-between w-full">
         {bookmarks?.length !== 0 ? (
           <>
-            <h3 className="text-black/70 px-2 py-2">Your bookmarks</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-black/70 px-2 py-2">Your bookmarks</h3>
+
+              <Link
+                href={`/profile/${user?.profile?.username}/?tab=bookmarks`}
+                className="text-blue-600 hover:underline"
+              >
+                See details
+              </Link>
+            </div>
             <BookMarksList bookMarks={bookmarks} />
             <Divider className="md:my-3 my-2" />
           </>

@@ -2682,39 +2682,81 @@ export class PostsService implements OnModuleInit {
 
     const limit = getBookMarksQueryDto?.limit ?? 10;
 
-    const decodedCursor = getBookMarksQueryDto?.after
+    const decodedAfterCursor = getBookMarksQueryDto?.after
       ? decodeCursor(getBookMarksQueryDto.after)
       : null;
 
-    const bookmarks = await this.prismaService.bookMarks.findMany({
-      where: {
-        user_id: user.id,
-      },
-      orderBy: { saved_at: 'desc' },
-      take: limit + 1,
-      ...(decodedCursor && {
+    const decodedBeforeCursor = getBookMarksQueryDto?.before
+      ? decodeCursor(getBookMarksQueryDto.before)
+      : null;
+
+    let bookmarks: any[] = [];
+
+    if (decodedAfterCursor) {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'desc' },
+        take: limit + 1,
         cursor: {
-          id: decodedCursor.id,
-          saved_at: decodedCursor.saved_at,
+          id: decodedAfterCursor.id,
+          saved_at: decodedAfterCursor.saved_at,
         },
         skip: 1,
-      }),
-    });
+      });
+    } else if (decodedBeforeCursor) {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'asc' },
+        take: limit + 1,
+        cursor: {
+          id: decodedBeforeCursor.id,
+          saved_at: decodedBeforeCursor.saved_at,
+        },
+        skip: 1,
+      });
+
+      bookmarks = bookmarks.reverse();
+    } else {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'desc' },
+        take: limit + 1,
+      });
+    }
 
     const hasNextPage = bookmarks.length > limit;
-
     const items = hasNextPage ? bookmarks.slice(0, -1) : bookmarks;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({
+          id: items[items.length - 1].id,
+          saved_at: items[items.length - 1].saved_at,
+        })
+      : null;
+
+    const prevCursor =
+      items.length > 0
+        ? encodeCursor({
+            id: items[0].id,
+            saved_at: items[0].saved_at,
+          })
+        : null;
+
+    console.log('Next cursor: ', nextCursor);
+    console.log('Prev cursor: ', prevCursor);
 
     return {
       data: await Promise.all(
         items.map(async (item) => this.getFormattedBookMark(item.id, user.id)),
       ),
-      nextCursor: hasNextPage
-        ? encodeCursor({
-            id: items[items.length - 1].id,
-            saved_at: items[items.length - 1].saved_at,
-          })
-        : null,
+      nextCursor,
+      prevCursor,
     };
   };
 

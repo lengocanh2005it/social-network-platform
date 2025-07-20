@@ -291,7 +291,14 @@ export class PostsController {
     @Payload('getBookMarksQueryDto')
     getBookMarksQueryDto: GetBookMarksQueryDto,
   ) {
-    return this.postsService.getBookmarks(email, getBookMarksQueryDto);
+    const response = await this.postsService.getBookmarks(
+      email,
+      getBookMarksQueryDto,
+    );
+
+    console.log('Response: ', response);
+
+    return response;
   }
 
   @MessagePattern('delete-bookmarks')

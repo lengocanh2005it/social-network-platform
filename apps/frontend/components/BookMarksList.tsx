@@ -1,6 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BookMark } from "@/utils";
-import { Avatar } from "@heroui/react";
+import { Avatar, Tooltip } from "@heroui/react";
+import { format } from "date-fns";
 import {
   BookmarkIcon,
   ClockIcon,
@@ -8,6 +9,7 @@ import {
   MessageSquareIcon,
   Share2Icon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface BookMarksListProps {
@@ -15,12 +17,21 @@ interface BookMarksListProps {
 }
 
 const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
+  const router = useRouter();
+
+  const handleViewPostDetails = (bookMark: BookMark) => {
+    router.push(
+      `/${bookMark.post.user.profile.username}/posts/${bookMark.post.id}`,
+    );
+  };
+
   return (
     <ScrollArea className="h-[350px] w-full">
       {bookMarks.map((bookmark) => (
         <div
           key={bookmark.id}
           className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-100"
+          onClick={() => handleViewPostDetails(bookmark)}
         >
           <div className="flex items-center gap-3 mb-3">
             <Avatar
@@ -35,7 +46,7 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
               </p>
               <p className="text-xs text-gray-500 flex items-center gap-1">
                 <ClockIcon className="w-3 h-3" />
-                {new Date(bookmark.saved_at).toLocaleDateString()}
+                {format(new Date(bookmark.post.created_at), "dd/MM/yyyy")}
               </p>
             </div>
           </div>
@@ -60,7 +71,7 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
             <img
               src={bookmark.post.images[0].image_url}
               alt="Post content"
-              className="w-full h-40 object-cover rounded-md mb-3"
+              className="w-full h-40 object-cover rounded-md mb-3 flex-shrink-0 select-none"
             />
           )}
 
@@ -81,10 +92,14 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-yellow-500">
-                <BookmarkIcon className="w-4 h-4 fill-current" />
-              </span>
-              <span className="text-xs">Saved</span>
+              <Tooltip
+                content={`Saved at ${format(bookmark.saved_at, "dd/MM/yyyy HH:mm:ss")}`}
+                delay={2000}
+              >
+                <span className="text-yellow-500">
+                  <BookmarkIcon className="w-4 h-4 fill-current" />
+                </span>
+              </Tooltip>
             </div>
           </div>
         </div>
