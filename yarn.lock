@@ -8846,7 +8846,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/qs@npm:*":
+"@types/qs@npm:*, @types/qs@npm:^6":
   version: 6.14.0
   resolution: "@types/qs@npm:6.14.0"
   checksum: 10c0/5b3036df6e507483869cdb3858201b2e0b64b4793dc4974f188caa5b5732f2333ab9db45c08157975054d3b070788b35088b4bc60257ae263885016ee2131310
@@ -13538,6 +13538,7 @@ __metadata:
     "@types/cookie": "npm:^1.0.0"
     "@types/js-cookie": "npm:^3.0.6"
     "@types/node": "npm:^20"
+    "@types/qs": "npm:^6"
     "@types/react": "npm:^19"
     "@types/react-dom": "npm:^19"
     axios: "npm:^1.8.4"
@@ -13553,6 +13554,7 @@ __metadata:
     js-cookie: "npm:^3.0.5"
     lucide-react: "npm:^0.503.0"
     next: "npm:15.3.1"
+    qs: "npm:^6.14.0"
     react: "npm:^19.1.0"
     react-dom: "npm:^19.1.0"
     react-easy-crop: "npm:^5.4.1"

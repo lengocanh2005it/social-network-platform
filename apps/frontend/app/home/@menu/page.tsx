@@ -1,33 +1,22 @@
 "use client";
-import { useUserStore } from "@/store";
-import { Divider, ScrollShadow, User } from "@heroui/react";
+import BookMarksList from "@/components/BookMarksList";
+import { useGetBookMarks } from "@/hooks";
+import { useBookMarkStore, useUserStore } from "@/store";
+import { Divider, User } from "@heroui/react";
 import {
   BadgeHelp,
+  Bell,
+  BookmarkIcon,
   Contact,
   LogOut,
   MapPinHouse,
+  MessagesSquare,
+  Newspaper,
   Settings,
-  UsersRound,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const categories = [
-  {
-    key: 1,
-    icon: <Contact />,
-    content: "Friends",
-  },
-  {
-    key: 2,
-    icon: <UsersRound />,
-    content: "Groups",
-  },
-  {
-    key: 3,
-    icon: <MapPinHouse />,
-    content: "Marketplace",
-  },
-];
+import { useEffect } from "react";
 
 const settings = [
   { key: 1, icon: <Settings />, content: "Settings & Privacy" },
@@ -46,9 +35,50 @@ const settings = [
 const MenuPage = () => {
   const router = useRouter();
   const { user } = useUserStore();
+  const { data } = useGetBookMarks(user?.id ?? "", {});
+  const { bookmarks, setBookMarks } = useBookMarkStore();
+
+  useEffect(() => {
+    if (data) {
+      if (data?.data?.length) setBookMarks(data?.data);
+    }
+  }, [data, setBookMarks]);
+
+  const categories = [
+    {
+      key: 1,
+      icon: <Contact />,
+      content: "Friends",
+    },
+    {
+      key: 2,
+      icon: <BookmarkIcon />,
+      content: "Bookmarks",
+    },
+    {
+      key: 3,
+      icon: <MessagesSquare />,
+      content: "Messages",
+    },
+    {
+      key: 5,
+      icon: <Bell />,
+      content: "Notifications",
+    },
+    {
+      key: 6,
+      icon: <MapPinHouse />,
+      content: "Marketplace",
+    },
+    {
+      key: 7,
+      icon: <Newspaper />,
+      content: "Feed",
+    },
+  ];
 
   return (
-    <main className="flex flex-col w-full justify-between">
+    <main className="flex flex-col w-full justify-between h-full">
       <section className="flex flex-col md:gap-4 gap-2 w-full">
         <div
           className="hover:bg-gray-200 flex items-center p-2 rounded-md
@@ -66,6 +96,8 @@ const MenuPage = () => {
             />
           )}
         </div>
+
+        <Divider />
 
         <div className="flex flex-col">
           <h3 className="text-black/70 px-2 py-2">Your shortcuts</h3>
@@ -87,56 +119,35 @@ const MenuPage = () => {
 
       <Divider className="md:my-3 my-2" />
 
-      <section className="flex flex-col justify-between">
-        <h3 className="text-black/70 px-2 py-2">Your groups</h3>
+      <section className="flex flex-col justify-between w-full">
+        {bookmarks?.length !== 0 ? (
+          <>
+            <div className="flex items-center justify-between">
+              <h3 className="text-black/70 px-2 py-2">Your bookmarks</h3>
 
-        <ScrollShadow
-          hideScrollBar
-          className="min-h-[350px] max-h-[400px]"
-          offset={0}
-          size={0}
-        >
-          {[
-            "NestJS Developer Community",
-            "Code Your Life as Developer",
-            "TOEIC Writing And Speaking Test",
-            "Fullstack Developer Intern",
-            "Next.js Developers Team",
-            "FPT Software Interships",
-            "Code Love Communities",
-            "Backend Developers Senior",
-            "Backend Developers Senior",
-            "Backend Developers Senior",
-            "Backend Developers Senior",
-          ].map((group, index) => (
-            <div
-              key={index}
-              className="flex items-center p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-            >
-              <div
-                className="w-8 h-8 min-w-[2rem] bg-blue-100 rounded-full mr-2 flex
-               items-center justify-center text-blue-500 select-none"
+              <Link
+                href={`/profile/${user?.profile?.username}/?tab=bookmarks`}
+                className="text-blue-600 hover:underline"
               >
-                {group.charAt(0)}
-              </div>
-
-              <span className="break-words text-sm leading-snug max-w-[calc(100%-2.5rem)]">
-                {group}
-              </span>
+                See details
+              </Link>
             </div>
-          ))}
-        </ScrollShadow>
-
-        <Divider className="md:my-3 my-2" />
+            <BookMarksList bookMarks={bookmarks} />
+            <Divider className="md:my-3 my-2" />
+          </>
+        ) : (
+          <></>
+        )}
 
         <div>
-          <h3 className="text-black/70 px-2 py-2">Others</h3>
+          <h3 className="text-black/70 px-2">Others</h3>
 
-          <div className="text-sm text-gray-500 px-2 py-2">
+          <div className="text-sm text-gray-500 py-2 flex flex-col gap-1">
             {settings.map((setting) => (
               <div
                 key={setting.key}
-                className="flex group items-center gap-1 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                className="flex group items-center gap-1 p-2 hover:bg-gray-100 
+                rounded-lg cursor-pointer"
               >
                 {setting.icon}
 

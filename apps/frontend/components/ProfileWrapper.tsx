@@ -1,6 +1,7 @@
 "use client";
 import LoadingComponent from "@/components/loading/LoadingComponent";
 import HomeNav from "@/components/nav/HomeNav";
+import BookMarksTab from "@/components/tabs/BookMarksTab";
 import FriendsTab from "@/components/tabs/FriendsTab";
 import PhotosTab from "@/components/tabs/PhotosTab";
 import { useGetProfile } from "@/hooks";
@@ -126,6 +127,7 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
               )}
               {tab === "photos" && <PhotosTab />}
               {tab == "friends" && <FriendsTab />}
+              {tab === "bookmarks" && <BookMarksTab />}
             </div>
           </section>
         </main>

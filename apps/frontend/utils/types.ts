@@ -1,3 +1,4 @@
+import { PostDetails } from "@/store";
 import {
   AuthMethod,
   CreateCommentTargetType,
@@ -15,6 +16,8 @@ import {
   PostPrivaciesEnum,
   PostPrivaciesType,
   UserEducationsType,
+  UserProfilesType,
+  UsersType,
   UserWorkPlacesType,
 } from "@repo/db";
 
@@ -685,4 +688,21 @@ export type Photo = {
   created_at: Date;
   updated_at: Date;
   deleted_at?: Date;
+};
+
+export type CreateBookMarkDto = {
+  postId: string;
+};
+
+export type GetBookMarksQueryDto = GetFeedQueryDto;
+
+export type DeleteBookMarksQueryDto = {
+  postIds: string[];
+};
+
+export type BookMark = {
+  id: string;
+  saved_at: string;
+  user: Omit<UsersType & { profile: UserProfilesType }, "password">;
+  post: PostDetails;
 };

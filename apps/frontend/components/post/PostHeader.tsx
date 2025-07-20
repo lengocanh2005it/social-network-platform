@@ -1,8 +1,14 @@
 "use client";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
-import { PostDetails, usePostStore, useUserStore } from "@/store";
-import { formatDateTime, HIDE_DURATION } from "@/utils";
+import { useCreateBookMark, useDeleteBookMarks } from "@/hooks";
+import {
+  PostDetails,
+  useBookMarkStore,
+  usePostStore,
+  useUserStore,
+} from "@/store";
+import { BookMark, formatDateTime, HIDE_DURATION } from "@/utils";
 import {
   Avatar,
   Dropdown,
@@ -11,6 +17,7 @@ import {
   DropdownTrigger,
 } from "@heroui/react";
 import {
+  BookmarkIcon,
   CircleX,
   Ellipsis,
   MessageSquareWarning,
@@ -30,9 +37,19 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   homePost,
   shouldHiddenXCloseIcon,
 }) => {
-  const { hideHomePosts, homePosts, restoreHomePostAtIndex } = usePostStore();
+  const {
+    hideHomePosts,
+    homePosts,
+    restoreHomePostAtIndex,
+    updatePost,
+    updateHomePost,
+  } = usePostStore();
   const { user } = useUserStore();
   const router = useRouter();
+  const { mutate: mutateCreateBookMark, isPending } = useCreateBookMark();
+  const { addBookmark, deleteBookmark } = useBookMarkStore();
+  const { mutate: mutateDeleteBookMarks, isPending: isDeletePending } =
+    useDeleteBookMarks();
 
   const viewProfileClick = (username: string) => {
     router.push(`/profile/${username}`);
@@ -85,6 +102,61 @@ const PostHeader: React.FC<PostHeaderProps> = ({
     );
   };
 
+  const handleToggleBookMark = () => {
+    if (!homePost.markedByCurrentUser) {
+      mutateCreateBookMark(
+        {
+          postId: homePost.id,
+        },
+        {
+          onSuccess: (data: BookMark) => {
+            addBookmark({
+              ...data,
+              post: homePost,
+            });
+            updatePost(homePost.id, {
+              markedByCurrentUser: true,
+            });
+            updateHomePost(homePost.id, {
+              markedByCurrentUser: true,
+            });
+            toast.success("This post has been added to your bookmarks.", {
+              position: "bottom-right",
+            });
+          },
+        },
+      );
+    } else {
+      mutateDeleteBookMarks(
+        {
+          postIds: [homePost.id],
+        },
+        {
+          onSuccess: (data: {
+            success: true;
+            message: string;
+            bookMarkIds: string[];
+          }) => {
+            if (data && data?.bookMarkIds?.length) {
+              data.bookMarkIds.forEach((bookMarkId) =>
+                deleteBookmark(bookMarkId),
+              );
+              updatePost(homePost.id, {
+                markedByCurrentUser: false,
+              });
+              updateHomePost(homePost.id, {
+                markedByCurrentUser: false,
+              });
+              toast.success("This post has been removed from your bookmarks.", {
+                position: "bottom-right",
+              });
+            }
+          },
+        },
+      );
+    }
+  };
+
   return (
     <div className="flex items-start justify-between">
       <div className="flex items-center mb-3 gap-2">
@@ -119,6 +191,14 @@ const PostHeader: React.FC<PostHeaderProps> = ({
 
       {user?.id !== homePost.user.id && (
         <div className="flex items-center md:gap-3 gap-2">
+          <BookmarkIcon
+            className={`cursor-pointer 
+    duration-250 ease-in-out 
+    ${isPending || isDeletePending ? "opacity-50 pointer-events-none select-none" : "opacity-70 hover:opacity-100"}
+    ${homePost.markedByCurrentUser ? "text-yellow-400 fill-yellow-400" : "text-gray-500 fill-none"}`}
+            onClick={handleToggleBookMark}
+          />
+
           <Dropdown
             placement="bottom-end"
             className="text-black"

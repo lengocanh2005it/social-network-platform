@@ -1,4 +1,9 @@
 import {
+  CreateBookMarkDto,
+  DeleteBookMarksQueryDto,
+  GetBookMarksQueryDto,
+} from '@app/common/dtos/bookmarks';
+import {
   CreateCommentDto,
   CreateCommentReplyDto,
   CreatePostDto,
@@ -270,5 +275,38 @@ export class PostsController {
       userId,
       getTaggedUsersQueryDto,
     );
+  }
+
+  @MessagePattern('create-bookmark')
+  async createBookmark(
+    @Payload('email') email: string,
+    @Payload('createBookMarkDto') createBookMarkDto: CreateBookMarkDto,
+  ) {
+    return this.postsService.createBookmark(email, createBookMarkDto);
+  }
+
+  @MessagePattern('get-bookmarks')
+  async getBookmarks(
+    @Payload('email') email: string,
+    @Payload('getBookMarksQueryDto')
+    getBookMarksQueryDto: GetBookMarksQueryDto,
+  ) {
+    const response = await this.postsService.getBookmarks(
+      email,
+      getBookMarksQueryDto,
+    );
+
+    console.log('Response: ', response);
+
+    return response;
+  }
+
+  @MessagePattern('delete-bookmarks')
+  async deleteBookMarks(
+    @Payload('email') email: string,
+    @Payload('deleteBookMarksQueryDto')
+    deleteBookMarksQueryDto: DeleteBookMarksQueryDto,
+  ) {
+    return this.postsService.deleteBookMarks(email, deleteBookMarksQueryDto);
   }
 }

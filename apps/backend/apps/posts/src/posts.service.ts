@@ -1,3 +1,8 @@
+import {
+  CreateBookMarkDto,
+  DeleteBookMarksQueryDto,
+  GetBookMarksQueryDto,
+} from '@app/common/dtos/bookmarks';
 import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import {
   CreateCommentDto,
@@ -605,6 +610,11 @@ export class PostsService implements OnModuleInit {
 
     const taggedUsersData = await this.getTaggedUsersOfPost(item.id, userId);
 
+    const markedByCurrentUser = await this.checkPostMarkedByUser(
+      item.id,
+      userId,
+    );
+
     const taggedUsers = {
       data: taggedUsersData?.data ?? [],
       nextCursor: taggedUsersData?.nextCursor ?? null,
@@ -636,6 +646,7 @@ export class PostsService implements OnModuleInit {
             userId,
           ),
         }),
+      markedByCurrentUser,
     };
   }
 
@@ -897,6 +908,19 @@ export class PostsService implements OnModuleInit {
     }
 
     return topUsers;
+  };
+
+  private checkPostMarkedByUser = async (postId: string, userId: string) => {
+    const bookmark = await this.prismaService.bookMarks.findUnique({
+      where: {
+        user_id_post_id: {
+          user_id: userId,
+          post_id: postId,
+        },
+      },
+    });
+
+    return Boolean(bookmark);
   };
 
   private checkUserLikePost = async (postId: string, userId: string) => {
@@ -2534,5 +2558,253 @@ export class PostsService implements OnModuleInit {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  public createBookmark = async (
+    email: string,
+    createBookMarkDto: CreateBookMarkDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const { postId } = createBookMarkDto;
+
+    const existingPost = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!existingPost)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Post not found.',
+      });
+
+    const bookmark = await this.prismaService.bookMarks.upsert({
+      where: {
+        user_id_post_id: {
+          user_id: user.id,
+          post_id: postId,
+        },
+      },
+      create: {
+        user_id: user.id,
+        post_id: postId,
+      },
+      update: {
+        saved_at: new Date(),
+      },
+    });
+
+    return this.getFormattedBookMark(bookmark.id, user.id);
+  };
+
+  public getFormattedBookMark = async (bookMarkId: string, userId: string) => {
+    const bookmark = await this.prismaService.bookMarks.findUnique({
+      where: {
+        id: bookMarkId,
+      },
+      include: {
+        post: {
+          include: {
+            user: {
+              include: {
+                profile: true,
+              },
+            },
+            images: true,
+            videos: true,
+            tags: { include: { user: true } },
+            contents: true,
+            hashtags: { include: { hashtag: true } },
+            _count: {
+              select: {
+                tags: true,
+              },
+            },
+          },
+        },
+        user: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+
+    if (!bookmark)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Book mark not found.`,
+      });
+
+    if (bookmark.user_id !== userId)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You can only access your own bookmarks.`,
+      });
+
+    return {
+      id: bookMarkId,
+      saved_at: bookmark.saved_at,
+      post: await this.transformPostItem(
+        bookmark.post,
+        userId,
+        bookmark.post?.parent_post_id
+          ? bookmark.post.parent_post_id
+          : undefined,
+      ),
+      user: omit(bookmark.user, ['password']),
+    };
+  };
+
+  public getBookmarks = async (
+    email: string,
+    getBookMarksQueryDto: GetBookMarksQueryDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const limit = getBookMarksQueryDto?.limit ?? 10;
+
+    const decodedAfterCursor = getBookMarksQueryDto?.after
+      ? decodeCursor(getBookMarksQueryDto.after)
+      : null;
+
+    const decodedBeforeCursor = getBookMarksQueryDto?.before
+      ? decodeCursor(getBookMarksQueryDto.before)
+      : null;
+
+    let bookmarks: any[] = [];
+
+    if (decodedAfterCursor) {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'desc' },
+        take: limit + 1,
+        cursor: {
+          id: decodedAfterCursor.id,
+          saved_at: decodedAfterCursor.saved_at,
+        },
+        skip: 1,
+      });
+    } else if (decodedBeforeCursor) {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'asc' },
+        take: limit + 1,
+        cursor: {
+          id: decodedBeforeCursor.id,
+          saved_at: decodedBeforeCursor.saved_at,
+        },
+        skip: 1,
+      });
+
+      bookmarks = bookmarks.reverse();
+    } else {
+      bookmarks = await this.prismaService.bookMarks.findMany({
+        where: {
+          user_id: user.id,
+        },
+        orderBy: { saved_at: 'desc' },
+        take: limit + 1,
+      });
+    }
+
+    const hasNextPage = bookmarks.length > limit;
+    const items = hasNextPage ? bookmarks.slice(0, -1) : bookmarks;
+
+    const nextCursor = hasNextPage
+      ? encodeCursor({
+          id: items[items.length - 1].id,
+          saved_at: items[items.length - 1].saved_at,
+        })
+      : null;
+
+    const prevCursor =
+      items.length > 0
+        ? encodeCursor({
+            id: items[0].id,
+            saved_at: items[0].saved_at,
+          })
+        : null;
+
+    console.log('Next cursor: ', nextCursor);
+    console.log('Prev cursor: ', prevCursor);
+
+    return {
+      data: await Promise.all(
+        items.map(async (item) => this.getFormattedBookMark(item.id, user.id)),
+      ),
+      nextCursor,
+      prevCursor,
+    };
+  };
+
+  public deleteBookMarks = async (
+    email: string,
+    deleteBookMarksQueryDto: DeleteBookMarksQueryDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const { postIds } = deleteBookMarksQueryDto;
+
+    const bookMarkIds: string[] = [];
+
+    await Promise.all(
+      postIds.map(async (postId) => {
+        const existingBookmark = await this.prismaService.bookMarks.findUnique({
+          where: {
+            user_id_post_id: {
+              user_id: user.id,
+              post_id: postId,
+            },
+          },
+        });
+
+        if (existingBookmark) {
+          await this.prismaService.bookMarks.delete({
+            where: {
+              id: existingBookmark.id,
+            },
+          });
+
+          bookMarkIds.push(existingBookmark.id);
+        }
+      }),
+    );
+
+    return {
+      success: true,
+      message: `Bookmark${postIds.length > 1 ? 's have' : ' has'} been deleted successfully.`,
+      bookMarkIds,
+    };
   };
 }
