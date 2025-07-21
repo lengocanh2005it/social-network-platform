@@ -17,7 +17,10 @@ export default function HomeLayout({
   sidebar: React.ReactNode;
 }) {
   return (
-    <main className="flex w-full flex-col min-h-screen bg-white text-black">
+    <main
+      className="flex w-full flex-col min-h-screen bg-white text-black 
+    dark:bg-black dark:text-white"
+    >
       <div className="h-16 fixed w-full z-[50]">
         <HomeNav shouldShowIndicator />
       </div>
@@ -25,16 +28,20 @@ export default function HomeLayout({
       <section className="relative w-full mt-24">
         <aside
           className="w-1/4 p-4 fixed top-20 left-0 bg-white z-10 
-            h-[calc(98vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out"
+            h-[calc(98vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out
+            dark:bg-black dark:text-white"
         >
           {menu}
         </aside>
 
-        <main className="ml-[25%] mr-[25%] p-4">{feed}</main>
+        <main className="ml-[25%] mr-[25%] p-4 dark:bg-black dark:text-white">
+          {feed}
+        </main>
 
         <aside
           className="w-1/4 p-4 fixed top-20 right-0 bg-white z-10 
-        h-[calc(98vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out"
+        h-[calc(98vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out
+        dark:bg-black dark:text-white"
         >
           {sidebar}
         </aside>

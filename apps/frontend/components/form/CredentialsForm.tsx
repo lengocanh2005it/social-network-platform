@@ -71,7 +71,7 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-black">Email</FormLabel>
+            <FormLabel className="text-black dark:text-white">Email</FormLabel>
             <FormControl>
               <Input
                 placeholder="johndoe01@gmail.com"
@@ -94,7 +94,9 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
         name="password"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-black">Password</FormLabel>
+            <FormLabel className="text-black dark:text-white">
+              Password
+            </FormLabel>
             <FormControl>
               <PasswordToggleInput
                 {...field}
@@ -109,7 +111,7 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
       <Button
         type="button"
         onPress={handleContinue}
-        className="w-fit mx-auto bg-primary text-white"
+        className="w-fit mx-auto bg-primary text-white dark:bg-white dark:text-black"
         endContent={<MoveRight />}
       >
         Continue
@@ -117,10 +119,11 @@ const CredentialsForm = ({ onValidSubmit, form }: CredentialsFormProps) => {
 
       <SocialsAuthForm method={AuthMethod.SIGN_UP} />
 
-      <div className="text-sm text-center text-black/60 select-none">
+      <div className="text-sm text-center text-black/60 dark:text-white/60 select-none">
         Have an account?{" "}
         <a
-          className="hover:text-blue-600 text-black hover:underline font-medium cursor-pointer"
+          className="hover:text-blue-600 text-black dark:text-white 
+          hover:underline font-medium cursor-pointer"
           onClick={handleSignIn}
         >
           Sign in

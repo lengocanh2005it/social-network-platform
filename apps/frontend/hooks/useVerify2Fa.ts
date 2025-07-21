@@ -1,8 +1,9 @@
 import { verify2Fa } from "@/lib/api/auth";
 import { getMe } from "@/lib/api/users";
-import { useAppStore, useUserStore } from "@/store";
+import { FullUserType, useAppStore, useUserStore } from "@/store";
 import { handleAxiosError, Verify2FaActionEnum } from "@/utils";
 import { useMutation } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -15,6 +16,7 @@ export const useVerify2Fa = () => {
   } = useAppStore();
   const { setUser, user } = useUserStore();
   const router = useRouter();
+  const { setTheme } = useTheme();
 
   return useMutation({
     mutationFn: verify2Fa,
@@ -77,6 +79,8 @@ export const useVerify2Fa = () => {
           } else if (data?.role === "admin") {
             router.push("/home/dashboard");
           }
+
+          if (response) setTheme((response as FullUserType).profile.theme);
 
           toast.success("Successfully logged in!", {
             position: "bottom-right",

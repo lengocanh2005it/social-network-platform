@@ -338,7 +338,10 @@ const ProfileHeaderSection = () => {
     <>
       {viewedUser && (
         <>
-          <div className="w-full h-full shadow pb-2 px-2 rounded-b-lg">
+          <div
+            className="w-full h-full shadow pb-2 px-2 rounded-b-lg dark:bg-black dark:text-white
+          dark:border dark:border-white/20"
+          >
             <PhotoProvider>
               <PhotoView
                 src={
@@ -348,7 +351,8 @@ const ProfileHeaderSection = () => {
                 }
               >
                 <div
-                  className="h-60 w-full bg-gray-300 relative rounded-b-md cursor-pointer"
+                  className="h-60 w-full bg-gray-300 dark:bg-black dark:text-white 
+                  relative rounded-b-md cursor-pointer"
                   style={{
                     backgroundImage: `url(${
                       !isCurrentUser
@@ -369,7 +373,7 @@ const ProfileHeaderSection = () => {
             </PhotoProvider>
 
             <div
-              className="absolute bottom-4 h-1 bg-blue-500 transition-all duration-200 
+              className="absolute bottom-4 h-1 bg-blue-500 dark:bg-blue-700 transition-all duration-200 
           ease-[cubic-bezier(0.4,0,0.2,1)]"
               style={{
                 left: `${indicatorStyle.left}px`,
@@ -400,7 +404,7 @@ const ProfileHeaderSection = () => {
                         height={180}
                         priority
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="rounded-full border-4 border-white object-cover 
+                        className="rounded-full border-4 border-white dark:border-black object-cover 
                     select-none cursor-pointer"
                       />
                     </PhotoView>
@@ -429,7 +433,7 @@ const ProfileHeaderSection = () => {
                       {isCurrentUser ? (
                         <>
                           {user?.profile?.nickname && (
-                            <p className="md:text-lg text-medium text-gray-600">
+                            <p className="md:text-lg text-medium text-gray-600 dark:text-white/70">
                               ({user?.profile?.nickname})
                             </p>
                           )}
@@ -437,7 +441,7 @@ const ProfileHeaderSection = () => {
                       ) : (
                         <>
                           {viewedUser.profile.nickname && (
-                            <p className="md:text-lg text-medium text-gray-600">
+                            <p className="md:text-lg text-medium text-gray-600 dark:text-white/70">
                               ({viewedUser.profile.nickname})
                             </p>
                           )}
@@ -448,7 +452,7 @@ const ProfileHeaderSection = () => {
                     {!isCurrentUser ? (
                       <>
                         {viewedUser?.total_friends > 0 && (
-                          <p className="text-gray-600">
+                          <p className="text-gray-600 dark:text-white/80">
                             {viewedUser?.total_friends} friends
                           </p>
                         )}
@@ -456,7 +460,7 @@ const ProfileHeaderSection = () => {
                     ) : (
                       <>
                         {user && user?.total_friends > 0 && (
-                          <p className="text-gray-600">
+                          <p className="text-gray-600 dark:text-white/80">
                             {user?.total_friends ?? 0} friends
                           </p>
                         )}
@@ -469,7 +473,7 @@ const ProfileHeaderSection = () => {
                       <Button
                         startContent={<Plus className="focus:outline-none" />}
                         className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 
-                      rounded-md text-sm"
+                      rounded-md text-sm dark:bg-blue-700 dark:text-white"
                         onPress={() => setIsOpen(true)}
                       >
                         Add to story
@@ -477,7 +481,8 @@ const ProfileHeaderSection = () => {
 
                       <Button
                         startContent={<Edit className="focus:outline-none" />}
-                        className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-md text-sm"
+                        className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-md text-sm
+                        dark:bg-white dark:text-black"
                         onPress={() => setIsModalEditProfileOpen(true)}
                       >
                         Edit Profile
@@ -504,7 +509,7 @@ const ProfileHeaderSection = () => {
                               {isPending ? (
                                 <Button
                                   className="bg-blue-500 hover:bg-blue-700 text-white 
-                                px-3 py-1 rounded-md text-sm"
+                                px-3 py-1 rounded-md text-sm dark:bg-blue-700 dark:hover:bg-blue-800"
                                   isLoading
                                 >
                                   Please wait...
@@ -513,7 +518,7 @@ const ProfileHeaderSection = () => {
                                 <Button
                                   startContent={<UserPlus />}
                                   className="bg-blue-500 hover:bg-blue-700 text-white 
-                                px-3 py-1 rounded-md text-sm"
+                                px-3 py-1 rounded-md text-sm dark:bg-blue-700 dark:hover:bg-blue-800"
                                   onPress={handleAddNewFriendClick}
                                 >
                                   Add new friend
@@ -543,7 +548,7 @@ const ProfileHeaderSection = () => {
                               <Button
                                 startContent={<MessagesSquare />}
                                 className="bg-blue-500 hover:bg-blue-700 text-white px-3 
-                                py-1 rounded-md text-sm"
+                                py-1 rounded-md text-sm dark:bg-blue-700 dark:hover:bg-blue-800"
                                 onPress={handleMessageClick}
                               >
                                 Message
@@ -566,7 +571,7 @@ const ProfileHeaderSection = () => {
                                   <Tooltip content="You have sent a friend request to this person.">
                                     <Button
                                       className="bg-blue-500 hover:bg-blue-700 text-white px-3 
-                                py-1 rounded-md text-sm"
+                                py-1 rounded-md text-sm dark:bg-blue-700 dark:hover:bg-blue-800"
                                       startContent={<X />}
                                       onPress={handleDeleteFriendRequest}
                                     >
@@ -599,8 +604,10 @@ const ProfileHeaderSection = () => {
 
                                 {open && (
                                   <div
-                                    className="absolute right-0 z-50 top-full mt-2 bg-white w-2/3 
-            overflow-hidden flex flex-col gap-1 transition-opacity duration-150 opacity-100"
+                                    className="absolute right-0 z-50 top-full mt-2 bg-white 
+                                    dark:bg-black dark:text-white
+                                     w-2/3 overflow-hidden flex flex-col gap-1 
+                                     transition-opacity duration-150 opacity-100"
                                   >
                                     <Button
                                       onPress={async () =>
@@ -635,15 +642,18 @@ const ProfileHeaderSection = () => {
 
                       <Dropdown
                         placement="bottom-end"
-                        className="text-black"
+                        className="text-black dark:text-white"
                         shouldBlockScroll={false}
                       >
                         <DropdownTrigger>
                           <Button
                             isIconOnly
-                            className="bg-transparent rounded-full"
+                            className="bg-transparent dark:bg-white/20 rounded-full"
                           >
-                            <ChevronDown className="text-gray-700 focus:outline-none" />
+                            <ChevronDown
+                              className="text-gray-700 dark:text-white/80 
+                            focus:outline-none"
+                            />
                           </Button>
                         </DropdownTrigger>
                         <DropdownMenu aria-label="" variant="flat">
@@ -663,7 +673,7 @@ const ProfileHeaderSection = () => {
 
               {isShowPeopleKnow && <PeopleKnow />}
 
-              <Divider />
+              <Divider className="dark:bg-white/40" />
 
               <div className="flex items-center md:gap-3 gap-2 justify-between">
                 <div className="flex items-center md:gap-3 gap-2">
@@ -680,7 +690,7 @@ const ProfileHeaderSection = () => {
                     >
                       <Link
                         href={option.href}
-                        className="px-4 py-3 font-medium text-gray-700"
+                        className="px-4 py-3 font-medium text-gray-700 dark:text-white/80"
                       >
                         {option.label}
                       </Link>
@@ -689,15 +699,18 @@ const ProfileHeaderSection = () => {
 
                   <Dropdown
                     placement="bottom-end"
-                    className="text-black"
+                    className="text-black dark:text-white"
                     shouldBlockScroll={false}
                   >
                     <DropdownTrigger>
                       <Button
                         endContent={
-                          <ChevronDown className="text-gray-700 focus:outline-none" />
+                          <ChevronDown
+                            className="text-gray-700 dark:text-white/80 
+                          focus:outline-none"
+                          />
                         }
-                        className="bg-transparent text-gray-700"
+                        className="bg-transparent text-gray-700 dark:text-white/80"
                       >
                         More
                       </Button>
@@ -712,12 +725,12 @@ const ProfileHeaderSection = () => {
 
                 <Dropdown
                   placement="bottom-end"
-                  className="text-black"
+                  className="text-black dark:text-white"
                   shouldBlockScroll={false}
                 >
                   <DropdownTrigger>
                     <Button isIconOnly className="bg-transparent">
-                      <Ellipsis className="text-gray-700 focus:outline-none" />
+                      <Ellipsis className="text-gray-700 dark:text-white/80 focus:outline-none" />
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu aria-label="" variant="flat">

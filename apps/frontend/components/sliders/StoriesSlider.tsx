@@ -199,17 +199,19 @@ export default function StorySlider() {
                   ></div>
 
                   <div
-                    className={`swiper-button-next !right-0 !text-black after:!text-2xl ${
-                      isEnd ? "!hidden" : ""
-                    }`}
+                    className={`swiper-button-next !right-0 !text-black dark:!text-white 
+                      after:!text-2xl ${isEnd ? "!hidden" : ""}`}
                   ></div>
                 </div>
               ) : (
                 <div
                   className="flex flex-col items-center justify-center 
-                h-30 bg-gray-100 rounded-2xl border border-black/10"
+                h-30 bg-gray-100 rounded-2xl border border-black/10
+                dark:bg-black dark:text-white dark:border dark:border-white/30"
                 >
-                  <p className="text-gray-500 text-sm mb-2">No stories yet</p>
+                  <p className="text-gray-500 dark:text-white/50 text-sm mb-2">
+                    No stories yet
+                  </p>
 
                   <button
                     onClick={() => setIsOpen(true)}

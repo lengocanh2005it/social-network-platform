@@ -1,18 +1,18 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const commonSettings = {
   ignore_watch: ['node_modules'],
   env: { NODE_ENV: 'development' },
   env_production: { NODE_ENV: 'production' },
 };
 
-const serviceNames = [
-  'auth',
-  'users',
-  'posts',
-  'conversations',
-  'stories',
-  'emails',
-  'redis',
-];
+const rawServices = process.env.SERVICE_NAMES || '';
+
+const serviceNames = rawServices
+  .split(',')
+  .map((name) => name.trim())
+  .filter(Boolean);
 
 const createApp = (name, script, watch, extraEnv = {}) => ({
   name,

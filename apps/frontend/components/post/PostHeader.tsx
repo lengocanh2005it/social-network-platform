@@ -181,7 +181,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
               homePost.user.profile.last_name}
           </h4>
           <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-white/80">
               {formatDateTime(homePost.created_at)}
             </span>
             <GlobalIcon width={20} height={20} />
@@ -195,13 +195,13 @@ const PostHeader: React.FC<PostHeaderProps> = ({
             className={`cursor-pointer 
     duration-250 ease-in-out 
     ${isPending || isDeletePending ? "opacity-50 pointer-events-none select-none" : "opacity-70 hover:opacity-100"}
-    ${homePost.markedByCurrentUser ? "text-yellow-400 fill-yellow-400" : "text-gray-500 fill-none"}`}
+    ${homePost.markedByCurrentUser ? "text-yellow-400 fill-yellow-400" : "text-gray-500 dark:text-white/80 fill-none"}`}
             onClick={handleToggleBookMark}
           />
 
           <Dropdown
             placement="bottom-end"
-            className="text-black"
+            className="text-black dark:text-white"
             shouldBlockScroll={false}
           >
             <DropdownTrigger>

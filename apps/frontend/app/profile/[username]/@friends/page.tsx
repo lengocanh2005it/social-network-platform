@@ -28,7 +28,7 @@ const ProfileFriendSection: React.FC = () => {
   }, [data, setFriends, setTotalFriends]);
 
   return (
-    <section className="w-full flex flex-col md:gap-2 gap-1">
+    <section className="w-full flex flex-col md:gap-2 gap-1 dark:text-white text-black">
       <div className="flex items-center justify-between">
         <h1 className="font-medium md:text-xl text-lg">Friends</h1>
 
@@ -39,7 +39,7 @@ const ProfileFriendSection: React.FC = () => {
                 ? (viewedUser?.profile.username ?? "")
                 : (user?.profile.username ?? "")
             }/?tab=friends`}
-            className="text-blue-700 hover:underline"
+            className="text-blue-700 dark:text-blue-500 hover:underline"
           >
             See all friends
           </Link>

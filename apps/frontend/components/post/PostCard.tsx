@@ -10,7 +10,10 @@ export default function PostCard({ homePost }: { homePost: PostDetails }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
-    <div className="bg-white border border-black/10 rounded-xl mb-6 p-4">
+    <div
+      className="bg-white border border-black/10 rounded-xl mb-6 p-4 
+    dark:bg-black dark:text-white dark:border-white/40"
+    >
       <PostHeader homePost={homePost} />
 
       <PostContent homePost={homePost} />

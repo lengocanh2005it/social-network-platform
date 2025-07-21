@@ -21,7 +21,7 @@ const TaggedUserPosts: React.FC<TaggedUserPostsProps> = ({ post }) => {
   return (
     <>
       <div className="flex items-center justify-end md:gap-4 gap-3 p-2">
-        <p className="text-sm text-gray-600">with</p>
+        <p className="text-sm text-gray-600 dark:text-white/80">with</p>
 
         <AvatarGroup
           isBordered

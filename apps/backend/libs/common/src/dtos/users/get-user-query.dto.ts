@@ -14,11 +14,6 @@ export class GetUserQueryDto {
   @IsOptional()
   @IsBoolean()
   @ToBoolean()
-  readonly includeGroups?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  @ToBoolean()
   readonly includeProfile?: boolean;
 
   @IsOptional()

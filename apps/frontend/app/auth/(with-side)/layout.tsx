@@ -9,7 +9,8 @@ export default function AuthWithSideLayout({
   return (
     <main
       className="flex md:flex-row flex-col md:px-10 px-4 py-4 md:h-screen 
-    bg-white text-black mx-auto w-full justify-between md:gap-8 gap-6 items-center"
+    bg-white text-black dark:bg-black dark:text-white mx-auto w-full 
+    justify-between md:gap-8 gap-6 items-center"
     >
       <SideCredentials />
 

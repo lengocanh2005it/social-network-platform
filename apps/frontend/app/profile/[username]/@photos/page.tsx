@@ -25,7 +25,7 @@ const ProfilePhotosSection: React.FC = () => {
   }, [data, setPhotos, setNextCursor]);
 
   return (
-    <section className="w-full flex flex-col md:gap-2 gap-1">
+    <section className="w-full flex flex-col md:gap-2 gap-1 dark:text-white text-black">
       <div className="flex items-center justify-between">
         <h1 className="font-medium md:text-xl text-lg">Photos</h1>
 
@@ -36,7 +36,7 @@ const ProfilePhotosSection: React.FC = () => {
                 ? `/profile/${user?.profile?.username}`
                 : `/profile/${viewedUser?.profile?.username}`) + "?tab=photos"
             }
-            className="text-blue-700 hover:underline"
+            className="text-blue-700 dark:text-blue-500 hover:underline"
           >
             See all photos
           </Link>

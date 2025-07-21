@@ -78,10 +78,10 @@ const MenuPage = () => {
   ];
 
   return (
-    <main className="flex flex-col w-full justify-between h-full">
+    <main className="flex flex-col w-full justify-between h-full dark:text-white text-black">
       <section className="flex flex-col md:gap-4 gap-2 w-full">
         <div
-          className="hover:bg-gray-200 flex items-center p-2 rounded-md
+          className="hover:bg-gray-200 dark:hover:bg-white/20 flex items-center p-2 rounded-md
         transition-all ease-in-out duration-300 cursor-pointer"
           onClick={() => router.push(`/profile/${user?.profile?.username}`)}
         >
@@ -97,17 +97,20 @@ const MenuPage = () => {
           )}
         </div>
 
-        <Divider />
+        <Divider className="dark:bg-white/40" />
 
         <div className="flex flex-col">
-          <h3 className="text-black/70 px-2 py-2">Your shortcuts</h3>
+          <h3 className="text-black/70 px-2 py-2 dark:text-white/70">
+            Your shortcuts
+          </h3>
 
           <div className="flex flex-col md:gap-3 gap-2 w-full">
             {categories.map((category) => (
               <div
                 key={category.key}
                 className="flex w-full items-center cursor-pointer md:gap-3 
-              gap-2 p-2 rounded-md hover:bg-gray-200 transition-all ease-in-out duration-300"
+              gap-2 p-2 rounded-md hover:bg-gray-200 dark:hover:bg-white/20 
+              transition-all ease-in-out duration-300"
               >
                 {category.icon}
                 <p>{category.content}</p>
@@ -117,13 +120,15 @@ const MenuPage = () => {
         </div>
       </section>
 
-      <Divider className="md:my-3 my-2" />
+      <Divider className="md:my-3 my-2 dark:bg-white/40" />
 
       <section className="flex flex-col justify-between w-full">
         {bookmarks?.length !== 0 ? (
           <>
             <div className="flex items-center justify-between">
-              <h3 className="text-black/70 px-2 py-2">Your bookmarks</h3>
+              <h3 className="text-black/70 px-2 py-2 dark:text-white/70">
+                Your bookmarks
+              </h3>
 
               <Link
                 href={`/profile/${user?.profile?.username}/?tab=bookmarks`}
@@ -133,25 +138,25 @@ const MenuPage = () => {
               </Link>
             </div>
             <BookMarksList bookMarks={bookmarks} />
-            <Divider className="md:my-3 my-2" />
+            <Divider className="md:my-3 my-2 dark:bg-white/40" />
           </>
         ) : (
           <></>
         )}
 
         <div>
-          <h3 className="text-black/70 px-2">Others</h3>
+          <h3 className="text-black/70 px-2 dark:text-white/70">Others</h3>
 
-          <div className="text-sm text-gray-500 py-2 flex flex-col gap-1">
+          <div className="text-sm text-gray-500 dark:text-white/70 py-2 flex flex-col gap-1">
             {settings.map((setting) => (
               <div
                 key={setting.key}
                 className="flex group items-center gap-1 p-2 hover:bg-gray-100 
-                rounded-lg cursor-pointer"
+                rounded-lg cursor-pointer dark:hover:bg-white/20"
               >
                 {setting.icon}
 
-                <p className="cursor-pointer group-hover:text-black">
+                <p className="cursor-pointer group-hover:text-black dark:group-hover:text-white">
                   {setting.content}
                 </p>
               </div>

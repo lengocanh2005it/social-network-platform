@@ -4,8 +4,10 @@ import {
   GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
+  UpdateThemeDto,
   UpdateUserProfileDto,
 } from '@app/common/dtos/users';
+import { clearCookies } from '@app/common/utils';
 import {
   Body,
   Controller,
@@ -21,10 +23,9 @@ import {
   Res,
 } from '@nestjs/common';
 import { RoleEnum } from '@repo/db';
+import { Request, Response } from 'express';
 import { KeycloakUser, Roles } from 'nest-keycloak-connect';
 import { UsersService } from './users.service';
-import { Request, Response } from 'express';
-import { clearCookies } from '@app/common/utils';
 
 @Controller('users')
 export class UsersController {
@@ -212,5 +213,21 @@ export class UsersController {
       );
 
     return this.usersService.deleteMyAccount(email, refreshToken);
+  }
+
+  @Patch('theme')
+  async updateThemeOfUser(
+    @KeycloakUser() user: any,
+    @Body() updateThemeDto: UpdateThemeDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.usersService.updateThemeOfUser(email, updateThemeDto);
   }
 }

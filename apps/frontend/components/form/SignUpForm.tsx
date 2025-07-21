@@ -113,6 +113,7 @@ const SignUpForm = () => {
       last_name: "",
       gender: undefined,
       dob: undefined,
+      username: "",
     },
   });
 
@@ -173,7 +174,7 @@ const SignUpForm = () => {
     <FormProvider {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="md:w-3/4 md:gap-6 gap-4 w-full flex flex-col"
+        className="md:w-4/5 md:gap-6 gap-4 w-full flex flex-col dark:text-white text-black"
       >
         {step === "credentials" && (
           <CredentialsForm onValidSubmit={handleValidCredentials} form={form} />

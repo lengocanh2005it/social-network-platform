@@ -104,7 +104,7 @@ const FriendRequests: React.FC = () => {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <h2 className="text-medium font-medium text-black/70">
+        <h2 className="text-medium font-medium text-black/70 dark:text-white/70">
           Friend Requests
         </h2>
 

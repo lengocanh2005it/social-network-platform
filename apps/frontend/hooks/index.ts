@@ -62,6 +62,7 @@ export * from "./useUnlikePost";
 export * from "./useUpdateMessage";
 export * from "./useUpdatePost";
 export * from "./useUpdateProfile";
+export * from "./useUpdateTheme";
 export * from "./useUploadImage";
 export * from "./useVerify2Fa";
 export * from "./useVerifyAccountOwnership";

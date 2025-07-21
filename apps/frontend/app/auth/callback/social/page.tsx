@@ -136,7 +136,7 @@ const CallbackSocialPageContent = () => {
   return (
     <section
       className="flex flex-col md:px-10 px-4 py-4 bg-white text-black min-h-screen
-      mx-auto w-full items-center justify-center"
+      mx-auto w-full items-center justify-center dark:bg-black dark:text-white"
     >
       {!(fingerprint && deviceDetails) ||
       authMethod === "sign-in" ||
@@ -153,7 +153,7 @@ const CallbackSocialPageContent = () => {
                 Hello, {oAuthNames?.first_name} {oAuthNames?.last_name}!
               </h1>
 
-              <p className="md:text-sm text-[14px] text-black/60">
+              <p className="md:text-sm text-[14px] text-black/60 dark:text-white/60">
                 Almost there! Please provide a few more details to complete your
                 registration.
               </p>

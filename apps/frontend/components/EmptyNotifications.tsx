@@ -5,9 +5,9 @@ const EmptyNotifications: React.FC = () => {
   return (
     <div
       className="flex flex-col md:gap-2 gap-1 h-[150px] items-center 
-    justify-center text-center text-gray-500"
+    justify-center text-center text-gray-500 dark:text-white/80"
     >
-      <Inbox className="w-8 h-8 text-gray-400" />
+      <Inbox className="w-8 h-8 text-gray-400 dark:text-white/70" />
 
       <div className="flex flex-col gap-1 items-center justify-center text-center">
         <h1 className="text-base font-semibold">No Notifications</h1>

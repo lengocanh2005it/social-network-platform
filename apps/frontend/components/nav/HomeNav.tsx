@@ -2,7 +2,7 @@
 import ConversationsDropdown from "@/components/ConversationsDropdown";
 import SearchDropdown from "@/components/SearchDropdown";
 import NotificationsTab from "@/components/tabs/NotificationsTab";
-import { useSignOut } from "@/hooks";
+import { useSignOut, useUpdateTheme } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
   Avatar,
@@ -20,6 +20,7 @@ import {
   NavbarMenuToggle,
   Tooltip,
 } from "@heroui/react";
+import { ThemeEnum } from "@repo/db";
 import {
   Contact,
   Grid2X2,
@@ -49,14 +50,18 @@ interface HomeNavProps {
 const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const [, setIsHovering] = useState(false);
+  const [, setIsHovering] = useState<boolean>(false);
   const isHoveringRef = useRef(false);
   const { user } = useUserStore();
   const { mutate: mutateSignOut } = useSignOut();
+  const { mutate: mutateUpdateTheme, isPending } = useUpdateTheme();
+  const [currentTheme, setCurrentTheme] = useState<string>(
+    user?.profile?.theme ?? "system",
+  );
 
   const menuItems = ["Profile", "Dashboard", "Activity", "Log Out"];
 
@@ -139,7 +144,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             height={40}
             alt="icon"
             onClick={() => router.push("/home")}
-            className="rounded-full cursor-pointer select-none"
+            className="rounded-full cursor-pointer select-none dark:bg-white dark:border-none"
           />
         </NavbarBrand>
         <SearchDropdown />
@@ -170,7 +175,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         {navItems.map(({ icon: Icon, label, redirectTo }, index) => (
           <div
             key={label}
-            className="relative inline-block"
+            className="relative inline-block dark:text-white"
             ref={setItemRef(index)}
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
@@ -181,7 +186,11 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             }}
           >
             <NavbarItem className="list-none px-4 py-2">
-              <Tooltip showArrow content={label} className="text-black">
+              <Tooltip
+                showArrow
+                content={label}
+                className="text-black dark:text-white"
+              >
                 <div className="flex flex-col items-center">
                   <Icon
                     size={"30px"}
@@ -201,13 +210,27 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
       <NavbarContent as="div" justify="end">
         <Dropdown
           placement="bottom-end"
-          className="text-black"
+          className="text-black dark:text-white"
           shouldBlockScroll={false}
         >
           <DropdownTrigger>
-            <LaptopMinimal className="focus:outline-none cursor-pointer" />
+            <LaptopMinimal className="focus:outline-none cursor-pointer dark:text-white" />
           </DropdownTrigger>
-          <DropdownMenu aria-label="Theme Actions" variant="flat">
+          <DropdownMenu
+            aria-label="Theme Actions"
+            variant="flat"
+            selectedKeys={[currentTheme]}
+            selectionMode="single"
+            onSelectionChange={(keys) => {
+              const selectedTheme = Array.from(keys)[0]?.toString();
+              if (!selectedTheme || selectedTheme === currentTheme || isPending)
+                return;
+              setCurrentTheme(selectedTheme);
+              mutateUpdateTheme({
+                theme: selectedTheme as ThemeEnum,
+              });
+            }}
+          >
             <DropdownItem
               key="light"
               description="Light theme."
@@ -225,14 +248,14 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             <DropdownItem
               key="system"
               startContent={<TvMinimal />}
-              description="System theme"
+              description="System theme."
             >
               System
             </DropdownItem>
           </DropdownMenu>
         </Dropdown>
 
-        <Grid2X2 className="cursor-pointer" />
+        <Grid2X2 className="cursor-pointer dark:text-white" />
 
         <ConversationsDropdown />
 
@@ -241,7 +264,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         {user && (
           <Dropdown
             placement="bottom-end"
-            className="text-black"
+            className="text-black dark:text-white"
             shouldBlockScroll={false}
           >
             <DropdownTrigger>

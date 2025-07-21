@@ -10,6 +10,7 @@ import {
   GetUserQueryDto,
   ResponseFriendRequestType,
   SearchUserQueryDto,
+  UpdateThemeDto,
   UpdateUserProfile,
 } from "@/utils";
 
@@ -147,6 +148,12 @@ export const getPhotosOfUser = async (
 
 export const deleteMyAccount = async () => {
   const response = await axios.delete("/users/me");
+
+  return response.data;
+};
+
+export const updateThemeOfUser = async (updateThemeDto: UpdateThemeDto) => {
+  const response = await axios.patch("/users/theme", updateThemeDto);
 
   return response.data;
 };

@@ -223,7 +223,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
 
     return (
       <div className="relative text-sm">
-        <span className="text-gray-600">with</span>{" "}
+        <span className="text-gray-600 dark:text-white/80">with</span>{" "}
         <span
           className="hover:underline cursor-pointer"
           onClick={() => viewProfileClick(post.tagged_users.data[0].username)}
@@ -232,7 +232,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
         </span>
         {taggedUsersLength > 1 && (
           <>
-            <span className="text-gray-600"> and </span>
+            <span className="text-gray-600 dark:text-white/80"> and </span>
             <span
               className="hover:underline cursor-pointer"
               onClick={() => setIsShowTaggedUsersModal(true)}
@@ -249,7 +249,10 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     <>
       {user && (
         <>
-          <div className="bg-white border border-black/10 rounded-xl md:mb-6 md-4 p-4">
+          <div
+            className="bg-white border border-black/10 rounded-xl md:mb-6 md-4 p-4
+          dark:bg-black dark:text-white dark:border-white/30"
+          >
             <div className="flex flex-col md:gap-2 gap-1">
               <div className="flex items-start justify-between">
                 <div className="flex items-center mb-3 gap-2">
@@ -281,7 +284,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                         renderTaggedUsersText()}
                     </div>
 
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-white/70">
                       <span className="leading-none">
                         {formatDateTime(new Date(post.created_at))}
                       </span>
@@ -309,13 +312,13 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                   <div className="flex items-center md:gap-3 gap-2">
                     <Dropdown
                       placement="bottom-end"
-                      className="text-black"
+                      className="text-black dark:text-white"
                       shouldBlockScroll={false}
                     >
                       <DropdownTrigger>
                         <Ellipsis
                           size={30}
-                          className="cursor-pointer focus:outline-none"
+                          className="cursor-pointer focus:outline-none dark:text-white/70"
                         />
                       </DropdownTrigger>
                       <DropdownMenu aria-label="Post options" variant="flat">

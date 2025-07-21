@@ -277,7 +277,9 @@ export const generateNotificationMessage = (
     case 'friend_request_rejected':
       return `${params.senderName} rejected your friend request.`;
     case 'post_liked':
-      return `${params.senderName} liked your post: "${params.postTitle}".`;
+      return params?.postTitle
+        ? `${params.senderName} liked your post: "${params.postTitle}".`
+        : `${params.senderName} liked your post.`;
     case 'post_commented':
       return `${params.senderName} commented on your post: "${params.commentContent}".`;
     case 'comment_liked':

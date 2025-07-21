@@ -36,4 +36,5 @@ export {
   PostPrivacies as PostPrivaciesEnum,
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
+  Theme as ThemeEnum,
 } from "../@generated/default.js";

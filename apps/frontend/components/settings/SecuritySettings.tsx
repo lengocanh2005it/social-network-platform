@@ -66,7 +66,7 @@ const SecuritySettings = () => {
   return (
     <>
       <h2 className="text-xl font-semibold mb-2">Security Settings</h2>
-      <p className="text-gray-600 mb-4">
+      <p className="text-gray-600 mb-4 dark:text-white/70">
         Manage your password and 2FA settings.
       </p>
 
@@ -100,7 +100,7 @@ const SecuritySettings = () => {
               onChange={handleToggle2FA}
               color="success"
             />
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-white/70">
               {is2FAEnabled ? "2FA is enabled" : "2FA is disabled"}
             </span>
           </div>

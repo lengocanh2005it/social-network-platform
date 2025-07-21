@@ -183,7 +183,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
                     Create post
                   </ModalHeader>
 
-                  <Divider />
+                  <Divider className="dark:bg-white/40" />
 
                   <ModalBody>
                     <CreatePostHeader

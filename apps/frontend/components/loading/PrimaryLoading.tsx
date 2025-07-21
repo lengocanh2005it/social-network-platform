@@ -6,7 +6,7 @@ const PrimaryLoading: React.FC = () => {
   return (
     <div
       className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
-            flex-col items-center justify-center text-center"
+     flex-col items-center justify-center text-center dark:text-white"
     >
       <Spinner />
 

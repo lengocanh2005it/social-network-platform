@@ -296,8 +296,6 @@ export class PostsController {
       getBookMarksQueryDto,
     );
 
-    console.log('Response: ', response);
-
     return response;
   }
 

@@ -26,7 +26,7 @@ const NotificationsTab: React.FC = () => {
     user?.id ?? "",
     activeTab
       ? {
-          is_read: activeTab === "read" ? true : false,
+          is_read: activeTab === "read" ? "true" : "false",
         }
       : undefined,
   );
@@ -138,7 +138,7 @@ const NotificationsTab: React.FC = () => {
 
     try {
       const res = await getNotifications({
-        is_read: activeTab === NotificationStatus.READ ? true : false,
+        is_read: activeTab === NotificationStatus.READ ? "true" : "false",
         after: notifications[currentTab].nextCursor,
       });
 
@@ -188,22 +188,22 @@ const NotificationsTab: React.FC = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative dark:text-white">
       <div ref={iconRef}>
         <BellIcon
-          className="cursor-pointer focus:outline-none select-none"
+          className="cursor-pointer focus:outline-none select-none dark:text-white"
           onClick={handleToggleDropdown}
         />
       </div>
 
       {showDropdown && (
         <div
-          className="fixed z-50 bg-white rounded-xl w-[450px]
+          className="fixed z-50 bg-white dark:bg-black dark:text-white rounded-xl w-[450px]
           mt-2 shadow-md flex flex-col gap-1
-          border border-black/10 p-4 right-10"
+          border border-black/10 p-4 right-10 dark:border-white/40"
           ref={dropdownRef}
         >
-          <h1 className="text-center text-medium text-black/80">
+          <h1 className="text-center text-medium text-black/80 dark:text-white/80">
             Notifications
           </h1>
 
@@ -226,7 +226,7 @@ const NotificationsTab: React.FC = () => {
               <button
                 className={`flex-1 p-2 text-sm font-medium outline-none cursor-pointer ${
                   activeTab === NotificationStatus.UNREAD
-                    ? "border-b-2 border-blue-500 text-blue-600"
+                    ? "border-b-2 border-blue-500 text-blue-600 dark:border-white/80 dark:text-white"
                     : "text-gray-500"
                 }`}
                 onClick={() => setActiveTab(NotificationStatus.UNREAD)}
@@ -236,7 +236,7 @@ const NotificationsTab: React.FC = () => {
               <button
                 className={`flex-1 p-2 text-sm font-medium outline-none cursor-pointer ${
                   activeTab === NotificationStatus.READ
-                    ? "border-b-2 border-blue-500 text-blue-600"
+                    ? "border-b-2 border-blue-500 text-blue-600 dark:border-white/80 dark:text-white"
                     : "text-gray-500"
                 }`}
                 onClick={() => setActiveTab(NotificationStatus.READ)}

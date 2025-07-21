@@ -15,6 +15,7 @@ import {
   PostContentType,
   PostPrivaciesEnum,
   PostPrivaciesType,
+  ThemeEnum,
   UserEducationsType,
   UserProfilesType,
   UsersType,
@@ -611,7 +612,7 @@ export type StoryViewer = {
   username: string;
 };
 
-export type GetNotificationsQueryDto = GetFeedQueryDto & { is_read: boolean };
+export type GetNotificationsQueryDto = GetFeedQueryDto & { is_read: string };
 
 export type DeleteNotificationQueryDto = {
   notificationIds: string[];
@@ -705,4 +706,8 @@ export type BookMark = {
   saved_at: string;
   user: Omit<UsersType & { profile: UserProfilesType }, "password">;
   post: PostDetails;
+};
+
+export type UpdateThemeDto = {
+  theme: ThemeEnum;
 };

@@ -202,21 +202,24 @@ const ChatBoxContent: React.FC<ChatBoxContentProps> = ({
                   <div className="flex flex-col md:gap-2 gap-1">
                     {msg.parent_message && (
                       <div
-                        className={`border-l-4 pl-3 pr-2 py-2 rounded-md bg-gray-100 
+                        className={`border-l-4 pl-3 pr-2 py-2 rounded-md bg-gray-100
                           text-sm text-gray-700 max-w-xs ${
                             isMine
-                              ? "bg-blue-100 border-blue-400"
-                              : "bg-gray-100 border-gray-400"
+                              ? "bg-blue-100 border-blue-400 dark:bg-white/20"
+                              : "bg-gray-100 border-gray-400 dark:bg-white/20"
                           }`}
                       >
-                        <p className="font-medium text-gray-600 text-xs mb-1 truncate">
+                        <p
+                          className="font-medium text-gray-600 dark:text-white/70 
+                        text-xs mb-1 truncate"
+                        >
                           Replying to{" "}
                           {msg.parent_message.user.id === user?.id
                             ? "you"
                             : msg.parent_message.user.full_name}
                         </p>
 
-                        <p className="text-sm text-gray-800 truncate">
+                        <p className="text-sm text-gray-800 dark:text-white/80 truncate">
                           {msg.parent_message.content}
                         </p>
                       </div>
@@ -225,7 +228,8 @@ const ChatBoxContent: React.FC<ChatBoxContentProps> = ({
                     <div className="relative">
                       {isEdited && !msg.deleted_at && (
                         <p
-                          className={`text-gray-600 text-xs pb-1 ${isMine && "text-right"}`}
+                          className={`text-gray-600 dark:text-white/70 text-xs pb-1 
+                            ${isMine && "text-right"}`}
                         >
                           Edited
                         </p>
@@ -234,7 +238,7 @@ const ChatBoxContent: React.FC<ChatBoxContentProps> = ({
                       {msg.deleted_at ? (
                         <div
                           className="bg-gray-200 text-gray-800 opacity-50 select-none
-                      max-w-xs px-4 py-2 rounded-xl"
+                      max-w-xs px-4 py-2 rounded-xl dark:bg-white/40 dark:text-white"
                         >
                           <p className="text-xs">
                             This message has been removed.
@@ -295,7 +299,7 @@ const ChatBoxContent: React.FC<ChatBoxContentProps> = ({
             >
               <h1 className="text-medium font-semibold">No messages yet</h1>
 
-              <p className="text-sm text-black/70">
+              <p className="text-sm text-black/70 dark:text-white/70">
                 Start the conversation by sending a message!
               </p>
             </div>

@@ -75,9 +75,9 @@ const BlockedUsersList: React.FC = () => {
   return (
     <section className="relative md:w-[90%] w-full h-full mx-auto flex flex-col">
       {blockedUsersList?.length > 0 ? (
-        <div className="flex flex-col md:gap-3 gap-2 shadow rounded-lg p-4">
+        <div className="flex flex-col md:gap-3 gap-2 shadow rounded-lg p-4 dark:shadow-white">
           <ScrollShadow
-            className="max-h-[300px] flex flex-col md:gap-3 gap-2"
+            className="max-h-[300px] flex flex-col md:gap-1 gap-2"
             offset={0}
             size={0}
             hideScrollBar
@@ -85,7 +85,8 @@ const BlockedUsersList: React.FC = () => {
             {blockedUsersList.map((user) => (
               <div
                 key={user.user_id}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between dark:hover:bg-white/20 p-2 rounded-lg
+                cursor-pointer hover:bg-gray-100"
               >
                 <div className="flex items-center justify-center md:gap-3 gap-2">
                   <Avatar
@@ -95,12 +96,17 @@ const BlockedUsersList: React.FC = () => {
                   />
 
                   <div className="flex flex-col relative gap-1">
-                    <h1 className="text-sm text-black">{user.full_name}</h1>
+                    <h1 className="text-sm text-black dark:text-white">
+                      {user.full_name}
+                    </h1>
 
-                    <div className="flex flex-col items-start justify-start text-gray-600">
+                    <div
+                      className="flex flex-col items-start justify-start text-gray-600 
+                    dark:text-white/70"
+                    >
                       <p className="text-xs">Blocked at: </p>
 
-                      <p className="text-xs text-gray-700">
+                      <p className="text-xs text-gray-700 dark:text-white/70">
                         {formatDateTime(user.blocked_at)}
                       </p>
                     </div>
@@ -109,12 +115,12 @@ const BlockedUsersList: React.FC = () => {
 
                 <Dropdown
                   placement="bottom-end"
-                  className="text-black"
+                  className="text-black dark:text-white"
                   shouldBlockScroll={false}
                 >
                   <DropdownTrigger>
                     <Button isIconOnly className="bg-transparent">
-                      <Ellipsis className="text-gray-700 focus:outline-none" />
+                      <Ellipsis className="text-gray-700 focus:outline-none dark:text-white/70" />
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu aria-label="" variant="flat">
@@ -133,7 +139,8 @@ const BlockedUsersList: React.FC = () => {
 
           {nextCursor && (
             <p
-              className="text-right cursor-pointer hover:underline hover:text-blue-600"
+              className="text-right cursor-pointer hover:underline hover:text-blue-600
+              dark:hover:text-blue-300"
               onClick={hanleLoadMore}
             >
               View more

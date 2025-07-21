@@ -4,6 +4,7 @@ import {
   GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
+  UpdateThemeDto,
   UpdateUserProfileDto,
 } from '@app/common/dtos/users';
 import { sendWithTimeout, toPlain } from '@app/common/utils';
@@ -31,6 +32,7 @@ export class UsersService implements OnModuleInit {
       'get-users',
       'get-photos-of-user',
       'delete-my-account',
+      'update-theme',
     ];
 
     patterns.forEach((pattern) => {
@@ -127,6 +129,16 @@ export class UsersService implements OnModuleInit {
     return sendWithTimeout(this.userClient, 'delete-my-account', {
       email,
       refreshToken,
+    });
+  };
+
+  public updateThemeOfUser = async (
+    email: string,
+    updateThemeDto: UpdateThemeDto,
+  ) => {
+    return sendWithTimeout(this.userClient, 'update-theme', {
+      email,
+      updateThemeDto,
     });
   };
 }

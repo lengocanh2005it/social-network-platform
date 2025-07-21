@@ -1,5 +1,4 @@
 "use client";
-
 import NotFoundPage from "@/app/not-found";
 import ResetPasswordForm from "@/components/form/ResetPasswordForm";
 import ResetPasswordSuccess from "@/components/ResetPasswordSuccess";
@@ -24,7 +23,7 @@ const ResetPasswordPageContent = () => {
   return (
     <main
       className="flex flex-col md:px-10 px-4 py-4 bg-white text-black h-screen mx-auto 
-    w-full items-center justify-center"
+    w-full items-center justify-center dark:bg-black dark:text-white"
     >
       {isPasswordResetSuccess ? (
         <ResetPasswordSuccess />
@@ -35,7 +34,7 @@ const ResetPasswordPageContent = () => {
         >
           <div className="text-center w-full flex flex-col items-center justify-center">
             <h1 className="md:text-2xl text-xl">Reset Your Password</h1>
-            <p className="md:text-sm text-[14px] text-black/60">
+            <p className="md:text-sm text-[14px] text-black/60 dark:text-white/60">
               Please enter your new password and confirm it below to reset your
               account password.
             </p>

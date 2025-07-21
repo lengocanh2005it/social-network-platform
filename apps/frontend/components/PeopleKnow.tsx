@@ -89,7 +89,10 @@ const PeopleKnow: React.FC = () => {
   };
 
   return (
-    <section className="p-4 border border-black/10 rounded-lg flex flex-col md:gap-2 gap-1">
+    <section
+      className="p-4 border border-black/10 dark:border-white/30 rounded-lg 
+    flex flex-col md:gap-2 gap-1"
+    >
       {friendSuggestions?.length !== 0 && (
         <div className="flex items-center justify-between">
           <h1 className="text-medium">People You May Know</h1>
@@ -107,7 +110,7 @@ const PeopleKnow: React.FC = () => {
       ) : (
         <>
           {friendSuggestions?.length === 0 ? (
-            <div className="text-center text-gray-500 mt-4 flex flex-col items-center gap-2">
+            <div className="text-center text-gray-500 dark:text-white/80 mt-4 flex flex-col items-center gap-2">
               <Users className="w-12 h-12 text-gray-400" />
               <p className="text-lg font-semibold">No suggestions available</p>
               <p className="text-sm">
@@ -145,7 +148,7 @@ const PeopleKnow: React.FC = () => {
                   >
                     <div
                       className="flex flex-col md:gap-3 gap-2 text-center border border-black/20
-              rounded-lg"
+              rounded-lg dark:border-white/40"
                     >
                       <div className="h-40 relative rounded-t-lg overflow-hidden">
                         <Image
@@ -159,7 +162,8 @@ const PeopleKnow: React.FC = () => {
 
                         <div
                           className="p-2 absolute right-2 top-2 rounded-full bg-gray-200 
-                          hover:bg-gray-300 ease-in-out transition-all duration-250"
+                          hover:bg-gray-300 ease-in-out transition-all duration-250 
+                          dark:bg-black/80 dark:hover:bg-black dark:text-white"
                           onClick={() =>
                             setFriendSuggestions((prev) =>
                               prev.filter((pre) => pre.user_id !== p.user_id),
@@ -173,12 +177,14 @@ const PeopleKnow: React.FC = () => {
                       <div className="grid grid-rows-3 p-2 rounded-md">
                         <div className="flex flex-col relative mb-1">
                           <Tooltip content={p.full_name} delay={5000}>
-                            <p className="row-span-1 truncate max-w-full">
+                            <p className="row-span-1 truncate max-w-full dark:text-white">
                               {p.full_name}
                             </p>
                           </Tooltip>
 
-                          <p className="text-xs text-gray-500">@{p.username}</p>
+                          <p className="text-xs text-gray-500 dark:text-white/80">
+                            @{p.username}
+                          </p>
                         </div>
 
                         <div className="row-span-1">
@@ -210,13 +216,13 @@ const PeopleKnow: React.FC = () => {
               </Swiper>
 
               <div
-                className={`swiper-button-prev !left-0 !text-black after:!text-2xl ${
+                className={`swiper-button-prev !left-0 !text-black dark:!text-white after:!text-2xl ${
                   isBeginning ? "!hidden" : ""
                 }`}
               ></div>
 
               <div
-                className={`swiper-button-next !right-0 !text-black after:!text-2xl ${
+                className={`swiper-button-next !right-0 !text-black dark:!text-white after:!text-2xl ${
                   isEnd ? "!hidden" : ""
                 }`}
               ></div>

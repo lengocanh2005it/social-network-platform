@@ -70,7 +70,7 @@ const CreatePostHeader: React.FC<CreatePostHeaderProps> = ({
 
           <div className="flex items-end justify-between w-full">
             <div className="flex flex-col gap-1 w-[170px]">
-              <h3 className="text-sm text-gray-900">
+              <h3 className="text-sm text-gray-900 dark:text-white/80">
                 {user.profile.first_name + " " + user.profile.last_name}
               </h3>
 

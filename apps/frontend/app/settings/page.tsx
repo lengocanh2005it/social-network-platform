@@ -16,17 +16,20 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
 
   return (
-    <div className="px-4 py-4 flex flex-col md:gap-6 gap-4">
+    <div className="px-4 py-4 flex flex-col md:gap-6 gap-4 dark:text-white text-black">
       <div className="flex flex-col md:gap-1">
         <h1 className="text-2xl font-bold">Settings</h1>
 
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-white/80">
           Manage your preferences and account settings.
         </p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8 px-6">
-        <div className="flex md:flex-col gap-2 md:w-1/4 border-b md:border-b-0 md:border-r md:pr-4">
+        <div
+          className="flex md:flex-col gap-2 md:w-1/4 border-b md:border-b-0 md:border-r md:pr-4
+        dark:md:border-r dark:md:border-r-white/20"
+        >
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -34,8 +37,8 @@ export default function SettingsPage() {
                  font-medium transition-colors focus:outline-none
                 ${
                   activeTab === tab.key
-                    ? "bg-gray-100 text-black font-semibold"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-gray-100 text-black font-semibold dark:bg-white/20 dark:text-white"
+                    : "text-gray-600 hover:bg-gray-50 dark:text-white/70 dark:hover:bg-white/30"
                 }`}
               onClick={() => setActiveTab(tab.key)}
             >

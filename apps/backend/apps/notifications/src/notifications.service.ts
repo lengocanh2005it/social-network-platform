@@ -58,7 +58,7 @@ export class NotificationsService implements OnModuleInit {
     const notifications = await this.prismaService.notifications.findMany({
       where: {
         recipient_id: user.id,
-        is_read,
+        is_read: is_read === 'true' ? true : false,
       },
       take: limit + 1,
       orderBy: [

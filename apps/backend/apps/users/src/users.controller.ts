@@ -13,6 +13,7 @@ import {
   GetPhotosOfUserQueryDto,
   GetUserQueryDto,
   SearchUserQueryDto,
+  UpdateThemeDto,
   UpdateUserProfileDto,
   UpdateUserSessionDto,
   UploadUserImageQueryDto,
@@ -295,5 +296,13 @@ export class UsersController {
     @Payload('refreshToken') refreshToken: string,
   ) {
     return this.usersService.deleteMyAccount(email, refreshToken);
+  }
+
+  @MessagePattern('update-theme')
+  async updateThemeOfUser(
+    @Payload('email') email: string,
+    @Payload('updateThemeDto') updateThemeDto: UpdateThemeDto,
+  ) {
+    return this.usersService.updateThemeOfUser(email, updateThemeDto);
   }
 }

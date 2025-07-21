@@ -55,7 +55,7 @@ const FeedPage = () => {
 
   return (
     <ScrollShadow
-      className="flex flex-col md:gap-3 gap-2 relative"
+      className="flex flex-col md:gap-3 gap-2 relative dark:bg-black dark:text-white"
       hideScrollBar
       offset={0}
       size={0}
@@ -67,7 +67,7 @@ const FeedPage = () => {
       {isLoading ? (
         <div
           className="w-full flex md:gap-3 gap-2 
-        flex-col items-center justify-center text-center md:mt-8 mt-4"
+        flex-col items-center justify-center text-center md:mt-8 mt-4 dark:text-white text-black"
         >
           <Spinner />
 

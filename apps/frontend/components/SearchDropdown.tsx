@@ -1,5 +1,6 @@
 "use client";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUsers } from "@/lib/api/users";
 import { useUserStore } from "@/store";
 import { handleAxiosError, UserSearchResult } from "@/utils";
@@ -204,7 +205,9 @@ const SearchDropdown: React.FC = () => {
         onFocus={() => setShowDropdown(true)}
         className="flex-1 outline-none focus:ring-0 focus:outline-none focus:border-none"
         placeholder="Enter name of user..."
-        startContent={<SearchIcon className="w-4 h-4 text-gray-400" />}
+        startContent={
+          <SearchIcon className="w-4 h-4 text-gray-400 dark:text-white/70" />
+        }
         isClearable
         onClear={() => {
           setInputValue("");
@@ -216,14 +219,15 @@ const SearchDropdown: React.FC = () => {
       {showDropdown && (
         <div
           className="absolute z-50 bg-white rounded-xl 
-    w-full mt-2 shadow-md border border-black/10 p-2"
+    w-full mt-2 shadow-md border border-black/10 p-2 dark:bg-black
+    dark:border dark:border-white/40"
         >
           <ScrollShadow className="max-h-60" offset={0} size={0} hideScrollBar>
             <div className={`flex flex-col ${isLoading && "h-40"}`}>
               {isLoading ? (
                 <div
                   className="w-full h-full flex md:gap-3 gap-2 
-                flex-col items-center justify-center text-center"
+                flex-col items-center justify-center text-center dark:text-white"
                 >
                   <Spinner />
 
@@ -231,55 +235,58 @@ const SearchDropdown: React.FC = () => {
                 </div>
               ) : items.length > 0 ? (
                 <>
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex justify-between items-center px-3 py-2 
-                hover:bg-gray-100 rounded-lg cursor-pointer"
-                      onClick={() =>
-                        handleItemSelect(
-                          item.type === "user" ? item.username : item.name,
-                          item.type,
-                          item.type === "user" ? item.full_name : undefined,
-                        )
-                      }
-                    >
-                      {item.type === "user" ? (
-                        <div className="flex items-center gap-2">
-                          <img
-                            src={item.avatar_url}
-                            alt={item.full_name}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">
-                              {item.full_name}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              @{item.username}
-                            </span>
+                  <ScrollArea className="h-[250px]">
+                    {items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center px-3 py-2 
+                hover:bg-gray-100 dark:hover:bg-white/20 rounded-lg cursor-pointer"
+                        onClick={() =>
+                          handleItemSelect(
+                            item.type === "user" ? item.username : item.name,
+                            item.type,
+                            item.type === "user" ? item.full_name : undefined,
+                          )
+                        }
+                      >
+                        {item.type === "user" ? (
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={item.avatar_url}
+                              alt={item.full_name}
+                              className="w-10 h-10 rounded-full"
+                            />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">
+                                {item.full_name}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                @{item.username}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm">{item.name}</span>
-                      )}
+                        ) : (
+                          <span className="text-sm">{item.name}</span>
+                        )}
 
-                      {item.type === "history" && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteHistoryItem(item.name);
-                          }}
-                          className="text-gray-400 hover:text-red-500 focus:outline-none"
-                        >
-                          <XIcon size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                        {item.type === "history" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteHistoryItem(item.name);
+                            }}
+                            className="text-gray-400 hover:text-red-500 focus:outline-none
+                            dark:text-white/70"
+                          >
+                            <XIcon size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </ScrollArea>
                 </>
               ) : (
-                <p className="text-center text-sm text-gray-500 py-4">
+                <p className="text-center text-sm text-gray-500 dark:text-white py-4">
                   No users found
                 </p>
               )}

@@ -50,14 +50,16 @@ const ForgotPasswordForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col md:gap-3 gap-2 md:w-2/3 w-full mx-auto"
+        className="flex flex-col md:gap-3 gap-2 md:w-2/3 w-full mx-auto dark:text-white"
       >
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-black">Email</FormLabel>
+              <FormLabel className="text-black dark:text-white">
+                Email
+              </FormLabel>
               <FormControl>
                 <Input
                   startContent={<Mail />}
@@ -94,10 +96,11 @@ const ForgotPasswordForm = () => {
         )}
       </form>
 
-      <div className="text-sm text-center text-black/60">
+      <div className="text-sm text-center text-black/60 dark:text-white/60">
         Have an account?{" "}
         <a
-          className="hover:text-blue-600 text-black hover:underline font-medium cursor-pointer"
+          className="hover:text-blue-600 text-black dark:text-white 
+          hover:underline font-medium cursor-pointer"
           onClick={handleSignIn}
         >
           Sign in

@@ -8,3 +8,4 @@ export * from './search-user-query.dto';
 export * from './update-user-profile.dto';
 export * from './update-user-session.dto';
 export * from './upload-user-image-query.dto';
+export * from './update-theme.dto';

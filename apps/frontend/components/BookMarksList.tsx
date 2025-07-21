@@ -30,7 +30,8 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
       {bookMarks.map((bookmark) => (
         <div
           key={bookmark.id}
-          className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-100"
+          className="p-4 hover:bg-gray-50 rounded-lg cursor-pointer
+          dark:hover:bg-white/20 dark:text-white text-black"
           onClick={() => handleViewPostDetails(bookmark)}
         >
           <div className="flex items-center gap-3 mb-3">
@@ -44,7 +45,7 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
                 {bookmark.post.user.profile.first_name}{" "}
                 {bookmark.post.user.profile.last_name}
               </p>
-              <p className="text-xs text-gray-500 flex items-center gap-1">
+              <p className="text-xs text-gray-500 dark:text-white/70 flex items-center gap-1">
                 <ClockIcon className="w-3 h-3" />
                 {format(new Date(bookmark.post.created_at), "dd/MM/yyyy")}
               </p>
@@ -52,7 +53,7 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
           </div>
 
           <div className="mb-3">
-            <p className="text-sm text-gray-800 max-w-[300px] truncate">
+            <p className="text-sm text-gray-800 dark:text-white/80 max-w-[300px] truncate">
               {bookmark?.post?.contents.map((c) => c.content).join(" ")}
             </p>
 
@@ -75,7 +76,7 @@ const BookMarksList: React.FC<BookMarksListProps> = ({ bookMarks }) => {
             />
           )}
 
-          <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-white/70">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
                 <HeartIcon className="w-3 h-3" />
