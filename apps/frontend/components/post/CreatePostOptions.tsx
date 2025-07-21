@@ -1,3 +1,4 @@
+"use client";
 import UploadMediaButton from "@/components/button/UploadMediaButton";
 import TagFriendsModal from "@/components/modal/TagFriendsModal";
 import { PostDetails } from "@/store";
@@ -63,9 +64,11 @@ const CreatePostOptions: React.FC<CreatePostOptionsProps> = ({ post }) => {
     <>
       <div
         className="w-full flex items-center justify-between px-4 py-2 border
-     border-black/10 rounded-lg"
+     border-black/10 rounded-lg dark:border-white/20"
       >
-        <p className="text-sm text-gray-700">Add to your post</p>
+        <p className="text-sm text-gray-700 dark:text-white/70">
+          Add to your post
+        </p>
 
         <div className="flex items-center md:gap-3 gap-2">
           <div className="flex items-center md:gap-3 gap-2">
@@ -79,13 +82,16 @@ const CreatePostOptions: React.FC<CreatePostOptionsProps> = ({ post }) => {
             ))}
           </div>
 
-          <Dropdown className="text-black" shouldBlockScroll={false}>
+          <Dropdown
+            className="text-black dark:text-white"
+            shouldBlockScroll={false}
+          >
             <DropdownTrigger>
               <div>
                 <Tooltip content="More">
                   <Ellipsis
                     size={30}
-                    className="cursor-pointer focus:outline-none"
+                    className="cursor-pointer focus:outline-none dark:text-white/70"
                   />
                 </Tooltip>
               </div>

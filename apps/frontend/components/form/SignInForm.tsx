@@ -193,11 +193,13 @@ const SignInForm = () => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-black">Email</FormLabel>
+              <FormLabel className="text-black dark:text-white">
+                Email
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder="johndoe01@gmail.com"
-                  startContent={<Mail />}
+                  startContent={<Mail className="dark:text-white" />}
                   isClearable
                   aria-label="email"
                   aria-labelledby="email"
@@ -219,12 +221,14 @@ const SignInForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-black">Password</FormLabel>
+              <FormLabel className="text-black dark:text-white">
+                Password
+              </FormLabel>
               <FormControl>
                 <PasswordToggleInput
                   {...field}
                   placeholder="Your password here..."
-                  startContent={<Lock />}
+                  startContent={<Lock className="dark:text-white" />}
                 />
               </FormControl>
               <FormMessage className="text-red-600 md:text-left text-center" />
@@ -234,7 +238,7 @@ const SignInForm = () => {
 
         <div className="flex md:flex-row flex-col gap-1 md:items-center md:justify-between select-none">
           <a
-            className="hover:underline hover:text-blue-600 transition-colors duration-200 
+            className="hover:underline hover:text-blue-600 
           hover:cursor-pointer italic"
             onClick={hanldeForgetPassword}
           >
@@ -263,11 +267,12 @@ const SignInForm = () => {
 
       <SocialsAuthForm method={AuthMethod.SIGN_IN} />
 
-      <div className="text-sm text-center text-black/60">
+      <div className="text-sm text-center text-black/60 dark:text-white/60">
         Don&apos;t have an account?{" "}
         <a
           onClick={handleSignUp}
-          className="hover:text-blue-600 text-black hover:underline font-medium cursor-pointer"
+          className="hover:text-blue-600 text-black dark:text-white hover:underline 
+          font-medium cursor-pointer dark:hover:text-blue-600"
         >
           Sign up
         </a>

@@ -90,7 +90,8 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
       {user && (
         <div
           className="w-full p-2 border-t border-t-black/10
-         flex items-center justify-between md:gap-2 gap-1"
+         flex items-center justify-between md:gap-2 gap-1
+         dark:border-t-white/40"
         >
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center 

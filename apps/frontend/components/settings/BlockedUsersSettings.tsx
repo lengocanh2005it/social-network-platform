@@ -7,7 +7,7 @@ const BlockedUsersSettings: React.FC = () => {
       <div className="flex flex-col md:gap-1">
         <h2 className="text-xl font-semibold">Blocked Users</h2>
 
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-white/70">
           Manage the users you have blocked from contacting you.
         </p>
       </div>

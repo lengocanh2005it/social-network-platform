@@ -5,9 +5,9 @@ import { isValidJWT } from "@/utils";
 import { Button } from "@heroui/react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 
-const VerifyEmailPageContent = () => {
+const VerifyEmailPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -25,7 +25,10 @@ const VerifyEmailPageContent = () => {
   };
 
   return (
-    <main className="h-screen flex items-center justify-center bg-white text-black p-4">
+    <main
+      className="h-screen flex items-center justify-center bg-white text-black p-4
+    dark:bg-black dark:text-white"
+    >
       <div className="flex items-center justify-center flex-col text-center">
         <Image
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -36,11 +39,11 @@ const VerifyEmailPageContent = () => {
           className="mx-auto mb-6 select-none"
         />
 
-        <h1 className="text-2xl font-bold mb-4 text-green-600">
+        <h1 className="text-2xl font-bold mb-4 text-green-600 dark:text-green-300">
           Email Verification Successful!
         </h1>
 
-        <p className="mb-6 text-gray-600">
+        <p className="mb-6 text-gray-600 dark:text-white/70">
           Your account has been verified. You can now sign in to continue.
         </p>
 

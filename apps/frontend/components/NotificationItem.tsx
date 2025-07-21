@@ -89,7 +89,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
     <>
       <div
         className={`group flex relative gap-1 p-3 cursor-pointer rounded-md items-center select-none
-         hover:bg-gray-100 transition ${!is_read ? "bg-blue-50" : ""}`}
+         hover:bg-gray-100 transition ${!is_read ? "bg-blue-50 dark:bg-white/40" : "hover:bg-white/20"}`}
         onClick={handleClickNotification}
       >
         <div className={`${isSelected ? "block" : "hidden"} group-hover:block`}>
@@ -109,9 +109,11 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               />
             )}
             <div className="flex-1 text-sm">
-              <p className="text-gray-800 font-xs">{sender?.full_name}</p>
-              <p className="text-gray-600">{content}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-gray-800 dark:text-white/80 font-xs">
+                {sender?.full_name}
+              </p>
+              <p className="text-gray-600 dark:text-white">{content}</p>
+              <p className="text-xs text-gray-400 dark:text-white/60">
                 {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
               </p>
             </div>

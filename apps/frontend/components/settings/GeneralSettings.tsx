@@ -15,12 +15,12 @@ const GeneralSettings: React.FC = () => {
     <section className="flex flex-col relative md:gap-6 gap-4 h-full">
       <div className="flex flex-col">
         <h2 className="text-xl font-semibold">General Settings</h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-white/80">
           Update your name, email, and profile info.
         </p>
       </div>
 
-      <Divider />
+      <Divider className="dark:bg-white/30" />
 
       <div
         className="relative flex items-start justify-between flex-1 h-full

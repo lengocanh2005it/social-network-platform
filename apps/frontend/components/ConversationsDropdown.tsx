@@ -124,10 +124,10 @@ const ConversationsDropdown: React.FC = () => {
   }, [value, debouncedSearch]);
 
   return (
-    <section className="relative">
+    <section className="relative dark:text-white">
       <div ref={iconRef}>
         <MessageCircle
-          className="cursor-pointer select-none focus:outline-none"
+          className="cursor-pointer select-none focus:outline-none dark:text-white"
           onClick={() => setShowDropdown(!showDropdown)}
         />
       </div>
@@ -136,23 +136,25 @@ const ConversationsDropdown: React.FC = () => {
         <div
           className="fixed z-[600] bg-white rounded-xl w-[440px]
           mt-2 shadow-md flex flex-col gap-1
-          border border-black/10 p-4 right-12"
+          border border-black/10 p-4 right-12 dark:bg-black dark:border-white/20"
           ref={dropdownRef}
         >
-          <h1 className="text-left text-lg text-black/80">Chats</h1>
+          <h1 className="text-left text-lg text-black/80 dark:text-white/80">
+            Chats
+          </h1>
 
           <ScrollArea
-            className={`${conversations.length > 0 ? "h-[350px]" : "h-[250px]"} mt-2 text-sm 
-            text-gray-700 relative border-t border-t-black/10 py-2 pr-2`}
+            className={`${conversations.length > 0 && !isSearching ? "h-[350px]" : "h-[250px]"} mt-2 text-sm 
+            text-gray-700 relative border-t border-t-black/10 dark:border-t-white/20 py-2 pr-2`}
           >
             {isLoading ? (
               <PrimaryLoading />
             ) : (
               <section className="flex flex-col md:gap-3 gap-2">
                 <Input
-                  className="w-[90%] mx-auto"
+                  className="w-[90%] mx-auto dark:caret-white dark:text-white"
                   placeholder="Enter name..."
-                  startContent={<SearchIcon />}
+                  startContent={<SearchIcon className="dark:text-white/80" />}
                   value={value}
                   onValueChange={(value) => {
                     setValue(value);

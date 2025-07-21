@@ -19,7 +19,7 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
         homePost?.hashtags?.length !== 0) && (
         <section className="flex flex-col md:gap-2 gap-1 relative">
           {homePost?.contents?.length !== 0 && (
-            <div className="flex flex-col relative md:gap-2 gap-1 text-black/80">
+            <div className="flex flex-col relative md:gap-2 gap-1 text-black/80 dark:text-white/90">
               {homePost.contents.map((ct) => (
                 <p className="text-sm whitespace-pre-wrap" key={ct.id}>
                   {ct.content}
@@ -34,7 +34,7 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
                 <span
                   key={tag.id}
                   className="text-xs cursor-pointer text-blue-500 bg-blue-100 
-                          px-2 py-0.5 rounded-full"
+               px-2 py-0.5 rounded-full"
                 >
                   #{tag.hashtag}
                 </span>

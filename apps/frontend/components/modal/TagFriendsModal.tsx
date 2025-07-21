@@ -100,7 +100,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
   };
 
   const loadMore = async () => {
-    if (!nextCursor || hasMore || !post) return;
+    if (!nextCursor || hasMore) return;
 
     setHasMore(true);
     setScrollClick(true);
@@ -113,7 +113,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
       });
 
       if (res && res?.data) {
-        if (taggedUsersNextCursor) {
+        if (taggedUsersNextCursor && post) {
           const res1 = await getTaggedUsersOfPost(post.id, {
             after: taggedUsersNextCursor,
           });
@@ -180,7 +180,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
           <>
             <ModalHeader className="flex flex-col gap-1 text-center">
               Tag people
-              <p className="text-sm text-gray-700 font-normal">
+              <p className="text-sm text-gray-700 dark:text-white/70 font-normal">
                 Select friends to tag in your post.
               </p>
             </ModalHeader>
@@ -191,10 +191,13 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
                 <>
                   {friends.length > 0 ? (
                     <>
-                      <ScrollArea className="h-[200px] border-b border-b-black/10">
+                      <ScrollArea
+                        className="h-[200px] border-b border-b-black/10
+                      dark:border-b-white/20"
+                      >
                         <div
                           className="relative flex flex-col md:gap-2 gap-1 border-t 
-                      border-t-black/10 p-2 py-3 cursor-pointer"
+                      border-t-black/10 dark:border-t-white/20 p-2 py-3 cursor-pointer"
                         >
                           {friends.map((friend, index) => {
                             const isSelected = tempSelectedTaggedUsers
@@ -209,7 +212,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
                               <div
                                 key={friend.user_id}
                                 className="flex items-center p-2 rounded-md hover:bg-gray-100 
-                              cursor-pointer"
+                              cursor-pointer dark:hover:bg-white/20"
                                 onClick={handleWrapperClick}
                                 ref={
                                   index === friends.length - 1
@@ -237,7 +240,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
                                     <span className="text-sm font-medium">
                                       {friend.full_name}
                                     </span>
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs text-gray-500 dark:text-white/70">
                                       @{friend.username}
                                     </span>
                                   </div>

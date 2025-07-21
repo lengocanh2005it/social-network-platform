@@ -44,7 +44,7 @@ const MessageOptions: React.FC<MessageOptionsProps> = ({ message }) => {
     <>
       <Dropdown
         placement="bottom-end"
-        className="text-black"
+        className="text-black dark:text-white"
         shouldBlockScroll={false}
       >
         <DropdownTrigger>

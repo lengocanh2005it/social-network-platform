@@ -124,7 +124,7 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
 
       <div
         className="relative z-50 w-[95%] max-w-8xl bg-white rounded-lg overflow-hidden 
-      shadow-xl flex"
+      shadow-xl flex dark:bg-white dark:text-black"
       >
         <Button
           startContent={<XIcon />}

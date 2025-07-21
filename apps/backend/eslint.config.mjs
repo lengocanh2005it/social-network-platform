@@ -8,10 +8,11 @@ export default tseslint.config(
   {
     ignores: [
       'eslint.config.mjs',
-      'ecosystem.config.js',
+      'ecosystem.config.cjs',
       'scripts/build-all.js',
       'scripts/start-dev-all.js',
       'scripts/watch-all.js',
+      'webpack.config.js',
     ],
   },
   eslint.configs.recommended,

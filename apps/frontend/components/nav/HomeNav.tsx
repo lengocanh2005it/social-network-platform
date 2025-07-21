@@ -139,7 +139,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             height={40}
             alt="icon"
             onClick={() => router.push("/home")}
-            className="rounded-full cursor-pointer select-none"
+            className="rounded-full cursor-pointer select-none dark:bg-white dark:border-none"
           />
         </NavbarBrand>
         <SearchDropdown />
@@ -170,7 +170,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         {navItems.map(({ icon: Icon, label, redirectTo }, index) => (
           <div
             key={label}
-            className="relative inline-block"
+            className="relative inline-block dark:text-white"
             ref={setItemRef(index)}
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
@@ -181,7 +181,11 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             }}
           >
             <NavbarItem className="list-none px-4 py-2">
-              <Tooltip showArrow content={label} className="text-black">
+              <Tooltip
+                showArrow
+                content={label}
+                className="text-black dark:text-white"
+              >
                 <div className="flex flex-col items-center">
                   <Icon
                     size={"30px"}
@@ -201,11 +205,11 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
       <NavbarContent as="div" justify="end">
         <Dropdown
           placement="bottom-end"
-          className="text-black"
+          className="text-black dark:text-white"
           shouldBlockScroll={false}
         >
           <DropdownTrigger>
-            <LaptopMinimal className="focus:outline-none cursor-pointer" />
+            <LaptopMinimal className="focus:outline-none cursor-pointer dark:text-white" />
           </DropdownTrigger>
           <DropdownMenu aria-label="Theme Actions" variant="flat">
             <DropdownItem
@@ -232,7 +236,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
           </DropdownMenu>
         </Dropdown>
 
-        <Grid2X2 className="cursor-pointer" />
+        <Grid2X2 className="cursor-pointer dark:text-white" />
 
         <ConversationsDropdown />
 
@@ -241,7 +245,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
         {user && (
           <Dropdown
             placement="bottom-end"
-            className="text-black"
+            className="text-black dark:text-white"
             shouldBlockScroll={false}
           >
             <DropdownTrigger>

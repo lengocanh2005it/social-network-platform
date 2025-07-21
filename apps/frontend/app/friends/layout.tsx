@@ -7,7 +7,10 @@ export default function FriendsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex w-full flex-col min-h-screen bg-white text-black">
+    <main
+      className="flex w-full flex-col min-h-screen bg-white text-black 
+    dark:bg-black dark:text-white"
+    >
       <div className="h-16 fixed w-full z-[50]">
         <HomeNav shouldShowIndicator />
       </div>

@@ -52,7 +52,7 @@ const DeleteAccountSettings: React.FC = () => {
       <section className="relative flex flex-col">
         <div className="flex flex-col relative gap-1">
           <h2 className="text-xl font-semibold">Account Deletion</h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 dark:text-white/80">
             Please note that deleting your account will erase all your data. If
             you&apos;re sure, you can proceed below.
           </p>

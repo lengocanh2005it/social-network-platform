@@ -219,7 +219,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
               }
             }}
           >
-            <ModalContent className="md:py-3 py-2">
+            <ModalContent className="md:py-3 py-2 dark:text-white text-black">
               {() => (
                 <>
                   <ModalHeader className="flex flex-col gap-1 text-center">
@@ -326,7 +326,10 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                         className="cursor-pointer select-none w-10 h-10 flex-shrink-0 rounded-full"
                       />
 
-                      <div className="w-full bg-gray-100 rounded-xl p-3">
+                      <div
+                        className="w-full bg-gray-100 dark:bg-white/20
+                      rounded-xl p-3"
+                      >
                         <textarea
                           rows={1}
                           placeholder="Write a comment..."
@@ -345,7 +348,8 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                           <div className="flex gap-2">
                             {icons.map((icon) => (
                               <button
-                                className="text-gray-500 hover:text-gray-700 transition-all"
+                                className="text-gray-500 hover:text-gray-700 transition-all
+                                dark:text-white/70 dark:hover:text-white/90"
                                 key={icon.key}
                               >
                                 {icon.icon}
@@ -354,7 +358,10 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                           </div>
 
                           {comment?.trim() !== "" && (
-                            <button className="text-gray-500 hover:text-gray-700">
+                            <button
+                              className="text-gray-500 hover:text-gray-700
+                            dark:text-white/80 dark:hover:text-white"
+                            >
                               <SendHorizontal
                                 className="w-5 h-5"
                                 onClick={handleSubmit}

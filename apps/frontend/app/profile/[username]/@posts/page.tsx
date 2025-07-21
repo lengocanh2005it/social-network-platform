@@ -5,9 +5,9 @@ import { useGetFeed, useInfiniteScroll } from "@/hooks";
 import { getMyFeed } from "@/lib/api/users";
 import { usePostStore, useUserStore } from "@/store";
 import { Spinner } from "@heroui/react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const ProfilePostsSection = () => {
+const ProfilePostsSection: React.FC = () => {
   const { posts, appendOldPosts, setPosts, nextCursor } = usePostStore();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { viewedUser, user } = useUserStore();
@@ -67,11 +67,11 @@ const ProfilePostsSection = () => {
             >
               {viewedUser?.id !== user?.id ? (
                 <>
-                  <h1 className="text-center text-gray-600">
+                  <h1 className="text-center text-gray-600 dark:text-white/80">
                     Nothing here yet.
                   </h1>
 
-                  <p className="text-center text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500 dark:text-white/70">
                     {viewedUser?.profile?.first_name +
                       " " +
                       viewedUser?.profile?.last_name || "This user"}{" "}
@@ -80,11 +80,11 @@ const ProfilePostsSection = () => {
                 </>
               ) : (
                 <>
-                  <h1 className="text-center text-gray-600">
+                  <h1 className="text-center text-gray-600 dark:text-white/80">
                     Let&apos;s get started!
                   </h1>
 
-                  <p className="text-center text-sm text-gray-500">
+                  <p className="text-center text-sm text-gray-500 dark:text-white/70">
                     You haven&apos;t posted anything yet. Share something with
                     the world.
                   </p>
@@ -98,7 +98,7 @@ const ProfilePostsSection = () => {
       {(isLoading || isLoadingFeed) && (
         <div
           className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
-            flex-col items-center justify-center text-center"
+            flex-col items-center justify-center text-center dark:text-white text-black"
         >
           <Spinner />
 

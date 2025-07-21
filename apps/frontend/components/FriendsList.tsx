@@ -21,7 +21,8 @@ const FriendsList: React.FC<FriendsListProps> = ({ friends }) => {
       {displayFriendsList.map((fl) => (
         <div
           key={fl.user_id}
-          className="flex flex-col md:gap-2 gap-1 p-2 rounded-lg shadow-sm hover:bg-gray-100 text-center"
+          className="flex flex-col md:gap-2 gap-1 p-2 rounded-lg shadow-sm hover:bg-gray-100 
+          text-center dark:bg-white/20 dark:hover:bg-white/40"
         >
           <div className="relative w-full pt-[100%] overflow-hidden rounded-md">
             <Image

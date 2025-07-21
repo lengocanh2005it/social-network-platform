@@ -59,11 +59,11 @@ const Disable2FAConfirmModal = () => {
               Confirm Disable 2FA
             </ModalHeader>
             <ModalBody className="text-center">
-              <h1 className="text-lg font-semibold text-gray-800">
+              <h1 className="text-lg font-semibold text-gray-800 dark:text-white/80">
                 Are you sure you want to turn off two-factor authentication?
               </h1>
 
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white/70">
                 Turning off 2FA will make your account less secure. <br />
                 We recommend keeping it on to help protect your account.
               </p>

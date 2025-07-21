@@ -107,7 +107,8 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
     <>
       <div
         className="flex justify-center cursor-pointer items-center gap-2 
-      p-3 rounded-lg hover:bg-gray-100 transition-all duration-250 ease-in select-none"
+      p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-white/20 
+      transition-all duration-250 ease-in select-none"
         onClick={onOpen}
       >
         <Share2 size={20} />
@@ -152,7 +153,10 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
                   className="md:max-h-[500px] max-h-[400px] pr-2"
                 >
                   <div className="flex flex-col md:gap-3 gap-2">
-                    <div className="flex flex-col gap-3 items-start border p-4 rounded-lg">
+                    <div
+                      className="flex flex-col gap-3 items-start border
+                    dark:border-white/20 p-4 rounded-lg"
+                    >
                       <div className="flex items-center justify-between w-full md:gap-3 gap-4">
                         <div className="flex items-start md:gap-3 gap-2">
                           <Avatar
@@ -161,19 +165,22 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
                             className="select-none"
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-800">
+                            <p className="text-sm font-semibold text-gray-800 dark:text-white/80">
                               {post.user.profile.first_name +
                                 " " +
                                 post.user.profile.last_name}
                             </p>
-                            <p className="text-xs text-gray-500 mb-1">
+                            <p className="text-xs text-gray-500 dark:text-white/70 mb-1">
                               {formatDateTime(post.created_at)}
                             </p>
                             {(post?.contents?.length !== 0 ||
                               post?.hashtags?.length !== 0) && (
                               <section className="flex flex-col md:gap-2 gap-1 relative">
                                 {post?.contents?.length !== 0 && (
-                                  <div className="flex flex-col relative md:gap-2 gap-1 text-black/80">
+                                  <div
+                                    className="flex flex-col relative md:gap-2 gap-1 
+                                  text-black/80 dark:text-white/80"
+                                  >
                                     {post.contents.map((ct) => (
                                       <p
                                         className="text-sm whitespace-pre-wrap"
@@ -281,7 +288,7 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
                       </Button>
                     ) : (
                       <Button color="primary" onPress={handleCreatePostShare}>
-                        Share Now
+                        Share
                       </Button>
                     )}
                   </>

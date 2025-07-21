@@ -236,7 +236,10 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
       {post && (
         <>
           <section className="flex flex-col md:gap-3 gap-2 relative max-w-2xl mx-auto md:pb-4 pb-3">
-            <div className="flex flex-col border border-black/10 p-2 rounded-lg">
+            <div
+              className="flex flex-col border border-black/10 p-2 rounded-lg 
+            dark:border-white/30"
+            >
               <PostHeader homePost={post} shouldHiddenXCloseIcon />
               <PostContent homePost={post} />
               <PostOptions post={post} shouldShowCommentOption={false} />
@@ -261,7 +264,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                       {isFetching && (
                         <div
                           className="w-full md:mt-8 mt-4 flex md:gap-3 gap-2 
-                          flex-col items-center justify-center text-center"
+                          flex-col items-center justify-center text-center dark:text-white text-black"
                         >
                           <Spinner />
 
@@ -273,7 +276,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                     {nextCursor && !isFetching && (
                       <p
                         className="text-xs text-end hover:underline hover:text-blue-600
-                         cursor-pointer transition-all pr-3"
+                         cursor-pointer transition-all pr-3 dark:hover:text-blue-700"
                         onClick={handleGetNewComments}
                       >
                         See more comments
@@ -291,7 +294,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                       No comments yet
                     </h1>
 
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-white/70">
                       Be the first to share your thoughts and start the
                       conversation.
                     </p>
@@ -307,7 +310,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                   />
                 )}
 
-                <div className="w-full bg-gray-100 rounded-xl p-3">
+                <div className="w-full bg-gray-100 rounded-xl p-3 dark:bg-white/20">
                   <textarea
                     rows={1}
                     placeholder="Write a comment..."
@@ -326,7 +329,8 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                     <div className="flex gap-2 relative">
                       {icons.map((icon) => (
                         <button
-                          className="text-gray-500 hover:text-gray-700 transition-all"
+                          className="text-gray-500 hover:text-gray-700 transition-all
+                          dark:text-white/70 dark:hover:text-white cursor-pointer"
                           key={icon.key}
                         >
                           {icon.icon}
@@ -335,7 +339,10 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                     </div>
 
                     {comment?.trim() !== "" && (
-                      <button className="text-gray-500 hover:text-gray-700">
+                      <button
+                        className="text-gray-500 hover:text-gray-700 dark:text-white/70
+                      dark:hover:text-white cursor-pointer"
+                      >
                         <SendHorizontal
                           className="w-5 h-5"
                           onClick={handleSubmit}

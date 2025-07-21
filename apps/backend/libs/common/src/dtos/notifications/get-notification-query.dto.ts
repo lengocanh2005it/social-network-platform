@@ -1,12 +1,5 @@
-import { Transform, Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Min,
-} from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class GetNotificationQueryDto {
   @IsOptional()
@@ -20,7 +13,7 @@ export class GetNotificationQueryDto {
   @IsNotEmpty()
   readonly after?: string;
 
-  @Transform(({ value }) => value === 'true')
-  @IsBoolean()
-  readonly is_read!: boolean;
+  @IsString()
+  @IsNotEmpty()
+  readonly is_read!: string;
 }

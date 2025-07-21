@@ -31,8 +31,8 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
     ${
       !conversation.last_message.is_read_by_receiver &&
       conversation.last_message.user.id !== user?.id
-        ? "bg-blue-50 hover:bg-blue-100"
-        : "hover:bg-gray-100"
+        ? "bg-blue-50 hover:bg-blue-100 dark:bg-white/40 dark:hover:bg-white/50"
+        : "hover:bg-gray-100 dark:hover:bg-white/20"
     }
   `}
           ref={index === conversations.length - 1 ? ref : null}
@@ -45,7 +45,6 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
             <Avatar
               src={conversation.target_user.avatar_url}
               alt={conversation.target_user.full_name}
-              className="w-10 h-10 select-none rounded-full flex-shrink-0"
             />
 
             <div className="flex flex-col relative">
@@ -53,28 +52,28 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                 className={`${
                   !conversation.last_message.is_read_by_receiver &&
                   conversation.last_message.user.id !== user?.id
-                    ? "font-semibold"
-                    : "font-normal"
+                    ? "font-semibold dark:text-white"
+                    : "font-normal dark:text-white"
                 }`}
               >
                 {conversation.target_user.full_name}
               </h1>
 
               <div className="flex items-center gap-1">
-                <p className="text-gray-600 text-xs italic">
+                <p className="text-gray-600 dark:text-white/60 text-xs italic">
                   {conversation.last_message?.user?.id === user?.id
                     ? "You"
                     : conversation.last_message?.user?.full_name}
                   :
                 </p>
 
-                <div className="flex items-center text-xs text-gray-600 gap-x-1">
+                <div className="flex items-center text-xs text-gray-600 dark:text-white/60 gap-x-1">
                   <p
                     className={`truncate max-w-[150px] ${
                       !conversation.last_message.is_read_by_receiver &&
                       conversation.last_message.user.id !== user?.id
-                        ? "font-medium text-black"
-                        : "text-gray-600"
+                        ? "font-medium text-black dark:text-white"
+                        : "text-gray-600 dark:text-white/80"
                     }`}
                   >
                     {conversation.last_message.content}

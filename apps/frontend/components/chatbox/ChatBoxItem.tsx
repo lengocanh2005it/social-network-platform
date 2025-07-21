@@ -27,13 +27,16 @@ const ChatBoxItem: React.FC<ChatBoxItemProps> = ({ friend }) => {
   const [parentMessage, setParentMessage] = useState<Message | null>(null);
 
   return (
-    <div className="w-85 h-100 bg-white border border-black/20 rounded-t-lg flex flex-col relative">
+    <div
+      className="w-85 h-100 bg-white border border-black/20 rounded-t-lg flex flex-col relative
+    dark:bg-black dark:text-white dark:border-white/30"
+    >
       <ChatBoxHeader friend={friend} />
 
       {isLoading ? (
         <div
           className="w-full flex-1 md:mt-8 mt-4 flex md:gap-3 gap-2 
-        flex-col items-center justify-center text-center"
+        flex-col items-center justify-center text-center dark:text-white"
         >
           <Spinner />
 
@@ -47,7 +50,8 @@ const ChatBoxItem: React.FC<ChatBoxItemProps> = ({ friend }) => {
         <div
           className="absolute bottom-15 left-0 right-0
         p-3 bg-gray-500 rounded-t-lg border border-black/10 text-white
-        flex items-start justify-between text-sm z-10"
+        flex items-start justify-between text-sm z-[800]
+        dark:bg-black/70 dark:text-white dark:border-white/30"
         >
           <div className="flex flex-col">
             <span className="text-xs text-white/80">

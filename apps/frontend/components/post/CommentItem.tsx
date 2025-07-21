@@ -290,13 +290,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
             <div className="flex-1 min-w-0 relative">
               <div
-                className={`bg-gray-100 p-2 rounded-lg max-w-fit relative ${
+                className={`bg-gray-100 dark:bg-white/20 p-2 rounded-lg max-w-fit relative ${
                   comment.total_likes > 0 ? "pb-8" : "pb-2"
                 }`}
               >
                 <p className="font-bold truncate">{comment.user.full_name}</p>
 
-                <p className="text-black/80 break-all whitespace-pre-wrap">
+                <p className="text-black/80 dark:text-white/80 break-all whitespace-pre-wrap">
                   {comment.content}
                 </p>
 
@@ -305,18 +305,20 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-white/70">
                 <span>{formatDateTime(comment.created_at)}</span>
                 <button
                   onClick={handleToggleLikeComment}
                   className={`cursor-pointer transition-colors ${
-                    liked ? "text-blue-600" : "hover:text-gray-700"
+                    liked
+                      ? "text-blue-600"
+                      : "hover:text-gray-700 dark:hover:text-white/50"
                   }`}
                 >
                   {liked ? "Liked" : "Like"}
                 </button>
                 <button
-                  className="cursor-pointer hover:text-gray-700"
+                  className="cursor-pointer hover:text-gray-700 dark:hover:text-white/50"
                   onClick={() => setShowReplyBox((prev) => !prev)}
                 >
                   Reply
@@ -326,7 +328,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   post?.user?.id !== user?.id) ||
                   post?.user?.id === user?.id) && (
                   <button
-                    className="cursor-pointer hover:text-gray-700"
+                    className="cursor-pointer hover:text-gray-700 dark:hover:text-white/50"
                     onClick={() => handleDelete(comment.id, post.id)}
                   >
                     Delete
@@ -364,7 +366,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               className="rounded-full w-10 h-10 select-none"
             />
 
-            <div className="w-full bg-gray-100 rounded-xl p-3 flex-1">
+            <div className="w-full bg-gray-100 dark:bg-white/20 rounded-xl p-3 flex-1">
               <textarea
                 rows={1}
                 placeholder="Write a comment..."
@@ -383,7 +385,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 <div className="flex gap-2">
                   {icons.map((icon) => (
                     <button
-                      className="text-gray-500 hover:text-gray-700 transition-all"
+                      className="text-gray-500 hover:text-gray-700 transition-all
+                      dark:text-white/70 dark:hover:text-white"
                       key={icon.key}
                     >
                       {icon.icon}
@@ -392,7 +395,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 </div>
 
                 {replyText?.trim() !== "" && (
-                  <button className="text-gray-500 hover:text-gray-700">
+                  <button
+                    className="text-gray-500 hover:text-gray-700
+                  dark:text-white/80 dark:hover:text-white"
+                  >
                     <SendHorizontal
                       className="w-5 h-5"
                       onClick={handleReplySubmit}

@@ -35,7 +35,7 @@ const PasswordToggleInput = ({
         endContent={
           <div
             onClick={() => setShowPassword((prev) => !prev)}
-            className="cursor-pointer text-gray-500"
+            className="cursor-pointer text-gray-500 dark:text-white"
           >
             {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
           </div>

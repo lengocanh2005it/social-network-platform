@@ -98,7 +98,7 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
         },
       }}
     >
-      <ModalContent className="text-black">
+      <ModalContent className="text-black dark:text-white">
         {(onClose) => (
           <>
             <ModalHeader
@@ -108,7 +108,10 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
               {textHeaders}
             </ModalHeader>
             <ModalBody className="flex flex-col md:gap-2 mx-auto gap-1 items-center justify-center">
-              <p className="font-normal text-black/80 md:text-medium text-[14px] text-center">
+              <p
+                className="font-normal text-black/80 dark:text-white/80 md:text-medium 
+              text-[14px] text-center"
+              >
                 {description}
               </p>
 
@@ -149,7 +152,7 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
                     <>
                       <Button
                         isLoading
-                        className="bg-black text-white"
+                        className="bg-black text-white dark:bg-white dark:text-black"
                         color="primary"
                       >
                         Please wait...
@@ -159,7 +162,7 @@ const VerifyOTPModal: React.FC<VerifyOTPModalProps> = ({
                     <>
                       <Button
                         type="submit"
-                        className="bg-black text-white"
+                        className="bg-black text-white dark:bg-white dark:text-black"
                         color="primary"
                       >
                         Verify OTP

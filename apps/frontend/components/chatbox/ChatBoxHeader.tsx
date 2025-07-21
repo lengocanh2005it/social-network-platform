@@ -19,7 +19,10 @@ const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({ friend }) => {
   };
 
   return (
-    <div className="flex bg-gray-200 rounded-t-lg items-center justify-between border-b p-3">
+    <div
+      className="flex bg-gray-200 rounded-t-lg items-center justify-between border-b p-3
+    dark:bg-black dark:text-white dark:border-b-white/40"
+    >
       <div className="flex items-center md:gap-2 gap-1">
         <div className="relative">
           <Avatar
@@ -39,7 +42,9 @@ const ChatBoxHeader: React.FC<ChatBoxHeaderProps> = ({ friend }) => {
 
         <div className="flex flex-col">
           <span className="text-sm font-medium">{friend.full_name}</span>
-          <span className="text-xs text-gray-500">@{friend.username}</span>
+          <span className="text-xs text-gray-500 dark:text-white/70">
+            @{friend.username}
+          </span>
         </div>
       </div>
 

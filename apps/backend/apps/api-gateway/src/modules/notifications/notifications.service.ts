@@ -29,7 +29,7 @@ export class NotificationsService implements OnModuleInit {
   ) => {
     return sendWithTimeout(this.notificationsClient, 'get-notifications', {
       email,
-      getNotificationQueryDto: toPlain(getNotificationQueryDto),
+      getNotificationQueryDto,
     });
   };
 

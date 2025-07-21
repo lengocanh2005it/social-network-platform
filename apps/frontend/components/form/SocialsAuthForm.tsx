@@ -26,7 +26,7 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
     <div className="w-full text-center space-y-4">
       <div className="relative flex items-center justify-center">
         <hr className="md:w-1/2 w-full border-t border-gray-300" />
-        <span className="absolute bg-white px-3 text-sm text-gray-500">
+        <span className="absolute bg-white dark:bg-black px-3 text-sm text-gray-500 dark:text-white">
           Or {method} with
         </span>
       </div>
@@ -34,7 +34,8 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
       <div className="flex justify-center space-x-4">
         <button
           className="flex items-center justify-center w-10 h-10 rounded-full border
-         border-gray-300 hover:bg-gray-100 transition cursor-pointer"
+         border-gray-300 hover:bg-gray-100 dark:hover:bg-white transition cursor-pointer
+         select-none"
           onClick={() => socialsLogin("google")}
         >
           <Image
@@ -48,7 +49,8 @@ const SocialsAuthForm: React.FC<SocialsAuthFormProps> = ({ method }) => {
 
         <button
           className="flex items-center justify-center w-10 h-10 rounded-full border
-         border-gray-300 hover:bg-gray-100 transition cursor-pointer"
+         border-gray-300 hover:bg-gray-100 transition cursor-pointer dark:hover:bg-white
+         select-none"
           onClick={() => socialsLogin("facebook")}
         >
           <Image

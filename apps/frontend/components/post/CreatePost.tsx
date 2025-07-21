@@ -31,7 +31,10 @@ const CreatePost = () => {
     <>
       {user && (
         <>
-          <div className="bg-white rounded-2xl border border-black/10 p-4 w-full mx-auto">
+          <div
+            className="bg-white rounded-2xl border border-black/10 p-4 w-full mx-auto
+          dark:bg-black dark:text-white dark:border-white/30"
+          >
             <div className="flex items-center space-x-3">
               <Avatar
                 src={user.profile.avatar_url}
@@ -44,20 +47,24 @@ const CreatePost = () => {
                   clearSelectedTaggedUsers();
                 }}
                 className="bg-gray-200 text-gray-500 rounded-full px-4 py-2 w-full 
-            cursor-pointer hover:bg-gray-200 transition select-none"
+            cursor-pointer hover:bg-gray-300 dark:bg-white/20 dark:hover:bg-white/30 
+            transition select-none dark:text-white/60"
               >
                 What&apos;s on your mind, {user.profile.last_name}?
               </div>
             </div>
 
-            <hr className="my-4" />
+            <hr className="my-4 dark:bg-white/20" />
 
-            <div className="grid grid-cols-3 px-2 text-sm text-gray-500">
+            <div
+              className="grid grid-cols-3 px-2 text-sm text-gray-500
+            dark:text-white/80"
+            >
               {activities.map((activity) => (
                 <div
                   key={activity.key}
                   className="flex items-center justify-center gap-2 p-2 hover:bg-black/10 
-            rounded-sm transition-all cursor-pointer"
+            rounded-sm transition-all cursor-pointer dark:hover:bg-white/20"
                 >
                   {activity.icon}
                   <span>{activity.content}</span>

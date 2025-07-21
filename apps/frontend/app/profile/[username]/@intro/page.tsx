@@ -68,7 +68,7 @@ const ProfileIntroSection = () => {
   return (
     <>
       <section
-        className={`w-full flex flex-col ${viewedUser?.id !== user?.id ? "md:gap-2" : "md:gap-3"} gap-2`}
+        className={`w-full flex flex-col dark:text-white dark:bg-black ${viewedUser?.id !== user?.id ? "md:gap-2" : "md:gap-3"} gap-2`}
       >
         <h1 className="font-medium md:text-xl text-lg">Intro</h1>
 
@@ -97,7 +97,7 @@ const ProfileIntroSection = () => {
               <>
                 {user?.profile?.bio && (
                   <div className="w-full flex-1 flex flex-col md:p-3 p-2 md:gap-2 gap-1">
-                    <p className="text-center text-gray-700">
+                    <p className="text-center text-gray-700 dark:text-white/80">
                       {user?.profile?.bio}
                     </p>
 

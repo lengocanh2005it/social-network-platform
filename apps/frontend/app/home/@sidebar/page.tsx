@@ -81,11 +81,13 @@ const SideBarPage: React.FC = () => {
     <main className="flex flex-col md:gap-1 flex-1">
       <FriendRequests />
 
-      <Divider className="md:my-3 my-2" />
+      <Divider className="md:my-3 my-2 dark:bg-white/30" />
 
       <div className="flex flex-col md:gap-2 gap-1 h-full">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-black/70">Contacts</h2>
+          <h2 className="text-lg font-medium text-black/70 dark:text-white/70">
+            Contacts
+          </h2>
 
           <div className="flex items-center md:gap-4 gap-2">
             {friends?.length !== 0 && (
@@ -94,7 +96,7 @@ const SideBarPage: React.FC = () => {
 
             <Dropdown
               placement="bottom-end"
-              className="text-black"
+              className="text-black dark:text-white"
               shouldBlockScroll={false}
             >
               <DropdownTrigger>
@@ -136,7 +138,7 @@ const SideBarPage: React.FC = () => {
                       <li
                         key={friend.user_id}
                         className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 
-                      p-2 rounded-sm"
+                      p-2 rounded-sm dark:hover:bg-white/20"
                         onClick={() => openChat(friend)}
                       >
                         <div className="relative">

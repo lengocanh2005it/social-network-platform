@@ -108,8 +108,8 @@ export default function EditImageButton({
           <Button
             isIconOnly
             onPress={() => fileInputRef.current?.click()}
-            className={`absolute bottom-3 right-3 bg-gray-400 text-white 
-          p-2 rounded-full hover:bg-gray-500 transition ${classNames}`}
+            className={`absolute bottom-3 right-3 bg-gray-400 dark:bg-black/70 text-white 
+          p-2 rounded-full hover:bg-gray-500 dark:hover:bg-black transition dark:border dark:border-white/20 ${classNames}`}
           >
             <CameraIcon />
           </Button>

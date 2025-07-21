@@ -1,6 +1,7 @@
 "use client";
 import { HeroUIProvider } from "@heroui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 import React, { useState } from "react";
 
 const AppProviders = ({ children }: { children: React.ReactNode }) => {
@@ -8,7 +9,15 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <HeroUIProvider>{children}</HeroUIProvider>
+      <HeroUIProvider>
+        <NextThemesProvider
+          attribute="class"
+          enableSystem
+          defaultTheme="system"
+        >
+          {children}
+        </NextThemesProvider>
+      </HeroUIProvider>
     </QueryClientProvider>
   );
 };

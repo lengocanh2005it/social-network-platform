@@ -81,12 +81,14 @@ const PostOptions: React.FC<PostOptionsProps> = ({
   return (
     <>
       <div
-        className={`flex flex-col relative md:gap-3 gap-2 border-t border-black/10 
+        className={`flex flex-col relative md:gap-3 gap-2 border-t border-black/10
+          dark:border-white/40
           ${!setIsOpen && "pb-2"} ${post.topLikedUsers?.length !== 0 ? "pt-3" : "pt-2"}`}
       >
         <div className="flex items-center justify-between md:gap-3 gap-2">
           <p
-            className="text-sm text-gray-600 text-left hover:underline cursor-pointer"
+            className="text-sm text-gray-600 text-left hover:underline cursor-pointer
+            dark:text-white/80"
             onClick={() => setIsModalOpen(true)}
           >
             {renderLikedUsersText()}
@@ -95,14 +97,20 @@ const PostOptions: React.FC<PostOptionsProps> = ({
           {(post?.total_comments !== 0 || post?.total_shares !== 0) && (
             <div className="flex items-center justify-center md:gap-2 gap-1">
               {post?.total_comments !== 0 && (
-                <p className="text-sm text-gray-600 text-left hover:underline cursor-pointer">
+                <p
+                  className="text-sm text-gray-600 dark:text-white/70 
+                text-left hover:underline cursor-pointer"
+                >
                   {post?.total_comments}{" "}
                   {post?.total_comments > 1 ? "comments" : "comment"}
                 </p>
               )}
 
               {post?.total_shares !== 0 && (
-                <p className="text-sm text-gray-600 text-left hover:underline cursor-pointer">
+                <p
+                  className="text-sm text-gray-600 dark:text-white/70 
+                text-left hover:underline cursor-pointer"
+                >
                   {post?.total_shares}{" "}
                   {post?.total_shares > 1 ? "shares" : "share"}
                 </p>
@@ -113,12 +121,14 @@ const PostOptions: React.FC<PostOptionsProps> = ({
 
         <div
           className={`grid ${shouldShowCommentOption ? "grid-cols-3 gap-4" : "grid-cols-2 gap-2"} 
-          text-gray-600`}
+          text-gray-600 dark:text-white/80`}
         >
           <div
             className={`flex justify-center cursor-pointer items-center gap-2 p-3 
           rounded-lg transition-all duration-250 ease-in select-none ${
-            liked ? "text-blue-600 hover:bg-blue-100" : "hover:bg-gray-100"
+            liked
+              ? "text-blue-600 hover:bg-blue-100 dark:hover:bg-white/20"
+              : "hover:bg-gray-100 dark:hover:bg-white/20"
           }`}
             onClick={toggleLike}
           >
@@ -135,7 +145,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
               {setIsOpen ? (
                 <div
                   className="flex justify-center cursor-pointer items-center gap-2 p-3 rounded-lg
-           hover:bg-gray-100 transition-all duration-250 ease-in select-none"
+           hover:bg-gray-100 dark:hover:bg-white/20 transition-all duration-250 ease-in select-none"
                   onClick={() => setIsOpen(true)}
                 >
                   <MessageCircle size={20} />
@@ -144,7 +154,8 @@ const PostOptions: React.FC<PostOptionsProps> = ({
               ) : (
                 <div
                   className="flex justify-center cursor-pointer items-center gap-2 
-        p-3 rounded-lg hover:bg-gray-100 transition-all duration-250 ease-in select-none"
+        p-3 rounded-lg hover:bg-gray-100 dark:hover-white/20 
+        transition-all duration-250 ease-in select-none"
                 >
                   <MessageCircle size={20} />
                   <p className="text-md">Comment</p>

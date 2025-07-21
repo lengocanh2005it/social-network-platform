@@ -22,7 +22,7 @@ const SideCredentials = () => {
       <div className="flex flex-col md:gap-2 gap-1 items-center justify-center text-center">
         <h1 className="md:text-xl text-lg">Social Network Platform</h1>
 
-        <p className="md:text-sm text-[14px] text-black/60">
+        <p className="md:text-sm text-[14px] text-black/60 dark:text-white/70">
           A platform used to build communities, connect with people who share
           similar interests, and share exciting stories.
         </p>

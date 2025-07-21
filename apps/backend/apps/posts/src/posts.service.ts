@@ -694,14 +694,14 @@ export class PostsService implements OnModuleInit {
 
     const fullContent = existingPost.contents.map((c) => c.content).join(' ');
 
-    const postTitle = truncateWithEllipsis(fullContent);
-
     if (user.id !== existingPost.user_id) {
       const createNotificationDto: CreateNotificationDto = {
         type: NotificationTypeEnum.post_liked,
         content: generateNotificationMessage(NotificationTypeEnum.post_liked, {
           senderName: `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`,
-          postTitle,
+          ...(fullContent?.trim() !== '' && {
+            postTitle: truncateWithEllipsis(fullContent.trim()),
+          }),
         }),
         sender_id: user.id,
         recipient_id: existingPost.user_id,
@@ -2747,9 +2747,6 @@ export class PostsService implements OnModuleInit {
             saved_at: items[0].saved_at,
           })
         : null;
-
-    console.log('Next cursor: ', nextCursor);
-    console.log('Prev cursor: ', prevCursor);
 
     return {
       data: await Promise.all(

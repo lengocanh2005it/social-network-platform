@@ -611,7 +611,7 @@ export type StoryViewer = {
   username: string;
 };
 
-export type GetNotificationsQueryDto = GetFeedQueryDto & { is_read: boolean };
+export type GetNotificationsQueryDto = GetFeedQueryDto & { is_read: string };
 
 export type DeleteNotificationQueryDto = {
   notificationIds: string[];

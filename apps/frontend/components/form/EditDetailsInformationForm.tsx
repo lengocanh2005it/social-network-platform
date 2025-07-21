@@ -130,6 +130,7 @@ const EditDetailsInformationForm = () => {
     const updateUserProfileDto: UpdateUserProfile = {
       infoDetails: {
         ...values,
+        ...(user?.profile?.bio && { bio: user.profile.bio }),
         dob: formatDateToString(values.dob),
         nickname:
           typeof values?.nickname === "string" &&
@@ -186,7 +187,9 @@ const EditDetailsInformationForm = () => {
                 name="first_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      First Name
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="John" {...field} />
                     </FormControl>
@@ -200,7 +203,9 @@ const EditDetailsInformationForm = () => {
                 name="last_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      Last Name
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Doe" {...field} />
                     </FormControl>
@@ -215,7 +220,9 @@ const EditDetailsInformationForm = () => {
               name="nickname"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nick Name</FormLabel>
+                  <FormLabel className="text-black dark:text-white">
+                    Nick Name
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Senior Software Engineer" {...field} />
                   </FormControl>
@@ -230,7 +237,9 @@ const EditDetailsInformationForm = () => {
                 name="phone_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone number</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      Phone number
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="0393873630" {...field} />
                     </FormControl>
@@ -244,7 +253,9 @@ const EditDetailsInformationForm = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      Username
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="john_doe01" {...field} />
                     </FormControl>
@@ -260,7 +271,9 @@ const EditDetailsInformationForm = () => {
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-black">Gender</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      Gender
+                    </FormLabel>
                     <FormControl>
                       <Select
                         className="text-black"
@@ -285,7 +298,9 @@ const EditDetailsInformationForm = () => {
                 name="dob"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-black">Date of birth</FormLabel>
+                    <FormLabel className="text-black dark:text-white">
+                      Date of birth
+                    </FormLabel>
                     <FormControl>
                       <DatePicker
                         hideTimeZone
@@ -337,7 +352,7 @@ const EditDetailsInformationForm = () => {
               </Button>
             </div>
 
-            <p className="text-center text-gray-700 italic text-sm">
+            <p className="text-center text-gray-700 dark:text-white/70 italic text-sm">
               Note: Click the Update button to save the changes you just made.
             </p>
           </form>

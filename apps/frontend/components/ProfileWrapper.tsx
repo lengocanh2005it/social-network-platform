@@ -57,7 +57,7 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
     return (
       <section
         className="relative w-full h-screen mt-20 pb-10 flex flex-col 
-        items-center justify-center text-center md:gap-4 gap-2"
+        items-center justify-center text-center md:gap-4 gap-2 dark:bg-black dark:text-white"
       >
         <div className="md:w-[250px] md:h-[250px] w-[300px] h-[300px] relative select-none">
           <Image
@@ -111,13 +111,13 @@ const ProfileWrapper: React.FC<ProfileWrapperProps> = ({
               {tab === null && (
                 <>
                   <div className="w-full md:w-1/3 flex flex-col gap-4">
-                    <div className="bg-white rounded-lg shadow p-4">
+                    <div className="bg-white dark:bg-black rounded-lg shadow dark:shadow-white p-4">
                       {intro}
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
+                    <div className="bg-white dark:bg-black rounded-lg shadow dark:shadow-white p-4">
                       {photos}
                     </div>
-                    <div className="sticky top-20 bg-white rounded-lg shadow p-4">
+                    <div className="sticky top-20 bg-white dark:bg-black dark:shadow-white rounded-lg shadow p-4">
                       {friends}
                     </div>
                   </div>
