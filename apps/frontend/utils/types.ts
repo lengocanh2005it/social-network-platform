@@ -15,6 +15,7 @@ import {
   PostContentType,
   PostPrivaciesEnum,
   PostPrivaciesType,
+  ThemeEnum,
   UserEducationsType,
   UserProfilesType,
   UsersType,
@@ -705,4 +706,8 @@ export type BookMark = {
   saved_at: string;
   user: Omit<UsersType & { profile: UserProfilesType }, "password">;
   post: PostDetails;
+};
+
+export type UpdateThemeDto = {
+  theme: ThemeEnum;
 };

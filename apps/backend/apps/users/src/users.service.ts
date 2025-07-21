@@ -17,6 +17,7 @@ import {
   UpdateEducationsDto,
   UpdateInfoDetailsDto,
   UpdateSocialsLinkDto,
+  UpdateThemeDto,
   UpdateUserProfileDto,
   UpdateUserSessionDto,
   UpdateWorkPlaceDto,
@@ -2293,5 +2294,44 @@ export class UsersService implements OnModuleInit {
       success: true,
       message: 'Account deleted successfully',
     };
+  };
+
+  public updateThemeOfUser = async (
+    email: string,
+    updateThemeDto: UpdateThemeDto,
+  ) => {
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!user || !user.profile)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `This email has not been registered.`,
+      });
+
+    const { theme } = updateThemeDto;
+
+    await this.prismaService.userProfiles.update({
+      where: {
+        user_id: user.id,
+      },
+      data: {
+        theme,
+      },
+    });
+
+    return this.handleGetMe(email, {
+      username: user.profile.username,
+      includeProfile: true,
+      includeEducations: true,
+      includeWorkPlaces: true,
+      includeSocials: true,
+    });
   };
 }

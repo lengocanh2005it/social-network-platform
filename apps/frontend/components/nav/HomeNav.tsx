@@ -2,7 +2,7 @@
 import ConversationsDropdown from "@/components/ConversationsDropdown";
 import SearchDropdown from "@/components/SearchDropdown";
 import NotificationsTab from "@/components/tabs/NotificationsTab";
-import { useSignOut } from "@/hooks";
+import { useSignOut, useUpdateTheme } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
   Avatar,
@@ -20,6 +20,7 @@ import {
   NavbarMenuToggle,
   Tooltip,
 } from "@heroui/react";
+import { ThemeEnum } from "@repo/db";
 import {
   Contact,
   Grid2X2,
@@ -49,14 +50,18 @@ interface HomeNavProps {
 const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const [, setIsHovering] = useState(false);
+  const [, setIsHovering] = useState<boolean>(false);
   const isHoveringRef = useRef(false);
   const { user } = useUserStore();
   const { mutate: mutateSignOut } = useSignOut();
+  const { mutate: mutateUpdateTheme, isPending } = useUpdateTheme();
+  const [currentTheme, setCurrentTheme] = useState<string>(
+    user?.profile?.theme ?? "system",
+  );
 
   const menuItems = ["Profile", "Dashboard", "Activity", "Log Out"];
 
@@ -211,7 +216,21 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
           <DropdownTrigger>
             <LaptopMinimal className="focus:outline-none cursor-pointer dark:text-white" />
           </DropdownTrigger>
-          <DropdownMenu aria-label="Theme Actions" variant="flat">
+          <DropdownMenu
+            aria-label="Theme Actions"
+            variant="flat"
+            selectedKeys={[currentTheme]}
+            selectionMode="single"
+            onSelectionChange={(keys) => {
+              const selectedTheme = Array.from(keys)[0]?.toString();
+              if (!selectedTheme || selectedTheme === currentTheme || isPending)
+                return;
+              setCurrentTheme(selectedTheme);
+              mutateUpdateTheme({
+                theme: selectedTheme as ThemeEnum,
+              });
+            }}
+          >
             <DropdownItem
               key="light"
               description="Light theme."
@@ -229,7 +248,7 @@ const HomeNav: React.FC<HomeNavProps> = ({ shouldShowIndicator }) => {
             <DropdownItem
               key="system"
               startContent={<TvMinimal />}
-              description="System theme"
+              description="System theme."
             >
               System
             </DropdownItem>
