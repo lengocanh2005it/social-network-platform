@@ -24,8 +24,12 @@
       "@app/common/*": [
         "libs/common/src/*"
       ],
-      "@repo/db": ["../../packages/db/src"],
-      "@repo/db/@generated": ["../../packages/db/@generated"]
+      "@repo/db": [
+        "../../packages/db/src"
+      ],
+      "@repo/db/@generated": [
+        "../../packages/db/@generated"
+      ]
     }
   }
 }
