@@ -1,6 +1,7 @@
 import { PostDetails } from "@/store";
 import {
   AuthMethod,
+  colorMap,
   CreateCommentTargetType,
   FriendListType,
   ResponseFriendRequestAction,
@@ -711,3 +712,5 @@ export type BookMark = {
 export type UpdateThemeDto = {
   theme: ThemeEnum;
 };
+
+export type Color = keyof typeof colorMap;

@@ -117,6 +117,11 @@ export const KAFKA_SERVICES = [
     clientId: 'notifications',
     groupId: 'notifications-group',
   },
+  {
+    serviceName: 'ADMIN_SERVICE',
+    clientId: 'admin',
+    groupId: 'admin-group',
+  },
 ] as const;
 
 export enum AuthMethod {
@@ -258,3 +263,9 @@ export enum FriendListType {
   REQUESTS = 'requests',
   SUGGESTIONS = 'suggestions',
 }
+
+export type StatsType = {
+  value: number;
+  percent: number;
+  trend: 'up' | 'down';
+};

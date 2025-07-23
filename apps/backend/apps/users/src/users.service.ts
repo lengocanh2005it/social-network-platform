@@ -35,6 +35,7 @@ import {
   REFRESH_TOKEN_LIFE,
   ResponseFriendRequestAction,
   sendWithTimeout,
+  StatsType,
   SyncOptions,
   toPascalCase,
   UploadUserImageTypeEnum,
@@ -50,6 +51,7 @@ import {
   PostPrivaciesEnum,
   SessionStatusEnum,
 } from '@repo/db';
+import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import { omit } from 'lodash';
 
 @Injectable()
@@ -2333,5 +2335,49 @@ export class UsersService implements OnModuleInit {
       includeWorkPlaces: true,
       includeSocials: true,
     });
+  };
+
+  public getUsersStats = async (): Promise<StatsType> => {
+    const now = new Date();
+
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+
+    const lastMonthDate = subMonths(now, 1);
+    const lastMonthStart = startOfMonth(lastMonthDate);
+    const lastMonthEnd = endOfMonth(lastMonthDate);
+
+    const current = await this.prismaService.users.count({
+      where: {
+        profile: {
+          created_at: {
+            gte: currentMonthStart,
+            lte: currentMonthEnd,
+          },
+        },
+      },
+    });
+
+    const lastMonth = await this.prismaService.users.count({
+      where: {
+        profile: {
+          created_at: {
+            gte: lastMonthStart,
+            lte: lastMonthEnd,
+          },
+        },
+      },
+    });
+
+    const percent =
+      lastMonth === 0
+        ? '100.0'
+        : (((current - lastMonth) / lastMonth) * 100).toFixed(1);
+
+    return {
+      value: current,
+      percent: parseFloat(percent),
+      trend: current >= lastMonth ? 'up' : 'down',
+    };
   };
 }

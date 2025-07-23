@@ -37,4 +37,7 @@ export {
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
   Theme as ThemeEnum,
+  ReportReason as ReportReasonEnum,
+  ReportStatus as ReportStatusEnum,
+  ReportType as ReportTypeEnum,
 } from "../@generated/default.js";

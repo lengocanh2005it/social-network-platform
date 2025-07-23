@@ -1,12 +1,14 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
+import { RoleEnum } from '@repo/db';
+import { Roles } from 'nest-keycloak-connect';
 import { AdminService } from './admin.service';
-import { MessagePattern } from '@nestjs/microservices';
 
-@Controller()
+@Controller('admin')
+@Roles(RoleEnum.admin)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @MessagePattern('get-stats')
+  @Get('dashboard/stats')
   async getStats() {
     return this.adminService.getStats();
   }

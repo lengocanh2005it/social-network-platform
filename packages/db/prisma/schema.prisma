@@ -44,6 +44,8 @@ model Users {
   work_places           UserWorkPlaces[]
   photos                Photos[]
   book_marks            BookMarks[]
+  activities            Activities[]
+  reports               Reports[]
 }
 
 model UserProfiles {
@@ -430,6 +432,51 @@ model BookMarks {
   post Posts @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id])
+}
+
+model Activities {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  action     String   @db.Text
+  user_id    String   @db.Uuid
+  metadata   Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Reports {
+  id          String       @id @default(uuid())
+  reporter_id String       @db.Uuid
+  type        ReportType
+  target_id   String
+  reason      ReportReason
+  status      ReportStatus @default(pending)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reporter Users @relation(fields: [reporter_id], references: [id])
+}
+
+enum ReportReason {
+  spam
+  abuse
+  inappropriate
+  harassment
+  misinformation
+  other
+}
+
+enum ReportStatus {
+  pending
+  resolved
+  rejected
+}
+
+enum ReportType {
+  post
+  comment
+  story
 }
 
 enum PhotoType {

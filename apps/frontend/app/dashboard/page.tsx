@@ -1,10 +1,11 @@
 "use client";
-import { Users, FileText, MessageSquare, AlertCircle } from "lucide-react";
-import { Card, CardBody } from "@heroui/react";
-import { StatCard } from "@/components/StatCard";
 import { ActivityItem } from "@/components/ActivityItem";
+import { StatCard } from "@/components/StatCard";
 import { UserPostChart } from "@/components/UserPostChart";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Color } from "@/utils";
+import { Card, CardBody } from "@heroui/react";
+import { AlertCircle, FileText, MessageSquare, Users } from "lucide-react";
 
 export default function DashboardPage() {
   const stats = [
@@ -85,12 +86,12 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-6 md:p-10 bg-gray-900 text-gray-100 space-y-10 rounded-lg">
+    <div className="p-6 md:p-10 bg-gray-900 text-gray-100 space-y-10 rounded-xl">
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-gray-100">Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((item, idx) => (
-            <StatCard key={idx} {...item} />
+            <StatCard key={idx} {...item} color={item.color as Color} />
           ))}
         </div>
       </section>

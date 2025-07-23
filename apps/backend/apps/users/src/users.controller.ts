@@ -305,4 +305,9 @@ export class UsersController {
   ) {
     return this.usersService.updateThemeOfUser(email, updateThemeDto);
   }
+
+  @MessagePattern('get-users-stats')
+  async getUsersStats() {
+    return this.usersService.getUsersStats();
+  }
 }

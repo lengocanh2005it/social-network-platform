@@ -3,6 +3,7 @@ import { Card, CardBody } from "@heroui/react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { motion } from "framer-motion";
 import React from "react";
+import { Color, colorMap } from "@/utils";
 
 interface StatCardProps {
   title: string;
@@ -10,7 +11,7 @@ interface StatCardProps {
   percent: string;
   trend: string;
   icon: React.ElementType;
-  color: string;
+  color: Color;
   sub: string;
 }
 
@@ -23,17 +24,18 @@ export function StatCard({
   color,
   sub,
 }: StatCardProps) {
+  const colors = colorMap[color];
+
   return (
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 200 }}
     >
       <Card
-        className={`bg-gray-800 border border-gray-700 hover:border-${color}-500 
-        transition-colors`}
+        className={`bg-white dark:bg-gray-800 border ${colors.border} transition-colors`}
       >
         <CardBody className="p-6">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start cursor-pointer">
             <div>
               <p className={`text-sm text-${color}-400 font-medium`}>{title}</p>
               <h2 className="text-2xl font-bold mt-1">{value}</h2>

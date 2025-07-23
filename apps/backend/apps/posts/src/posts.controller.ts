@@ -307,4 +307,19 @@ export class PostsController {
   ) {
     return this.postsService.deleteBookMarks(email, deleteBookMarksQueryDto);
   }
+
+  @MessagePattern('get-posts-today')
+  async getPostsToday() {
+    return this.postsService.getPostsToday();
+  }
+
+  @MessagePattern('get-new-comments')
+  async getNewComments() {
+    return this.postsService.getNewComments();
+  }
+
+  @MessagePattern('get-active-reports')
+  async getActiveReports() {
+    return this.postsService.getActiveReports();
+  }
 }

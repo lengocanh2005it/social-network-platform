@@ -4369,6 +4369,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@keycloak/keycloak-admin-client@npm:^26.3.1":
+  version: 26.3.1
+  resolution: "@keycloak/keycloak-admin-client@npm:26.3.1"
+  dependencies:
+    camelize-ts: "npm:^3.0.0"
+    url-join: "npm:^5.0.0"
+    url-template: "npm:^3.1.1"
+  checksum: 10c0/affc473030da1c4da5a44d18978e32f18bae83d833d783268c06a1821c69c8f965de5feabb7313effb5182588ce85ffa9ff165c918d90237bcb2bf489863c18e
+  languageName: node
+  linkType: hard
+
 "@keyv/redis@npm:^4.3.4":
   version: 4.5.0
   resolution: "@keyv/redis@npm:4.5.0"
@@ -7584,6 +7595,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@repo/db@workspace:packages/db"
   dependencies:
+    "@keycloak/keycloak-admin-client": "npm:^26.3.1"
     "@prisma/client": "npm:^6.12.0"
     "@repo/typescript-config": "npm:0.0.0"
     "@types/cookie": "npm:^1.0.0"
@@ -10915,6 +10927,13 @@ __metadata:
   version: 6.3.0
   resolution: "camelcase@npm:6.3.0"
   checksum: 10c0/0d701658219bd3116d12da3eab31acddb3f9440790c0792e0d398f0a520a6a4058018e546862b6fba89d7ae990efaeb97da71e1913e9ebf5a8b5621a3d55c710
+  languageName: node
+  linkType: hard
+
+"camelize-ts@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "camelize-ts@npm:3.0.0"
+  checksum: 10c0/879a7a84a1c889eb71b46ad5933107324eeeda0b713367aebe22356e25039636b5ce2f460ff4f302621e3d3ed8b6b0f2bcd8baee5218a8a38ff2b71d2c2a0522
   languageName: node
   linkType: hard
 
@@ -21946,6 +21965,20 @@ __metadata:
   dependencies:
     punycode: "npm:^2.1.0"
   checksum: 10c0/4ef57b45aa820d7ac6496e9208559986c665e49447cb072744c13b66925a362d96dd5a46c4530a6b8e203e5db5fe849369444440cb22ecfc26c679359e5dfa3c
+  languageName: node
+  linkType: hard
+
+"url-join@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "url-join@npm:5.0.0"
+  checksum: 10c0/ed2b166b4b5a98adcf6828a48b6bd6df1dac4c8a464a73cf4d8e2457ed410dd8da6be0d24855b86026cd7f5c5a3657c1b7b2c7a7c5b8870af17635a41387b04c
+  languageName: node
+  linkType: hard
+
+"url-template@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "url-template@npm:3.1.1"
+  checksum: 10c0/0947f4978665ced04bb0fe456f8a60ca4e1db283ce36da15193ee52c4a5461633dc9b5116ef8cf34bae4a31285ac6e7079f309badf211fe8bd1428d6ac56d28a
   languageName: node
   linkType: hard
 
