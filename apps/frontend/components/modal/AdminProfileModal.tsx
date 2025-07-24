@@ -1,4 +1,6 @@
 "use client";
+import { useSignOut } from "@/hooks";
+import { useUserStore } from "@/store";
 import {
   Button,
   Modal,
@@ -6,13 +8,20 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Skeleton,
   useDisclosure,
   User,
 } from "@heroui/react";
 import { LogOut } from "lucide-react";
 
 export default function AdminProfileModal() {
+  const { user } = useUserStore();
+  const { mutate: mutateSignOut, isPending } = useSignOut();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const handleSignOut = () => {
+    if (user?.id) mutateSignOut(user.id);
+  };
 
   return (
     <>
@@ -20,20 +29,38 @@ export default function AdminProfileModal() {
         className="flex items-center gap-3 justify-between rounded-lg dark:hover:bg-white/10
       px-4 py-2"
       >
-        <User
-          avatarProps={{
-            src: "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-          }}
-          description="Product Designer"
-          name="Jane Doe"
-          className="cursor-pointer select-none"
-          onClick={onOpen}
-        />
+        {!user ? (
+          <>
+            <div className="w-full flex items-center gap-3">
+              <div>
+                <Skeleton className="flex rounded-full w-12 h-12" />
+              </div>
+              <div className="w-full flex flex-col gap-2">
+                <Skeleton className="h-3 w-3/5 rounded-lg" />
+                <Skeleton className="h-3 w-4/5 rounded-lg" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <User
+              avatarProps={{
+                src: user?.profile?.avatar_url ?? "",
+              }}
+              description="Admin/Manager"
+              name={user?.profile?.first_name + " " + user?.profile?.last_name}
+              className="cursor-pointer select-none"
+              onClick={onOpen}
+            />
 
-        <LogOut
-          className="dark:text-white text-black cursor-pointer opacity-80 hover:opacity-100
-        duration-300 ease-in-out focus:outline-none"
-        />
+            <LogOut
+              className={`dark:text-white text-black cursor-pointer opacity-80 hover:opacity-100
+        duration-300 ease-in-out focus:outline-none 
+        ${isPending && "select-none opacity-60 pointer-events-none"}`}
+              onClick={handleSignOut}
+            />
+          </>
+        )}
       </div>
 
       <Modal
@@ -73,19 +100,6 @@ export default function AdminProfileModal() {
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit.
                   Nullam pulvinar risus non risus hendrerit venenatis.
                   Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                </p>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Nullam pulvinar risus non risus hendrerit venenatis.
-                  Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                </p>
-                <p>
-                  Magna exercitation reprehenderit magna aute tempor cupidatat
-                  consequat elit dolor adipisicing. Mollit dolor eiusmod sunt ex
-                  incididunt cillum quis. Velit duis sit officia eiusmod Lorem
-                  aliqua enim laboris do dolor eiusmod. Et mollit incididunt
-                  nisi consectetur esse laborum eiusmod pariatur proident Lorem
-                  eiusmod et. Culpa deserunt nostrud ad veniam.
                 </p>
               </ModalBody>
               <ModalFooter>

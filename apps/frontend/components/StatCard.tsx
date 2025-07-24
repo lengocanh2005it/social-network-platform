@@ -1,30 +1,15 @@
 "use client";
+import { colorMap, StatsType } from "@/utils";
 import { Card, CardBody } from "@heroui/react";
-import { ArrowUp, ArrowDown } from "lucide-react";
 import { motion } from "framer-motion";
-import React from "react";
-import { Color, colorMap } from "@/utils";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 interface StatCardProps {
-  title: string;
-  value: string;
-  percent: string;
-  trend: string;
-  icon: React.ElementType;
-  color: Color;
-  sub: string;
+  stats: StatsType;
 }
 
-export function StatCard({
-  title,
-  value,
-  percent,
-  trend,
-  icon: Icon,
-  color,
-  sub,
-}: StatCardProps) {
-  const colors = colorMap[color];
+export function StatCard({ stats }: StatCardProps) {
+  const colors = colorMap[stats.color];
 
   return (
     <motion.div
@@ -37,26 +22,30 @@ export function StatCard({
         <CardBody className="p-6">
           <div className="flex justify-between items-start cursor-pointer">
             <div>
-              <p className={`text-sm text-${color}-400 font-medium`}>{title}</p>
-              <h2 className="text-2xl font-bold mt-1">{value}</h2>
+              <p className={`text-sm text-${stats.color}-400 font-medium`}>
+                {stats.title}
+              </p>
+              <h2 className="text-2xl font-bold mt-1">{stats.value}</h2>
               <div className="flex items-center mt-2 text-sm">
-                {trend === "up" ? (
+                {stats.trend === "up" ? (
                   <ArrowUp className="h-4 w-4 text-green-400" />
                 ) : (
                   <ArrowDown className="h-4 w-4 text-red-400" />
                 )}
                 <span
-                  className={`ml-1 ${trend === "up" ? "text-green-400" : "text-red-400"}`}
+                  className={`ml-1 ${stats.trend === "up" ? "text-green-400" : "text-red-400"}`}
                 >
-                  {percent}
+                  {stats.percent}
                 </span>
-                <span className="text-gray-400 ml-1">{sub}</span>
+                <span className="text-gray-400 ml-1 text-nowrap">
+                  {stats.sub}
+                </span>
               </div>
             </div>
             <div
-              className={`p-3 rounded-lg bg-${color}-900/50 text-${color}-400`}
+              className={`p-3 rounded-lg bg-${stats.color}-900/50 text-${stats.color}-400`}
             >
-              <Icon className="h-6 w-6" />
+              <stats.icon className="h-6 w-6" />
             </div>
           </div>
         </CardBody>

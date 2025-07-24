@@ -26,6 +26,7 @@ import {
   CreateCommentTargetType,
   decodeCursor,
   encodeCursor,
+  generateActionContent,
   generateNotificationMessage,
   isToxic,
   PostMediaEnum,
@@ -40,6 +41,7 @@ import {
   PostPrivaciesEnum,
   PostsType,
   ReportStatusEnum,
+  RoleEnum,
   UsersType,
 } from '@repo/db';
 import { endOfDay, startOfDay, subDays } from 'date-fns';
@@ -56,6 +58,7 @@ export class PostsService implements OnModuleInit {
     private readonly huggingFaceProvider: HuggingFaceProvider,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -262,6 +265,19 @@ export class PostsService implements OnModuleInit {
     if (tags?.length) await this.createPostTags(tags, newPost.id, user);
 
     if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
+
+    this.adminClient.emit(
+      'create-activity',
+      JSON.stringify({
+        createActivityDto: {
+          action: generateActionContent('post'),
+          metadata: {
+            post_id: newPost.id,
+          },
+        },
+        userId: user.id,
+      }),
+    );
 
     return this.getFormattedPost(newPost.id, user.id);
   };
@@ -1092,6 +1108,23 @@ export class PostsService implements OnModuleInit {
     }
 
     comments.forEach((comment) => {
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('comment'),
+            metadata: {
+              comment_id: comment.id,
+              post_id: comment.post_id,
+              ...(comment.parent_comment_id
+                ? { parent_comment_id: comment.parent_comment_id }
+                : {}),
+            },
+          },
+          userId: user.id,
+        }),
+      );
+
       if (user.id !== existingPost.user_id) {
         const createNotificationDto: CreateNotificationDto = {
           type: NotificationTypeEnum.post_commented,
@@ -1435,6 +1468,18 @@ export class PostsService implements OnModuleInit {
       },
     });
 
+    if (user.role !== RoleEnum.admin)
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('delete'),
+            metadata: comment.id,
+          },
+          userId: user.id,
+        }),
+      );
+
     return this.getFormattedPost(
       postId,
       user.id === post.user_id ? user.id : post.user_id,
@@ -1487,6 +1532,21 @@ export class PostsService implements OnModuleInit {
 
     if (newComments.length) {
       newComments.forEach((newComment) => {
+        this.adminClient.emit(
+          'create-activity',
+          JSON.stringify({
+            createActivityDto: {
+              action: generateActionContent('reply_comment'),
+              metadata: {
+                comment_id: newComment.id,
+                post_id: comment.post_id,
+                parent_comment_id: comment.id,
+              },
+            },
+            userId: user.id,
+          }),
+        );
+
         if (user.id !== comment.user_id) {
           const createNotificationDto: CreateNotificationDto = {
             type: NotificationTypeEnum.comment_replied,

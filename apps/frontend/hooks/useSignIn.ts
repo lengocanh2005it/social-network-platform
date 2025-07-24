@@ -62,7 +62,7 @@ export const useSignIn = () => {
         if (data?.role === "user") {
           router.push("/home");
         } else if (data?.role === "admin") {
-          router.push("/home/dashboard");
+          router.push("/dashboard");
         }
 
         if (response) setTheme((response as FullUserType).profile.theme);

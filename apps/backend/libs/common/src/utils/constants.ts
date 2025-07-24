@@ -269,3 +269,12 @@ export type StatsType = {
   percent: number;
   trend: 'up' | 'down';
 };
+
+export type ActivityType =
+  | 'post'
+  | 'comment'
+  | 'reply_comment'
+  | 'story'
+  | 'profile'
+  | 'report'
+  | 'delete';

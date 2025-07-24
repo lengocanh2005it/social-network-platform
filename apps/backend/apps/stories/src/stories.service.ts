@@ -5,7 +5,10 @@ import {
   GetStoryViewersQueryDto,
 } from '@app/common/dtos/stories';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { generateNotificationMessage } from '@app/common/utils';
+import {
+  generateActionContent,
+  generateNotificationMessage,
+} from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
@@ -25,6 +28,7 @@ export class StoriesService implements OnModuleInit {
     private readonly usersClient: ClientKafka,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -191,6 +195,19 @@ export class StoriesService implements OnModuleInit {
         createNotificationDto,
       );
     });
+
+    this.adminClient.emit(
+      'create-activity',
+      JSON.stringify({
+        createActivityDto: {
+          action: generateActionContent('story'),
+          metadata: {
+            story_id: newStory.id,
+          },
+        },
+        userId: user.id,
+      }),
+    );
 
     return this.getFormattedStory(newStory.id, user.id);
   };

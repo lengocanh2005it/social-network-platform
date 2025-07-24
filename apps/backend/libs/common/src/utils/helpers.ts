@@ -1,5 +1,6 @@
 import {
   ACCESS_TOKEN_LIFE,
+  ActivityType,
   IS_PRODUCTION,
   NotificationParams,
   REFRESH_TOKEN_LIFE,
@@ -9,7 +10,7 @@ import { HttpService } from '@nestjs/axios';
 import { RequestTimeoutException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
-import { NotificationType } from '@repo/db';
+import { NotificationType, UserProfilesType, UsersType } from '@repo/db';
 import * as bcryptjs from 'bcryptjs';
 import { instanceToPlain } from 'class-transformer';
 import { config } from 'dotenv';
@@ -351,3 +352,24 @@ export const appLogger = createLogger({
     new transports.Console(),
   ],
 });
+
+export const generateActionContent = (type: ActivityType): string => {
+  switch (type) {
+    case 'post':
+      return `created a new post.`;
+    case 'comment':
+      return `commented on a post.`;
+    case 'reply_comment':
+      return `replied to a comment.`;
+    case 'story':
+      return `shared a story.`;
+    case 'profile':
+      return `updated their profile.`;
+    case 'report':
+      return `resolved a report.`;
+    case 'delete':
+      return `deleted a comment.`;
+    default:
+      return `performed an action.`;
+  }
+};

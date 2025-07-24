@@ -310,16 +310,16 @@ export class PostsController {
 
   @MessagePattern('get-posts-today')
   async getPostsToday() {
-    return this.postsService.getPostsToday();
+    return JSON.stringify(await this.postsService.getPostsToday());
   }
 
   @MessagePattern('get-new-comments')
   async getNewComments() {
-    return this.postsService.getNewComments();
+    return JSON.stringify(await this.postsService.getNewComments());
   }
 
   @MessagePattern('get-active-reports')
   async getActiveReports() {
-    return this.postsService.getActiveReports();
+    return JSON.stringify(await this.postsService.getActiveReports());
   }
 }

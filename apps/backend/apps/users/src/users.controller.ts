@@ -308,6 +308,6 @@ export class UsersController {
 
   @MessagePattern('get-users-stats')
   async getUsersStats() {
-    return this.usersService.getUsersStats();
+    return JSON.stringify(await this.usersService.getUsersStats());
   }
 }

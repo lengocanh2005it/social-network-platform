@@ -1,4 +1,4 @@
-import { PostDetails } from "@/store";
+import { FullUserType, PostDetails } from "@/store";
 import {
   AuthMethod,
   colorMap,
@@ -714,3 +714,31 @@ export type UpdateThemeDto = {
 };
 
 export type Color = keyof typeof colorMap;
+
+export type GetActivitiesQueryDto = GetFeedQueryDto;
+
+export type Activity = {
+  id: string;
+  action: string;
+  user_id: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  user: FullUserType;
+};
+
+export type StatsType = {
+  title: string;
+  value: number;
+  percent: string;
+  trend: string;
+  icon: React.ElementType;
+  color: Color;
+  sub: string;
+};
+
+export type GrowthOverviewType = {
+  name: string;
+  users: number;
+  posts: number;
+};

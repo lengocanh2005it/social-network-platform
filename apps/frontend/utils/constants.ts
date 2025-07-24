@@ -1,3 +1,5 @@
+import { AlertCircle, FileText, MessageSquare, Users } from "lucide-react";
+
 export const genders = [
   { key: "male", label: "Male" },
   { key: "female", label: "Female" },
@@ -72,3 +74,34 @@ export const colorMap = {
     iconColor: "text-red-600 dark:text-red-400",
   },
 };
+
+export const statConfig = [
+  {
+    key: "userStats",
+    title: "Total Users",
+    icon: Users,
+    color: "blue",
+    sub: "vs last month",
+  },
+  {
+    key: "postStats",
+    title: "Posts Today",
+    icon: FileText,
+    color: "purple",
+    sub: "vs yesterday",
+  },
+  {
+    key: "newComments",
+    title: "New Comments",
+    icon: MessageSquare,
+    color: "green",
+    sub: "vs last week",
+  },
+  {
+    key: "activeReports",
+    title: "Active Reports",
+    icon: AlertCircle,
+    color: "red",
+    sub: "needs attention",
+  },
+] as const;

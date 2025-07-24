@@ -378,7 +378,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 post?.hashtags?.length !== 0) && (
                 <section className="flex flex-col md:gap-2 gap-1 relative">
                   {post?.contents?.length !== 0 && (
-                    <div className="flex flex-col relative md:gap-2 gap-1 text-black/80">
+                    <div className="flex flex-col relative md:gap-2 gap-1 text-black/80 dark:text-white/80">
                       {post.contents.map((ct) => (
                         <p className="text-sm whitespace-pre-wrap" key={ct.id}>
                           {ct.content}
@@ -393,7 +393,7 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                         <span
                           key={tag.id}
                           className="text-xs cursor-pointer text-blue-500 bg-blue-100 
-                          px-2 py-0.5 rounded-full"
+                          px-2 py-0.5 rounded-full dark:text-blue-700 dark:bg-blue-50"
                         >
                           #{tag.hashtag}
                         </span>

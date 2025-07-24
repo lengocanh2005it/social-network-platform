@@ -111,6 +111,11 @@ async function main() {
             username: process.env.ADMIN_USERNAME ?? "",
           },
         },
+        oauth_account: {
+          create: {
+            provider: "local",
+          },
+        },
       },
     });
   }

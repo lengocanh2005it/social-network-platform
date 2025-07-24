@@ -30,6 +30,7 @@ import {
   encodeCursor,
   fieldDisplayMap,
   FriendListType,
+  generateActionContent,
   generateNotificationMessage,
   hashPassword,
   REFRESH_TOKEN_LIFE,
@@ -49,6 +50,7 @@ import {
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
+  RoleEnum,
   SessionStatusEnum,
 } from '@repo/db';
 import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
@@ -63,6 +65,7 @@ export class UsersService implements OnModuleInit {
     private readonly notificationsClient: ClientKafka,
     private readonly keycloakProvider: KeycloakProvider,
     private readonly infisicalProvider: InfisicalProvider,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -242,6 +245,18 @@ export class UsersService implements OnModuleInit {
 
     if (infoDetails)
       await this.updateInfoDetails(infoDetails, existingUserEmail.id);
+
+    if (existingUserEmail.role !== RoleEnum.admin) {
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('profile'),
+          },
+          userId: existingUserEmail.id,
+        }),
+      );
+    }
 
     return this.handleGetMe(email, {
       includeProfile: true,
@@ -2349,6 +2364,7 @@ export class UsersService implements OnModuleInit {
 
     const current = await this.prismaService.users.count({
       where: {
+        role: RoleEnum.user,
         profile: {
           created_at: {
             gte: currentMonthStart,
@@ -2360,6 +2376,7 @@ export class UsersService implements OnModuleInit {
 
     const lastMonth = await this.prismaService.users.count({
       where: {
+        role: RoleEnum.user,
         profile: {
           created_at: {
             gte: lastMonthStart,

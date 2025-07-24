@@ -1,98 +1,78 @@
 "use client";
-import { ActivityItem } from "@/components/ActivityItem";
+import ActivityItem from "@/components/ActivityItem";
 import { StatCard } from "@/components/StatCard";
+import StatCardSkeleton from "@/components/StatCardSkeleton";
 import { UserPostChart } from "@/components/UserPostChart";
+import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Color } from "@/utils";
+import { useGetActivities, useGetStats, useInfiniteScroll } from "@/hooks";
+import { getActivities } from "@/lib/api/admin";
+import { useUserStore } from "@/store";
+import { Activity, statConfig, StatsType } from "@/utils";
 import { Card, CardBody } from "@heroui/react";
-import { AlertCircle, FileText, MessageSquare, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
-  const stats = [
-    {
-      title: "Total Users",
-      value: "12,450",
-      percent: "12.5%",
-      trend: "up",
-      icon: Users,
-      color: "blue",
-      sub: "vs last month",
-    },
-    {
-      title: "Posts Today",
-      value: "320",
-      percent: "8.3%",
-      trend: "up",
-      icon: FileText,
-      color: "purple",
-      sub: "vs yesterday",
-    },
-    {
-      title: "New Comments",
-      value: "1,207",
-      percent: "3.2%",
-      trend: "down",
-      icon: MessageSquare,
-      color: "green",
-      sub: "vs last week",
-    },
-    {
-      title: "Active Reports",
-      value: "27",
-      percent: "5.1%",
-      trend: "up",
-      icon: AlertCircle,
-      color: "red",
-      sub: "needs attention",
-    },
-  ];
+  const { user } = useUserStore();
+  const { data: activitiesData, isLoading: isActivitiesDataLoading } =
+    useGetActivities(user?.id ?? "", {});
+  const { data, isLoading } = useGetStats(user?.id ?? "");
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [stats, setStats] = useState<StatsType[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
-  const activity = [
-    {
-      user: "John Doe",
-      action: "created a new post",
-      time: "2 mins ago",
-      avatar:
-        "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-    },
-    {
-      user: "Jane Smith",
-      action: "commented on a post",
-      time: "15 mins ago",
-      avatar:
-        "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-    },
-    {
-      user: "Admin",
-      action: "resolved a report",
-      time: "1 hour ago",
-      avatar:
-        "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-    },
-    {
-      user: "Mike Johnson",
-      action: "updated profile",
-      time: "3 hours ago",
-      avatar:
-        "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-    },
-    {
-      user: "Sarah Williams",
-      action: "deleted a comment",
-      time: "5 hours ago",
-      avatar:
-        "https://qwilddaqnrznqbhuskzx.supabase.co/storage/v1/object/public/files//1751373377309-default_user_logo_b1f7pd.png",
-    },
-  ];
+  useEffect(() => {
+    if (activitiesData) {
+      setActivities(activitiesData?.data ?? []);
+      setNextCursor(activitiesData?.nextCursor ?? null);
+    }
+  }, [activitiesData, setActivities, setNextCursor]);
+
+  useEffect(() => {
+    if (data) {
+      const newStats = statConfig.map(({ key, ...rest }) => {
+        const stat = data?.[key];
+        return {
+          ...rest,
+          value: stat?.value ?? "--",
+          percent: `${stat?.percent ?? 0}%`,
+          trend: stat?.trend ?? "up",
+        };
+      });
+      setStats(newStats);
+    }
+  }, [data, setStats]);
+
+  const loadMore = async () => {
+    if (!nextCursor || hasMore) return;
+
+    setHasMore(true);
+
+    try {
+      const res = await getActivities({
+        after: nextCursor,
+      });
+
+      if (res && res?.data) {
+        setActivities((prev) => [...prev, ...res.data]);
+        setNextCursor(res?.nextCursor ?? null);
+      }
+    } finally {
+      setHasMore(false);
+    }
+  };
+
+  const lastActivityRef = useInfiniteScroll(loadMore, !!nextCursor);
 
   return (
     <div className="p-6 md:p-10 bg-gray-900 text-gray-100 space-y-10 rounded-xl">
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold text-gray-100">Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((item, idx) => (
-            <StatCard key={idx} {...item} color={item.color as Color} />
-          ))}
+          {isLoading
+            ? statConfig.map((_, idx) => <StatCardSkeleton key={idx} />)
+            : stats.map((item, idx) => <StatCard key={idx} stats={item} />)}
         </div>
       </section>
 
@@ -119,11 +99,41 @@ export default function DashboardPage() {
               </h3>
 
               <ScrollArea className="max-h-[300px]">
-                <div className="flex flex-col md:gap-4 gap-3">
-                  {activity.map((item, idx) => (
-                    <ActivityItem key={idx} {...item} />
-                  ))}
-                </div>
+                {isActivitiesDataLoading ? (
+                  <div className="h-[300px] flex flex-col items-center justify-center">
+                    <PrimaryLoading />
+                  </div>
+                ) : (
+                  <>
+                    {activities?.length === 0 ? (
+                      <div
+                        className="flex flex-col items-center justify-center h-[300px]
+                      md:gap-2 gap-1"
+                      >
+                        <h1>Empty Activities</h1>
+                        <p className="text-black/80 dark:text-white/70">
+                          No recent activities found. Check back later.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col md:gap-4 gap-3">
+                          {activities.map((activity, index) => (
+                            <ActivityItem
+                              key={activity.id}
+                              activity={activity}
+                              ref={lastActivityRef}
+                              index={index}
+                              length={activities.length}
+                            />
+                          ))}
+
+                          {hasMore && <PrimaryLoading />}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </ScrollArea>
             </CardBody>
           </Card>
