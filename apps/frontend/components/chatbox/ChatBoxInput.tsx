@@ -1,5 +1,5 @@
 "use client";
-import { useCreateMessage, useSocket } from "@/hooks";
+import { useCreateMessage, useFingerprint, useSocket } from "@/hooks";
 import { useConversationStore, useUserStore } from "@/store";
 import { CreateMessageDto, Friend, Message, SocketNamespace } from "@/utils";
 import { Avatar, Input } from "@heroui/react";
@@ -22,8 +22,12 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
   const { mutate: mutateCreateMessage } = useCreateMessage();
   const { addMessage, conversations, setHasNewMessage } =
     useConversationStore();
+  const finger_print = useFingerprint();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { on, off, emit } = useSocket(SocketNamespace.CONVERSATIONS);
+  const { on, off, emit } = useSocket(
+    SocketNamespace.CONVERSATIONS,
+    finger_print ?? ""
+  );
 
   useEffect(() => {
     if (parentMessage) {
