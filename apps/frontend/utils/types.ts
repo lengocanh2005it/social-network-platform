@@ -742,3 +742,30 @@ export type GrowthOverviewType = {
   users: number;
   posts: number;
 };
+
+export type GetUsersDashboardQueryDto = GetFeedQueryDto & {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type ErrorState = {
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type FilterUserType = {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  exactMatch: boolean;
+};
+
+export type UserDashboardType = UsersType & {
+  profile: UserProfilesType;
+} & {
+  is_online: boolean;
+  last_seen_at: string;
+};

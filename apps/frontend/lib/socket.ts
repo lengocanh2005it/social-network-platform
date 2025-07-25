@@ -6,11 +6,14 @@ const SOCKET_SERVER_URL =
 
 const sockets: Record<string, Socket> = {};
 
-export const getSocket = (namespace: string): Socket => {
+export const getSocket = (namespace: string, fingerprint: string): Socket => {
   if (!sockets[namespace]) {
     sockets[namespace] = io(`${SOCKET_SERVER_URL}/ws/${namespace}`, {
       withCredentials: true,
       transports: ["websocket"],
+      query: {
+        fingerprint,
+      },
     });
   }
 

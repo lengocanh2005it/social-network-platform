@@ -17,7 +17,7 @@ export class AdminService implements OnModuleInit {
       'get-stats',
       'get-activities',
       'get-growth-overview',
-      'get-users',
+      'get-users-dashboard',
     ];
     patterns.forEach((p) => this.adminClient.subscribeToResponseOf(p));
   }
@@ -43,7 +43,7 @@ export class AdminService implements OnModuleInit {
   public getUsers = async (getUsersQueryDto: GetUsersQueryDto) => {
     return sendWithTimeout(
       this.adminClient,
-      'get-users',
+      'get-users-dashboard',
       toPlain(getUsersQueryDto),
     );
   };

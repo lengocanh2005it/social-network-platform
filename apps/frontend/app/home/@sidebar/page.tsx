@@ -1,7 +1,7 @@
 "use client";
 import FriendRequests from "@/components/FriendRequests";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
-import { useGetFriendsList, useSocket } from "@/hooks";
+import { useFingerprint, useGetFriendsList, useSocket } from "@/hooks";
 import { useFriendStore, useUserStore } from "@/store";
 import { FriendListType, SocketNamespace } from "@/utils";
 import {
@@ -23,7 +23,7 @@ import { useEffect } from "react";
 
 const SideBarPage: React.FC = () => {
   const { user } = useUserStore();
-
+  const fingerprint = useFingerprint();
   const {
     setFriends,
     setTotalFriends,
@@ -32,7 +32,10 @@ const SideBarPage: React.FC = () => {
     clearOpenChats,
     updateOnlineStatus,
   } = useFriendStore();
-  const { on, off, emit } = useSocket(SocketNamespace.PRESENCE);
+  const { on, off, emit } = useSocket(
+    SocketNamespace.PRESENCE,
+    fingerprint ?? "",
+  );
 
   useEffect(() => {
     const handleOnlineFriends = (friendIds: string[]) =>

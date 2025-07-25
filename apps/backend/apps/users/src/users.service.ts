@@ -573,8 +573,14 @@ export class UsersService implements OnModuleInit {
         refresh_token,
         expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
         status: SessionStatusEnum.active,
+        is_online: true,
+        last_seen_at: new Date(),
       },
-      create: createUserSessionDto,
+      create: {
+        ...createUserSessionDto,
+        is_online: true,
+        last_seen_at: new Date(),
+      },
     });
   };
 
@@ -605,15 +611,21 @@ export class UsersService implements OnModuleInit {
           finger_print,
         },
       },
+      include: {
+        user: true,
+      },
     });
 
-    if (!session || session?.status !== SessionStatusEnum.active)
+    if (
+      (!session || session?.status !== SessionStatusEnum.active) &&
+      session?.user?.role === RoleEnum.user
+    )
       throw new RpcException({
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Your session has expired. Please log in again.',
       });
 
-    return session;
+    return omit(session, ['user.password']);
   };
 
   public deactivateOtherSessions = async (
@@ -636,19 +648,24 @@ export class UsersService implements OnModuleInit {
   public updateUserSession = async (
     updateUserSessionDto: UpdateUserSessionDto,
   ) => {
-    const { user_id, finger_print, status } = updateUserSessionDto;
+    const { user_id, finger_print, status, is_online, last_seen_at } =
+      updateUserSessionDto;
 
-    await this.prismaService.userSessions.update({
-      where: {
-        user_id_finger_print: {
-          user_id,
-          finger_print,
+    if (user_id?.trim() && finger_print?.trim()) {
+      await this.prismaService.userSessions.update({
+        where: {
+          user_id_finger_print: {
+            user_id,
+            finger_print,
+          },
         },
-      },
-      data: {
-        status,
-      },
-    });
+        data: {
+          status,
+          is_online,
+          last_seen_at,
+        },
+      });
+    }
   };
 
   public handleGetUserByField = async (

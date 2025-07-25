@@ -1,12 +1,13 @@
 import {
   CreateActivityDto,
   GetActivitiesQueryDto,
+  GetUsersQueryDto,
 } from '@app/common/dtos/admin';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
 import { decodeCursor, encodeCursor, sendWithTimeout } from '@app/common/utils';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
-import { RoleEnum, UsersType } from '@repo/db';
+import { RoleEnum, UserSesstionsType, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
@@ -91,6 +92,7 @@ export class AdminService implements OnModuleInit {
             }
           : {}),
       },
+      take: limit + 1,
       orderBy: {
         created_at: 'desc',
       },
@@ -194,5 +196,117 @@ export class AdminService implements OnModuleInit {
     );
 
     return data;
+  };
+
+  public getUsers = async (getUsersQueryDto: GetUsersQueryDto) => {
+    const limit = getUsersQueryDto?.limit ?? 10;
+
+    const decodedCursor = getUsersQueryDto?.after
+      ? decodeCursor(getUsersQueryDto.after)
+      : null;
+
+    const name = getUsersQueryDto?.fullName?.trim();
+
+    const profileWhereClause: any = {};
+
+    if (getUsersQueryDto?.username) {
+      profileWhereClause.username = { equals: getUsersQueryDto.username };
+    }
+
+    if (getUsersQueryDto?.phoneNumber) {
+      profileWhereClause.phone_number = {
+        equals: getUsersQueryDto?.phoneNumber,
+      };
+    }
+
+    if (name) {
+      const nameParts = name.split(' ').filter(Boolean);
+
+      const matchMode =
+        getUsersQueryDto?.exactMatch?.trim() === 'true' ? 'equals' : 'contains';
+
+      if (nameParts.length === 1) {
+        const single = nameParts[0];
+        profileWhereClause.OR = [
+          { first_name: { [matchMode]: single, mode: 'insensitive' } },
+          { last_name: { [matchMode]: single, mode: 'insensitive' } },
+        ];
+      } else if (nameParts.length >= 2) {
+        const [first, ...rest] = nameParts;
+        const last = rest.join(' ');
+
+        profileWhereClause.AND = [
+          { first_name: { [matchMode]: first, mode: 'insensitive' } },
+          { last_name: { [matchMode]: last, mode: 'insensitive' } },
+        ];
+      }
+    }
+
+    const userWhereClause: any = {};
+
+    if (getUsersQueryDto?.email) {
+      userWhereClause.email = { equals: getUsersQueryDto.email };
+    }
+
+    if (Object.keys(profileWhereClause).length > 0) {
+      userWhereClause.profile = {
+        is: profileWhereClause,
+      };
+    }
+
+    const users = await this.prismaService.users.findMany({
+      where: {
+        ...userWhereClause,
+        role: RoleEnum.user,
+      },
+      take: limit + 1,
+      skip: decodedCursor ? 1 : 0,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+        },
+      }),
+      orderBy: [
+        {
+          id: 'desc',
+        },
+      ],
+      include: {
+        profile: true,
+        sessions: true,
+      },
+    });
+
+    const hasNextPage = users.length > limit;
+    const items = hasNextPage ? users.slice(0, -1) : users;
+
+    return {
+      data: items.map((i: any) => {
+        const is_online = i.sessions?.some(
+          (s: UserSesstionsType) => s.is_online === true,
+        );
+
+        const last_seen_at = i.sessions?.length
+          ? (i.sessions
+              .map((s: UserSesstionsType) => s.last_seen_at)
+              .filter(Boolean)
+              .sort(
+                (a: Date | string, b: Date | string) =>
+                  new Date(b).getTime() - new Date(a).getTime(),
+              )[0] ?? null)
+          : null;
+
+        return {
+          ...omit(i, ['password', 'sessions']),
+          is_online,
+          last_seen_at,
+        };
+      }),
+      nextCursor: hasNextPage
+        ? encodeCursor({
+            id: items[items.length - 1].id,
+          })
+        : null,
+    };
   };
 }

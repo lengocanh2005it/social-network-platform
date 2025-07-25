@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   AlertCircle,
   BookOpen,
+  ChartArea,
   ChevronRight,
   FileText,
   Inbox,
@@ -15,12 +16,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/admin/users", icon: Users, label: "Users" },
-  { href: "/admin/posts", icon: FileText, label: "Posts" },
-  { href: "/admin/stories", icon: BookOpen, label: "Stories" },
-  { href: "/admin/messages", icon: MessageCircleIcon, label: "Messages" },
-  { href: "/admin/reports", icon: AlertCircle, label: "Reports" },
-  { href: "/admin/support", icon: Inbox, label: "Supports" },
+  { href: "/dashboard", icon: ChartArea, label: "Dashboard" },
+  { href: "/dashboard/users", icon: Users, label: "Users" },
+  { href: "/dashboard/posts", icon: FileText, label: "Posts" },
+  { href: "/dashboard/stories", icon: BookOpen, label: "Stories" },
+  {
+    href: "/dashboard/messages",
+    icon: MessageCircleIcon,
+    label: "Messages",
+  },
+  { href: "/dashboard/reports", icon: AlertCircle, label: "Reports" },
+  { href: "/dashboard/support", icon: Inbox, label: "Supports" },
 ];
 
 export function SideBar() {

@@ -1,6 +1,7 @@
 import {
   CreateActivityDto,
   GetActivitiesQueryDto,
+  GetUsersQueryDto,
 } from '@app/common/dtos/admin';
 import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -31,5 +32,10 @@ export class AdminController {
   @MessagePattern('get-growth-overview')
   async getGrowthOverview() {
     return this.adminService.getGrowthOverview();
+  }
+
+  @MessagePattern('get-users-dashboard')
+  async getUsers(@Payload() getUsersQueryDto: GetUsersQueryDto) {
+    return this.adminService.getUsers(getUsersQueryDto);
   }
 }

@@ -10,6 +10,7 @@ import { getActivities } from "@/lib/api/admin";
 import { useUserStore } from "@/store";
 import { Activity, statConfig, StatsType } from "@/utils";
 import { Card, CardBody } from "@heroui/react";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
@@ -68,7 +69,15 @@ export default function DashboardPage() {
   return (
     <div className="p-6 md:p-10 bg-gray-900 text-gray-100 space-y-10 rounded-xl">
       <section className="space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-100">Overview</h2>
+        <motion.h2
+          className="text-2xl font-bold bg-gradient-to-r from-purple-600 
+          to-blue-500 bg-clip-text text-transparent"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          Overview
+        </motion.h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {isLoading
             ? statConfig.map((_, idx) => <StatCardSkeleton key={idx} />)

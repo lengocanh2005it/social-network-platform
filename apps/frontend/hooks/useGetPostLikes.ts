@@ -11,5 +11,6 @@ export const useGetPostLikes = (
     queryFn: () => getPostLikes(postId, getUserLikesQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!postId,
   });
 };

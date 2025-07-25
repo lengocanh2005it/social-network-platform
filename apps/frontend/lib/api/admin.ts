@@ -1,5 +1,5 @@
 import axios from "@/lib/axios";
-import { GetActivitiesQueryDto } from "@/utils";
+import { GetActivitiesQueryDto, GetUsersDashboardQueryDto } from "@/utils";
 
 export const getActivities = async (
   getActivitiesQueryDto: GetActivitiesQueryDto,
@@ -19,6 +19,19 @@ export const getStats = async () => {
 
 export const getGrowthOverview = async () => {
   const response = await axios.get(`/admin/dashboard/growth`);
+
+  return response.data;
+};
+
+export const getUsersDashboard = async (
+  getUsersDashboardQueryDto: GetUsersDashboardQueryDto,
+) => {
+  const response = await axios.get(`/admin/dashboard/users`, {
+    params: getUsersDashboardQueryDto,
+    paramsSerializer: {
+      indexes: null,
+    },
+  });
 
   return response.data;
 };

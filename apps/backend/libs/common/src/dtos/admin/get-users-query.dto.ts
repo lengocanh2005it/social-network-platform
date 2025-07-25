@@ -4,7 +4,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
-  IsPhoneNumber,
   IsString,
   Min,
 } from 'class-validator';
@@ -25,7 +24,8 @@ export class GetUsersQueryDto {
   readonly email?: string;
 
   @IsOptional()
-  @IsPhoneNumber('VN')
+  @IsString()
+  @IsNotEmpty()
   readonly phoneNumber?: string;
 
   @IsOptional()
@@ -38,4 +38,9 @@ export class GetUsersQueryDto {
   @IsString()
   @IsNotEmpty()
   readonly after?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  readonly exactMatch?: string;
 }

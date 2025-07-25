@@ -964,12 +964,26 @@ export class AuthService implements OnModuleInit {
     if (
       !isMatch ||
       new Date().getTime() > new Date(userSession.expires_at).getTime()
-    )
+    ) {
+      const updateUserSessionDto: UpdateUserSessionDto = {
+        user_id: userSession.user_id,
+        finger_print: userSession.finger_print,
+        status: SessionStatusEnum.expired,
+        is_online: false,
+        last_seen_at: new Date(),
+      };
+
+      this.usersClient.emit(
+        'update-user-session',
+        JSON.stringify(updateUserSessionDto),
+      );
+
       throw new RpcException({
         statusCode: HttpStatus.UNAUTHORIZED,
         message:
           'Looks like your session has expired. Please log in again to keep going.',
       });
+    }
 
     const userDevice = await firstValueFrom<UserDevicesType>(
       this.usersClient.send('get-user-device', {
@@ -1060,7 +1074,14 @@ export class AuthService implements OnModuleInit {
       user_id,
       finger_print,
       status: SessionStatusEnum.inactive,
+      is_online: false,
+      last_seen_at: new Date(),
     };
+
+    this.usersClient.emit(
+      'update-user-session',
+      JSON.stringify(updateUserSessionDto),
+    );
 
     if (refresh_token?.trim())
       await this.keyCloakProvider.revokeToken(refresh_token, 'refresh_token');
@@ -1071,11 +1092,6 @@ export class AuthService implements OnModuleInit {
       } catch (error) {
         console.error(error);
 
-        this.usersClient.emit(
-          'update-user-session',
-          JSON.stringify(updateUserSessionDto),
-        );
-
         if (!refresh_token?.trim())
           throw new RpcException({
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -1083,11 +1099,6 @@ export class AuthService implements OnModuleInit {
           });
       }
     }
-
-    this.usersClient.emit(
-      'update-user-session',
-      JSON.stringify(updateUserSessionDto),
-    );
 
     return {
       message: 'Signed out successfully.',

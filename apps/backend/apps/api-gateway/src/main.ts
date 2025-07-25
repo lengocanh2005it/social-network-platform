@@ -3,6 +3,7 @@ import {
   LoggingInterceptor,
   PerformanceInterceptor,
   RpcToHttpExceptionInterceptor,
+  UserActivityInterceptor,
 } from '@app/common/interceptors';
 import { KeycloakProvider } from '@app/common/providers';
 import { ValidationPipe } from '@nestjs/common';
@@ -26,8 +27,10 @@ async function bootstrap() {
 
   const loggingInterceptor = app.get(LoggingInterceptor);
   const performanceInterceptor = app.get(PerformanceInterceptor);
+  const userActivityInterceptor = app.get(UserActivityInterceptor);
 
   app.useGlobalInterceptors(
+    userActivityInterceptor,
     loggingInterceptor,
     performanceInterceptor,
     new RpcToHttpExceptionInterceptor(),

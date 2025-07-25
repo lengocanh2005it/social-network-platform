@@ -11,5 +11,6 @@ export const useGetFeed = (
     queryFn: () => getMyFeed(username, getFeedQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!username,
   });
 };
