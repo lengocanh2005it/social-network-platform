@@ -26,7 +26,7 @@ const ChatBoxInput: React.FC<ChatBoxInputProps> = ({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { on, off, emit } = useSocket(
     SocketNamespace.CONVERSATIONS,
-    finger_print ?? ""
+    finger_print ?? "",
   );
 
   useEffect(() => {

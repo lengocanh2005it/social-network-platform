@@ -2,7 +2,8 @@ import {
   GetActivitiesQueryDto,
   GetUsersQueryDto,
 } from '@app/common/dtos/admin';
-import { Controller, Get, Query } from '@nestjs/common';
+import { GetUserQueryDto } from '@app/common/dtos/users';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { RoleEnum } from '@repo/db';
 import { Roles } from 'nest-keycloak-connect';
 import { AdminService } from './admin.service';
@@ -30,5 +31,13 @@ export class AdminController {
   @Get('users')
   async getUsers(@Query() getUsersQueryDto: GetUsersQueryDto) {
     return this.adminService.getUsers(getUsersQueryDto);
+  }
+
+  @Get('users/:username')
+  async getUser(
+    @Param('username') username: string,
+    @Query() getUserQueryDto: GetUserQueryDto,
+  ) {
+    return this.adminService.getUser(username, getUserQueryDto);
   }
 }

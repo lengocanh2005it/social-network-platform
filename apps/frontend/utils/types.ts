@@ -128,7 +128,6 @@ export interface SocialItem {
 export type GetUserQueryDto = {
   includeProfile?: boolean;
   includeFollowings?: boolean;
-  includeGroups?: boolean;
   includeWorkPlaces?: boolean;
   includeTargets?: boolean;
   includeEducations?: boolean;

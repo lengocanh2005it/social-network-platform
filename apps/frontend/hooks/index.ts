@@ -44,6 +44,7 @@ export * from "./useGetProfile";
 export * from "./useGetStats";
 export * from "./useGetStories";
 export * from "./useGetStory";
+export * from "./useGetUserDashboard";
 export * from "./useGetUsersDashboard";
 export * from "./useGetViewersOfStory";
 export * from "./useHash";

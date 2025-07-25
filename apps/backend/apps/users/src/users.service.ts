@@ -52,6 +52,7 @@ import {
   PostPrivaciesEnum,
   RoleEnum,
   SessionStatusEnum,
+  UserSesstionsType,
 } from '@repo/db';
 import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import { omit } from 'lodash';
@@ -166,6 +167,7 @@ export class UsersService implements OnModuleInit {
         ...include,
         targets: true,
         initiators: true,
+        sessions: true,
       },
     });
 
@@ -198,7 +200,18 @@ export class UsersService implements OnModuleInit {
 
     return omit(
       {
-        ...findUser,
+        ...omit(findUser, ['sessions']),
+        is_online:
+          findUser?.sessions?.some((s) => s.is_online === true) ?? false,
+        last_seen_at: findUser?.sessions?.length
+          ? (findUser.sessions
+              .map((s: UserSesstionsType) => s.last_seen_at)
+              .filter(Boolean)
+              .sort(
+                (a: Date, b: Date) =>
+                  new Date(b).getTime() - new Date(a).getTime(),
+              )[0] ?? null)
+          : null,
         total_friends,
       },
       ['password', 'targets', 'initiators'],
