@@ -129,7 +129,7 @@ const EditWorkPlaces = () => {
           </Table>
         </>
       ) : (
-        <h1 className="text-gray-700 md:text-medium text-sm text-center">
+        <h1 className="text-gray-700 md:text-medium text-sm text-center dark:text-white/80">
           Empty Work Places
         </h1>
       )}
@@ -158,7 +158,7 @@ const EditWorkPlaces = () => {
           </Button>
         </div>
 
-        <p className="text-center text-gray-700 italic text-sm">
+        <p className="text-center text-gray-700 italic text-sm dark:text-white/70">
           Note: Click the Update button to save the changes you just made.
         </p>
       </div>

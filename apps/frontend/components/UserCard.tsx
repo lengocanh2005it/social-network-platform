@@ -2,7 +2,6 @@
 import { UserDashboardType } from "@/utils";
 import {
   Avatar,
-  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -18,8 +17,10 @@ import {
   ShieldIcon,
   UserIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export const UserCard = ({ user }: { user: UserDashboardType }) => {
+  const router = useRouter();
   const formatLastActive = (dateString?: string) => {
     if (!dateString) return "Never active";
 
@@ -75,19 +76,26 @@ export const UserCard = ({ user }: { user: UserDashboardType }) => {
                 shouldBlockScroll={false}
               >
                 <DropdownTrigger>
-                  <Button isIconOnly className="bg-transparent">
-                    <Ellipsis className="text-gray-700 focus:outline-none dark:text-white/70" />
-                  </Button>
+                  <Ellipsis
+                    className="text-gray-700 focus:outline-none dark:text-white/70
+                  cursor-pointer"
+                  />
                 </DropdownTrigger>
                 <DropdownMenu aria-label="" variant="flat">
-                  <DropdownItem key="view-as" startContent={<Eye />}>
+                  <DropdownItem
+                    key="view-as"
+                    startContent={<Eye />}
+                    onClick={() =>
+                      router.push(`/dashboard/users/${user.profile.username}`)
+                    }
+                  >
                     View Profile
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>
             </div>
 
-            <div className="flex flex-col md:gap-1">
+            <div className="flex flex-col md:gap-1 mt-1">
               <Tooltip content={user.email}>
                 <div
                   className="flex items-center text-sm text-gray-500 dark:text-gray-400 truncate

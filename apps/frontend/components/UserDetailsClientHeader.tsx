@@ -1,8 +1,13 @@
 import { Button } from "@heroui/react";
 import { ArrowLeftToLine } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const UserDetailsClientHeader: React.FC = () => {
+  const router = useRouter();
+
+  const handleBackward = () => router.push("/dashboard/users");
+
   return (
     <div
       className="flex flex-col md:flex-row justify-between items-start 
@@ -19,7 +24,7 @@ const UserDetailsClientHeader: React.FC = () => {
         <p className="text-default-500">Detailed overview of user account</p>
       </div>
 
-      <Button isIconOnly>
+      <Button isIconOnly onPress={handleBackward}>
         <ArrowLeftToLine />
       </Button>
     </div>

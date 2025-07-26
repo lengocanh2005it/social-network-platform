@@ -1,5 +1,5 @@
 import { FullUserType } from "@/store";
-import { Card, Chip } from "@heroui/react";
+import { Card, Chip, Divider } from "@heroui/react";
 import { GraduationCap } from "lucide-react";
 import React from "react";
 
@@ -14,21 +14,23 @@ const EducationHistoryTab: React.FC<EducationHistoryTabProps> = ({
 }) => {
   return (
     <Card className="p-6 shadow-sm">
-      <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <GraduationCap size={20} className="text-warning-500" />
         Education History
       </h3>
+
+      <Divider className="dark:bg-white/20 mb-3" />
 
       {viewedUser.educations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {viewedUser.educations.map((edu) => (
             <Card
               key={edu.id}
-              className="p-4 hover:shadow-md transition-shadow"
+              className="p-4 hover:shadow-md transition-shadow dark:border dark:border-white/10"
               isPressable
             >
-              <div className="flex justify-between gap-4">
-                <div>
+              <div className="flex gap-4 justify-between">
+                <div className="flex flex-col text-left">
                   <h4 className="font-semibold">{edu.school_name}</h4>
                   <p className="text-default-500">
                     {edu.major} ({edu.degree})

@@ -32,6 +32,13 @@ const navItems = [
 export function SideBar() {
   const pathname = usePathname();
 
+  function getActiveHref(pathname: string, hrefs: string[]) {
+    const sorted = [...hrefs].sort((a, b) => b.length - a.length);
+    return sorted.find(
+      (href) => pathname === href || pathname.startsWith(href + "/"),
+    );
+  }
+
   return (
     <aside
       className="fixed md:static z-40 top-0 left-0 h-full w-64 bg-gradient-to-b 
@@ -56,7 +63,12 @@ export function SideBar() {
 
         <nav className="flex flex-col gap-1">
           {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname === href;
+            const activeHref = getActiveHref(
+              pathname,
+              navItems.map((item) => item.href),
+            );
+
+            const isActive = href === activeHref;
 
             return (
               <motion.div

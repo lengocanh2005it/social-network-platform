@@ -1,5 +1,5 @@
 "use client";
-import PrimaryLoading from "@/components/loading/PrimaryLoading";
+import LoadingComponent from "@/components/loading/LoadingComponent";
 import UserDetailsBody from "@/components/UserDetailsBody";
 import UserDetailsCard from "@/components/UserDetailsCard";
 import UserDetailsClientHeader from "@/components/UserDetailsClientHeader";
@@ -27,8 +27,6 @@ const UserDetailsClient = ({ username }: { username: string }) => {
     }
   }, [data, setViewedUser]);
 
-  if (isLoading) return <PrimaryLoading />;
-
   const calculateProfileCompletion = () => {
     if (!viewedUser) return 0;
     let completedFields = 0;
@@ -48,37 +46,39 @@ const UserDetailsClient = ({ username }: { username: string }) => {
 
   const profileCompletion = calculateProfileCompletion();
 
+  if (isLoading) return <LoadingComponent />;
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <UserDetailsClientHeader />
-
-      <Card className="p-6 mb-8 shadow-lg rounded-xl h-full relative">
-        <div className="grid md:grid-cols-3 grid-cols-1 md:gap-6 gap-4">
-          {viewedUser && (
-            <>
-              <UserDetailsCard
-                viewedUser={viewedUser}
-                profileCompletion={profileCompletion}
-              />
-
-              <div className="w-full h-full relative col-span-2">
-                <UserDetailsBody viewedUser={viewedUser} />
-              </div>
-            </>
-          )}
-        </div>
-      </Card>
-
-      <Divider className="dark:bg-white/20" />
-
+    <>
       {viewedUser && (
-        <UserDetailsTabs
-          setActiveTab={setActiveTab}
-          activeTab={activeTab}
-          viewedUser={viewedUser}
-        />
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <UserDetailsClientHeader />
+
+          <Card className="p-6 mb-8 shadow-lg rounded-xl h-full relative">
+            <div className="grid md:grid-cols-3 grid-cols-1 md:gap-6 gap-4">
+              <>
+                <UserDetailsCard
+                  viewedUser={viewedUser}
+                  profileCompletion={profileCompletion}
+                />
+
+                <div className="w-full h-full relative col-span-2">
+                  <UserDetailsBody viewedUser={viewedUser} />
+                </div>
+              </>
+            </div>
+          </Card>
+
+          <Divider className="dark:bg-white/20" />
+
+          <UserDetailsTabs
+            setActiveTab={setActiveTab}
+            activeTab={activeTab}
+            viewedUser={viewedUser}
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 };
 

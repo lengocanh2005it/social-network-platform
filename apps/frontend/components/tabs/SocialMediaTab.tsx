@@ -1,47 +1,73 @@
 import { FullUserType } from "@/store";
-import { Card } from "@heroui/react";
+import { Card, Divider } from "@heroui/react";
+import clsx from "clsx";
 import { Globe, Link2 } from "lucide-react";
 import React from "react";
+import { FaGithub, FaGlobe, FaInstagram, FaTwitter } from "react-icons/fa";
+import { FiLink2 } from "react-icons/fi";
 
 interface SocialMediaTabProps {
   viewedUser: FullUserType;
 }
 
+const getIcon = (name: string) => {
+  switch (name.toLowerCase()) {
+    case "github":
+      return <FaGithub className="w-6 h-6" />;
+    case "instagram":
+      return <FaInstagram className="w-6 h-6" />;
+    case "twitter":
+      return <FaTwitter className="w-6 h-6" />;
+    case "website":
+      return <FaGlobe className="w-6 h-6" />;
+    default:
+      return <FiLink2 className="w-6 h-6" />;
+  }
+};
+
 const SocialMediaTab: React.FC<SocialMediaTabProps> = ({ viewedUser }) => {
+  const { socials } = viewedUser;
+
   return (
     <Card className="p-6 shadow-sm">
-      <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+      <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <Globe size={20} className="text-success-500" />
         Social Media Connections
       </h3>
 
-      {viewedUser.socials.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {viewedUser.socials.map((social) => (
-            <a
+      <Divider className="dark:bg-white/20 mb-4" />
+
+      {socials.length > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {socials.map((social) => (
+            <Card
               key={social.id}
-              href={social.social_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
+              className={clsx(
+                "p-4 transition-all",
+                "hover:shadow-md hover:border-primary-500",
+                "border dark:border-white/10",
+              )}
+              isPressable
             >
-              <Card
-                className="p-3 hover:shadow-md transition-shadow"
-                isPressable
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary-100 dark:bg-primary-900/50 rounded-full">
-                    <Link2 size={18} className="text-primary-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">{social.social_name}</h4>
-                    <p className="text-default-500 text-sm truncate">
-                      {social.social_link}
-                    </p>
-                  </div>
+              <div className="flex items-center gap-5">
+                <div className="rounded-full">
+                  {getIcon(social.social_name)}
                 </div>
-              </Card>
-            </a>
+                <div className="min-w-0">
+                  <h4 className="font-medium capitalize">
+                    {social.social_name}
+                  </h4>
+                  <a
+                    href={social.social_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-default-500 text-sm truncate hover:underline block"
+                  >
+                    {social.social_link}
+                  </a>
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
       ) : (

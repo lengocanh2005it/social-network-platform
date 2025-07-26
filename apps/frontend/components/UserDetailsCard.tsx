@@ -44,7 +44,7 @@ const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
         <div className="relative w-fit group">
           <Avatar
             src={viewedUser.profile.avatar_url}
-            className="w-28 h-28 text-large duration-300 cursor-pointer"
+            className="w-28 h-28 text-large duration-300 cursor-pointer select-none"
             onClick={onEditProfile}
           />
 
@@ -86,7 +86,7 @@ const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
 
         <div className="text-center">
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {format(new Date(viewedUser.profile.created_at), "yyyy")}
+            {format(new Date(viewedUser.profile.created_at), "MMM dd, yyyy")}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Member since
