@@ -1,3 +1,5 @@
+import SuspendAccountModal from "@/components/modal/SuspendAccountModal";
+import UnsuspendAccountConfirmModal from "@/components/modal/UnsuspendAccountConfirmModal";
 import { FullUserType } from "@/store";
 import { Button, Card, Chip, Tooltip } from "@heroui/react";
 import {
@@ -72,16 +74,24 @@ const UserDetailsBody: React.FC<UserDetailsBodyProps> = ({
           </Tooltip>
         </div>
 
-        <Button
-          variant="solid"
-          color="primary"
-          size="sm"
-          startContent={<MessageSquare size={16} />}
-          onPress={onMessage}
-          className="min-w-[120px]"
-        >
-          Send Message
-        </Button>
+        <div className="relative flex items-center md:gap-3 gap-2">
+          <Button
+            variant="solid"
+            color="primary"
+            size="sm"
+            startContent={<MessageSquare size={16} />}
+            onPress={onMessage}
+            className="min-w-[120px]"
+          >
+            Send Message
+          </Button>
+
+          {viewedUser.profile.status === "active" ? (
+            <SuspendAccountModal />
+          ) : (
+            <UnsuspendAccountConfirmModal viewedUser={viewedUser} />
+          )}
+        </div>
       </div>
 
       <Card className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">

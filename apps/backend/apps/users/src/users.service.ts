@@ -1,3 +1,4 @@
+import { UpdateUserSuspensionDto } from '@app/common/dtos/admin';
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
   CreateFriendRequestDto,
@@ -50,6 +51,7 @@ import {
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
+  ProfileStatusEnum,
   RoleEnum,
   SessionStatusEnum,
   UserSesstionsType,
@@ -2425,6 +2427,76 @@ export class UsersService implements OnModuleInit {
       value: current,
       percent: parseFloat(percent),
       trend: current >= lastMonth ? 'up' : 'down',
+    };
+  };
+
+  public updateUserSuspension = async (
+    email: string,
+    userId: string,
+    updateUserSuspensionDto: UpdateUserSuspensionDto,
+  ) => {
+    const admin = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!admin || (admin && admin.role !== RoleEnum.admin))
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Admin not found.`,
+      });
+
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        id: userId,
+      },
+      include: {
+        suspensions: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `User not found.`,
+      });
+
+    if (user.id === admin.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You cannot perform actions on your own account.`,
+      });
+
+    const { reason, is_suspended } = updateUserSuspensionDto;
+
+    const suspension = await this.prismaService.accountSuspensions.create({
+      data: {
+        admin_id: admin.id,
+        user_id: user.id,
+        ...(reason?.trim() && { reason }),
+        ...(is_suspended
+          ? { suspended_at: new Date() }
+          : { unsuspended_at: new Date() }),
+      },
+    });
+
+    await this.prismaService.userProfiles.update({
+      where: {
+        user_id: user.id,
+      },
+      data: {
+        status: is_suspended
+          ? ProfileStatusEnum.inactive
+          : ProfileStatusEnum.active,
+      },
+    });
+
+    return {
+      message: is_suspended
+        ? 'User has been suspended successfully.'
+        : 'User has been unsuspended successfully.',
+      suspension,
     };
   };
 }

@@ -1,11 +1,22 @@
 import {
   GetActivitiesQueryDto,
   GetUsersQueryDto,
+  UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
 import { GetUserQueryDto } from '@app/common/dtos/users';
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Query,
+} from '@nestjs/common';
 import { RoleEnum } from '@repo/db';
-import { Roles } from 'nest-keycloak-connect';
+import { KeycloakUser, Roles } from 'nest-keycloak-connect';
 import { AdminService } from './admin.service';
 
 @Controller('admin/dashboard')
@@ -39,5 +50,26 @@ export class AdminController {
     @Query() getUserQueryDto: GetUserQueryDto,
   ) {
     return this.adminService.getUser(username, getUserQueryDto);
+  }
+
+  @Patch('users/:userId/suspension')
+  async updateUserSuspension(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @KeycloakUser() user: any,
+    @Body() updateUserSuspensionDto: UpdateUserSuspensionDto,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.updateUserSuspension(
+      userId,
+      email,
+      updateUserSuspensionDto,
+    );
   }
 }

@@ -768,3 +768,13 @@ export type UserDashboardType = UsersType & {
   is_online: boolean;
   last_seen_at: string;
 };
+
+export type UpdateUserSuspensionDto = {
+  is_suspended: boolean;
+  reason?: string;
+};
+
+export type UpdateUserSuspensionData = {
+  userId: string;
+  updateUserSuspensionDto: UpdateUserSuspensionDto;
+};

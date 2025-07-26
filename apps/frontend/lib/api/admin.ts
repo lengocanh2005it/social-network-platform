@@ -1,5 +1,9 @@
 import axios from "@/lib/axios";
-import { GetActivitiesQueryDto, GetUsersDashboardQueryDto } from "@/utils";
+import {
+  GetActivitiesQueryDto,
+  GetUsersDashboardQueryDto,
+  UpdateUserSuspensionData,
+} from "@/utils";
 
 export const getActivities = async (
   getActivitiesQueryDto: GetActivitiesQueryDto,
@@ -32,6 +36,19 @@ export const getUsersDashboard = async (
       indexes: null,
     },
   });
+
+  return response.data;
+};
+
+export const updateUserSuspension = async (
+  updateUserSuspensionData: UpdateUserSuspensionData,
+) => {
+  const { userId, updateUserSuspensionDto } = updateUserSuspensionData;
+
+  const response = await axios.patch(
+    `/admin/dashboard/users/${userId}/suspension`,
+    updateUserSuspensionDto,
+  );
 
   return response.data;
 };

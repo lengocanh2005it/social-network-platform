@@ -1,6 +1,7 @@
 import {
   GetActivitiesQueryDto,
   GetUsersQueryDto,
+  UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
 import { GetUserQueryDto } from '@app/common/dtos/users';
 import { sendWithTimeout, toPlain } from '@app/common/utils';
@@ -20,6 +21,7 @@ export class AdminService implements OnModuleInit {
       'get-activities',
       'get-growth-overview',
       'get-users-dashboard',
+      'update-user-suspension',
     ];
     patterns.forEach((p) => this.adminClient.subscribeToResponseOf(p));
     this.usersClient.subscribeToResponseOf('get-user-by-field');
@@ -64,5 +66,17 @@ export class AdminService implements OnModuleInit {
         getUserQueryDto,
       }),
     );
+  };
+
+  public updateUserSuspension = async (
+    userId: string,
+    email: string,
+    updateUserSuspensionDto: UpdateUserSuspensionDto,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'update-user-suspension', {
+      userId,
+      email,
+      updateUserSuspensionDto,
+    });
   };
 }

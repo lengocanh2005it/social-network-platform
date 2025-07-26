@@ -1,6 +1,7 @@
 "use client";
 import SocialsAuthForm from "@/components/form/SocialsAuthForm";
 import PasswordToggleInput from "@/components/input/PasswordToggleInput";
+import AccountSuspendedModal from "@/components/modal/AccountSuspendedModal";
 import OTPVerification2FaModal from "@/components/modal/OTPVerification2FaModal";
 import VerifyOTPModal from "@/components/modal/VerifyOTPModal";
 import {
@@ -48,6 +49,7 @@ const SignInForm = () => {
     setIs2FAModalOpen,
     isModalOTPOpen,
     setIsModalOTPOpen,
+    isAccountSuspendedModalOpen,
   } = useAppStore();
   const {
     mutate: mutateVerify2Fa,
@@ -381,6 +383,8 @@ const SignInForm = () => {
           )}
         </>
       )}
+
+      {isAccountSuspendedModalOpen && <AccountSuspendedModal />}
     </Form>
   );
 };

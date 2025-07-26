@@ -5,12 +5,12 @@ import UserDetailsCard from "@/components/UserDetailsCard";
 import UserDetailsClientHeader from "@/components/UserDetailsClientHeader";
 import UserDetailsTabs from "@/components/UserDetailsTabs";
 import { useGetUserDashboard } from "@/hooks";
-import { FullUserType, useUserStore } from "@/store";
+import { useUserStore } from "@/store";
 import { Card, Divider } from "@heroui/react";
 import { useEffect, useState } from "react";
 
 const UserDetailsClient = ({ username }: { username: string }) => {
-  const { user } = useUserStore();
+  const { user, viewedUser, setViewedUser } = useUserStore();
   const { data, isLoading } = useGetUserDashboard(user?.id ?? "", username, {
     username,
     includeEducations: true,
@@ -18,7 +18,6 @@ const UserDetailsClient = ({ username }: { username: string }) => {
     includeSocials: true,
     includeWorkPlaces: true,
   });
-  const [viewedUser, setViewedUser] = useState<FullUserType | null>(null);
   const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {

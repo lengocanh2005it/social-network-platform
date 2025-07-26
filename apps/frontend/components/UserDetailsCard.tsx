@@ -44,7 +44,11 @@ const UserDetailsCard: React.FC<UserDetailsCardProps> = ({
         <div className="relative w-fit group">
           <Avatar
             src={viewedUser.profile.avatar_url}
-            className="w-28 h-28 text-large duration-300 cursor-pointer select-none"
+            className={`w-28 h-28 text-large duration-300 cursor-pointer select-none border-4 ${
+              viewedUser.profile.status === "active"
+                ? "border-green-500"
+                : "border-red-500"
+            }`}
             onClick={onEditProfile}
           />
 

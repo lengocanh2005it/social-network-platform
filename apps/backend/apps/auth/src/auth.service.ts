@@ -57,6 +57,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   OAuthProviderEnum,
+  ProfileStatusEnum,
   RoleEnum,
   SessionStatusEnum,
   UserDevicesType,
@@ -145,6 +146,13 @@ export class AuthService implements OnModuleInit {
       throw new RpcException({
         statusCode: HttpStatus.BAD_REQUEST,
         message: `The password you entered is incorrect. Please try again.`,
+      });
+
+    if (existingUser?.profile?.status === ProfileStatusEnum.inactive)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message:
+          'Your account has been suspended. Please contact support for more information.',
       });
 
     if (!existingUser.is_email_verified && existingUser.profile) {

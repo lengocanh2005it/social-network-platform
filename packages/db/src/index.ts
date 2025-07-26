@@ -40,4 +40,5 @@ export {
   ReportReason as ReportReasonEnum,
   ReportStatus as ReportStatusEnum,
   ReportType as ReportTypeEnum,
+  ProfileStatus as ProfileStatusEnum,
 } from "../@generated/default.js";

@@ -10,7 +10,11 @@ import { toast } from "react-hot-toast";
 export const useSignIn = () => {
   const router = useRouter();
   const { setUser } = useUserStore();
-  const { setIs2FAModalOpen, setIsModalOTPOpen } = useAppStore();
+  const {
+    setIs2FAModalOpen,
+    setIsModalOTPOpen,
+    setIsAccountSuspendedModalOpen,
+  } = useAppStore();
   const { setTheme } = useTheme();
 
   return useMutation({
@@ -72,6 +76,16 @@ export const useSignIn = () => {
         });
       }
     },
-    onError: (error: any) => handleAxiosError(error),
+    onError: (error: any) => {
+      if (
+        error?.response?.data?.statusCode === 403 &&
+        error?.response?.data?.message ===
+          "Your account has been suspended. Please contact support for more information."
+      ) {
+        setIsAccountSuspendedModalOpen(true);
+      }
+
+      handleAxiosError(error);
+    },
   });
 };
