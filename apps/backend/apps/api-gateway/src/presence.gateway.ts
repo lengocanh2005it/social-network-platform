@@ -1,3 +1,4 @@
+import { UpdateUserSessionDto } from '@app/common/dtos/users';
 import { createWsAuthMiddleware } from '@app/common/middlewares';
 import { KeycloakProvider } from '@app/common/providers';
 import { DEFAULT_TTL_ONLINE } from '@app/common/utils';
@@ -13,6 +14,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { SessionStatusEnum } from '@repo/db';
 import { firstValueFrom } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 
@@ -83,6 +85,19 @@ export class PresenceGateway
     const sockets = await this.server.in(user.id).fetchSockets();
 
     if (!sockets.length) {
+      const updateUserSessionDto: UpdateUserSessionDto = {
+        user_id: user.id,
+        finger_print: user.fingerprint,
+        status: SessionStatusEnum.inactive,
+        is_online: false,
+        last_seen_at: new Date(),
+      };
+
+      this.usersClient.emit(
+        'update-user-session',
+        JSON.stringify(updateUserSessionDto),
+      );
+
       this.redisClient.emit('del-key', `online:${user.id}`);
 
       this.server.emit('friend-offline', { user_id: user.id });
@@ -95,9 +110,23 @@ export class PresenceGateway
 
   @SubscribeMessage('ping')
   handlePing(@ConnectedSocket() client: Socket) {
-    const user_id = client?.data?.user?.user_id;
+    const user_id = client?.data?.user?.id;
+    const fingerprint = client?.data?.user?.fingerprint;
 
-    if (user_id)
+    if (user_id) {
+      const updateUserSessionDto: UpdateUserSessionDto = {
+        user_id,
+        finger_print: fingerprint,
+        status: SessionStatusEnum.active,
+        is_online: true,
+        last_seen_at: new Date(),
+      };
+
+      this.usersClient.emit(
+        'update-user-session',
+        JSON.stringify(updateUserSessionDto),
+      );
+
       this.redisClient.emit(
         'set-key',
         JSON.stringify({
@@ -106,6 +135,7 @@ export class PresenceGateway
           ttl: DEFAULT_TTL_ONLINE,
         }),
       );
+    }
   }
 
   @SubscribeMessage('get-online-friends')

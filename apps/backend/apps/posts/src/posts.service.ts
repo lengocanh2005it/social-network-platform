@@ -26,9 +26,11 @@ import {
   CreateCommentTargetType,
   decodeCursor,
   encodeCursor,
+  generateActionContent,
   generateNotificationMessage,
   isToxic,
   PostMediaEnum,
+  StatsType,
   truncateWithEllipsis,
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -38,8 +40,11 @@ import {
   PhotoTypeEnum,
   PostPrivaciesEnum,
   PostsType,
+  ReportStatusEnum,
+  RoleEnum,
   UsersType,
 } from '@repo/db';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { omit, pick } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,6 +58,7 @@ export class PostsService implements OnModuleInit {
     private readonly huggingFaceProvider: HuggingFaceProvider,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -259,6 +265,19 @@ export class PostsService implements OnModuleInit {
     if (tags?.length) await this.createPostTags(tags, newPost.id, user);
 
     if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
+
+    this.adminClient.emit(
+      'create-activity',
+      JSON.stringify({
+        createActivityDto: {
+          action: generateActionContent('post'),
+          metadata: {
+            post_id: newPost.id,
+          },
+        },
+        userId: user.id,
+      }),
+    );
 
     return this.getFormattedPost(newPost.id, user.id);
   };
@@ -1089,6 +1108,23 @@ export class PostsService implements OnModuleInit {
     }
 
     comments.forEach((comment) => {
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('comment'),
+            metadata: {
+              comment_id: comment.id,
+              post_id: comment.post_id,
+              ...(comment.parent_comment_id
+                ? { parent_comment_id: comment.parent_comment_id }
+                : {}),
+            },
+          },
+          userId: user.id,
+        }),
+      );
+
       if (user.id !== existingPost.user_id) {
         const createNotificationDto: CreateNotificationDto = {
           type: NotificationTypeEnum.post_commented,
@@ -1432,6 +1468,18 @@ export class PostsService implements OnModuleInit {
       },
     });
 
+    if (user.role !== RoleEnum.admin)
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('delete'),
+            metadata: comment.id,
+          },
+          userId: user.id,
+        }),
+      );
+
     return this.getFormattedPost(
       postId,
       user.id === post.user_id ? user.id : post.user_id,
@@ -1484,6 +1532,21 @@ export class PostsService implements OnModuleInit {
 
     if (newComments.length) {
       newComments.forEach((newComment) => {
+        this.adminClient.emit(
+          'create-activity',
+          JSON.stringify({
+            createActivityDto: {
+              action: generateActionContent('reply_comment'),
+              metadata: {
+                comment_id: newComment.id,
+                post_id: comment.post_id,
+                parent_comment_id: comment.id,
+              },
+            },
+            userId: user.id,
+          }),
+        );
+
         if (user.id !== comment.user_id) {
           const createNotificationDto: CreateNotificationDto = {
             type: NotificationTypeEnum.comment_replied,
@@ -2802,6 +2865,133 @@ export class PostsService implements OnModuleInit {
       success: true,
       message: `Bookmark${postIds.length > 1 ? 's have' : ' has'} been deleted successfully.`,
       bookMarkIds,
+    };
+  };
+
+  public getPostsToday = async (): Promise<StatsType> => {
+    const todayStart = startOfDay(new Date());
+    const todayEnd = endOfDay(new Date());
+
+    const yesterdayStart = startOfDay(subDays(new Date(), 1));
+    const yesterdayEnd = endOfDay(subDays(new Date(), 1));
+
+    const postsToday = await this.prismaService.posts.count({
+      where: {
+        created_at: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const postsYesterday = await this.prismaService.posts.count({
+      where: {
+        created_at: {
+          gte: yesterdayStart,
+          lte: yesterdayEnd,
+        },
+      },
+    });
+
+    const percent =
+      postsYesterday === 0
+        ? '100.0'
+        : (((postsToday - postsYesterday) / postsYesterday) * 100).toFixed(1);
+
+    const trend = postsToday >= postsYesterday ? 'up' : 'down';
+
+    return {
+      value: postsToday,
+      percent: parseFloat(percent),
+      trend,
+    };
+  };
+
+  public getNewComments = async (): Promise<StatsType> => {
+    const today = new Date();
+
+    const currentWeekStart = startOfDay(subDays(today, 6));
+    const currentWeekEnd = endOfDay(today);
+
+    const lastWeekStart = startOfDay(subDays(today, 13));
+    const lastWeekEnd = endOfDay(subDays(today, 7));
+
+    const commentsThisWeek = await this.prismaService.comments.count({
+      where: {
+        created_at: {
+          gte: currentWeekStart,
+          lte: currentWeekEnd,
+        },
+      },
+    });
+
+    const commentsLastWeek = await this.prismaService.comments.count({
+      where: {
+        created_at: {
+          gte: lastWeekStart,
+          lte: lastWeekEnd,
+        },
+      },
+    });
+
+    const percent =
+      commentsLastWeek === 0
+        ? 100.0
+        : parseFloat(
+            (
+              ((commentsThisWeek - commentsLastWeek) / commentsLastWeek) *
+              100
+            ).toFixed(1),
+          );
+
+    const trend = commentsThisWeek >= commentsLastWeek ? 'up' : 'down';
+
+    return {
+      value: commentsThisWeek,
+      percent,
+      trend,
+    };
+  };
+
+  public getActiveReports = async () => {
+    const now = new Date();
+
+    const lastWeekStart = startOfDay(subDays(now, 13));
+    const lastWeekEnd = endOfDay(subDays(now, 7));
+
+    const activeReportsNow = await this.prismaService.reports.count({
+      where: {
+        status: ReportStatusEnum.pending,
+      },
+    });
+
+    const activeReportsLastWeek = await this.prismaService.reports.count({
+      where: {
+        status: ReportStatusEnum.pending,
+        createdAt: {
+          gte: lastWeekStart,
+          lte: lastWeekEnd,
+        },
+      },
+    });
+
+    const percent =
+      activeReportsLastWeek === 0
+        ? 100.0
+        : parseFloat(
+            (
+              ((activeReportsNow - activeReportsLastWeek) /
+                activeReportsLastWeek) *
+              100
+            ).toFixed(1),
+          );
+
+    const trend = activeReportsNow >= activeReportsLastWeek ? 'up' : 'down';
+
+    return {
+      value: activeReportsNow,
+      percent,
+      trend,
     };
   };
 }

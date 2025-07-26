@@ -170,7 +170,7 @@ const EditSocialsForm = () => {
           </Button>
         </div>
 
-        <p className="text-center text-gray-700 italic text-sm">
+        <p className="text-center text-gray-700 italic text-sm dark:text-white/70">
           Note: Click the Update button to save the changes you just made.
         </p>
       </form>

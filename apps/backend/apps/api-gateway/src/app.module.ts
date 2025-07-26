@@ -9,6 +9,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BookmarksModule } from './modules/bookmarks/bookmarks.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
@@ -34,6 +35,7 @@ import { PresenceGateway } from './presence.gateway';
     NotificationsModule,
     SseModule,
     BookmarksModule,
+    AdminModule,
   ],
   providers: [
     PresenceGateway,

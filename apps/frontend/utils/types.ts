@@ -1,6 +1,7 @@
-import { PostDetails } from "@/store";
+import { FullUserType, PostDetails } from "@/store";
 import {
   AuthMethod,
+  colorMap,
   CreateCommentTargetType,
   FriendListType,
   ResponseFriendRequestAction,
@@ -127,7 +128,6 @@ export interface SocialItem {
 export type GetUserQueryDto = {
   includeProfile?: boolean;
   includeFollowings?: boolean;
-  includeGroups?: boolean;
   includeWorkPlaces?: boolean;
   includeTargets?: boolean;
   includeEducations?: boolean;
@@ -710,4 +710,71 @@ export type BookMark = {
 
 export type UpdateThemeDto = {
   theme: ThemeEnum;
+};
+
+export type Color = keyof typeof colorMap;
+
+export type GetActivitiesQueryDto = GetFeedQueryDto;
+
+export type Activity = {
+  id: string;
+  action: string;
+  user_id: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  user: FullUserType;
+};
+
+export type StatsType = {
+  title: string;
+  value: number;
+  percent: string;
+  trend: string;
+  icon: React.ElementType;
+  color: Color;
+  sub: string;
+};
+
+export type GrowthOverviewType = {
+  name: string;
+  users: number;
+  posts: number;
+};
+
+export type GetUsersDashboardQueryDto = GetFeedQueryDto & {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type ErrorState = {
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type FilterUserType = {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  exactMatch: boolean;
+};
+
+export type UserDashboardType = UsersType & {
+  profile: UserProfilesType;
+} & {
+  is_online: boolean;
+  last_seen_at: string;
+};
+
+export type UpdateUserSuspensionDto = {
+  is_suspended: boolean;
+  reason?: string;
+};
+
+export type UpdateUserSuspensionData = {
+  userId: string;
+  updateUserSuspensionDto: UpdateUserSuspensionDto;
 };

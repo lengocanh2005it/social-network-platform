@@ -4,6 +4,7 @@ import {
   LoggingInterceptor,
   PerformanceInterceptor,
   RpcToHttpExceptionInterceptor,
+  UserActivityInterceptor,
 } from '@app/common/interceptors';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
@@ -91,6 +92,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     PerformanceInterceptor,
     ...MetricsProviders,
     RpcToHttpExceptionInterceptor,
+    UserActivityInterceptor,
   ],
   exports: [
     ConfigModule,
@@ -113,6 +115,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     PerformanceInterceptor,
     ...MetricsProviders,
     SentryModule,
+    UserActivityInterceptor,
   ],
 })
 export class CommonModule {}

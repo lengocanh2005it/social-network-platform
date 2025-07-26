@@ -4,8 +4,8 @@ import { Socket } from "socket.io-client";
 
 type EventHandler = (...args: any[]) => void;
 
-export const useSocket = (namespace: string) => {
-  const socketRef = useRef<Socket>(getSocket(namespace));
+export const useSocket = (namespace: string, fingerprint: string) => {
+  const socketRef = useRef<Socket>(getSocket(namespace, fingerprint));
 
   const on = useCallback((event: string, handler: EventHandler) => {
     socketRef.current?.on(event, handler);
