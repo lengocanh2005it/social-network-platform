@@ -79,13 +79,12 @@ export const useSignIn = () => {
     onError: (error: any) => {
       if (
         error?.response?.data?.statusCode === 403 &&
-        error?.response?.data?.message ===
-          "Your account has been suspended. Please contact support for more information."
+        error?.response?.data?.message
       ) {
         setIsAccountSuspendedModalOpen(true);
+      } else {
+        handleAxiosError(error);
       }
-
-      handleAxiosError(error);
     },
   });
 };

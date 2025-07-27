@@ -148,12 +148,30 @@ export class AuthService implements OnModuleInit {
         message: `The password you entered is incorrect. Please try again.`,
       });
 
-    if (existingUser?.profile?.status === ProfileStatusEnum.inactive)
+    if (existingUser?.profile?.status === ProfileStatusEnum.inactive) {
+      const suspension = await this.prismaService.accountSuspensions.findFirst({
+        where: {
+          user_id: existingUser.id,
+          suspended_at: {
+            lte: new Date(),
+          },
+        },
+        orderBy: {
+          suspended_at: 'desc',
+        },
+      });
+
+      if (!suspension)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'No suspension history found for this user.',
+        });
+
       throw new RpcException({
         statusCode: HttpStatus.FORBIDDEN,
-        message:
-          'Your account has been suspended. Please contact support for more information.',
+        message: suspension.reason,
       });
+    }
 
     if (!existingUser.is_email_verified && existingUser.profile) {
       const { first_name, last_name } = existingUser.profile;

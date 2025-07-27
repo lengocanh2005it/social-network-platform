@@ -10,7 +10,15 @@ import {
 } from "@heroui/react";
 import React from "react";
 
-const AccountSuspendedModal: React.FC = () => {
+interface AccountSuspendedModalProps {
+  reason: string;
+  setReason: (reason: string) => void;
+}
+
+const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
+  reason,
+  setReason,
+}) => {
   const { setIsAccountSuspendedModalOpen, isAccountSuspendedModalOpen } =
     useAppStore();
 
@@ -54,7 +62,7 @@ const AccountSuspendedModal: React.FC = () => {
               <p className="text-black/80 dark:text-white/70">
                 Reason:{" "}
                 <span className="italic text-black dark:text-white">
-                  Violation of terms of service
+                  {reason?.trim() ? reason : "Violation of terms of service"}
                 </span>
               </p>
               <p className="text-black/80 dark:text-white/90">
@@ -71,7 +79,10 @@ const AccountSuspendedModal: React.FC = () => {
               <Button
                 color="primary"
                 className="dark:bg-white dark:text-black"
-                onPress={onClose}
+                onPress={() => {
+                  onClose();
+                  setReason("");
+                }}
               >
                 Close
               </Button>
