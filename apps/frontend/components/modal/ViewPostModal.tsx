@@ -26,7 +26,7 @@ import {
   ScrollShadow,
   Spinner,
 } from "@heroui/react";
-import { PostContentType, PostContentTypeEnum } from "@repo/db";
+import { PostContentType, PostContentTypeEnum, RoleEnum } from "@repo/db";
 import {
   Camera,
   SendHorizontal,
@@ -94,7 +94,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
     addOldComments,
     setReplies,
   } = useCommentStore();
-  const { updatePost } = usePostStore();
+  const { updatePost, updateHomePost } = usePostStore();
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const hasFetchedComments = useRef(false);
 
@@ -162,6 +162,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
       onSuccess: (data: { post: PostDetails; comments: GroupedComment[] }) => {
         if (data) {
           if (data?.post) {
+            updateHomePost(homePost.id, data?.post);
             updatePost(homePost.id, data?.post);
           }
 
@@ -229,7 +230,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                     &apos;s Post
                   </ModalHeader>
 
-                  <Divider />
+                  <Divider className="dark:bg-white/10" />
 
                   <ModalBody className="px-3">
                     <ScrollShadow
@@ -249,7 +250,7 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                         />
                       </div>
 
-                      <Divider />
+                      <Divider className="dark:bg-white/20" />
 
                       {isLoading ? (
                         <>
@@ -273,6 +274,16 @@ const ViewPostModal: React.FC<ViewPostModalProps> = ({
                                       post={homePost}
                                       key={comment.id}
                                       comment={comment}
+                                      shouldHideCommentButton={
+                                        user.role === RoleEnum.admin
+                                      }
+                                      shouldHideLikeButton={
+                                        user.role === RoleEnum.admin
+                                      }
+                                      cursor={
+                                        nextCursor ? nextCursor : undefined
+                                      }
+                                      loadNewComments={handleGetNewComments}
                                     />
                                   ),
                                 )}

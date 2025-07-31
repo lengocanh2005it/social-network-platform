@@ -22,7 +22,7 @@ import {
 import { Button, DatePicker, Input, Select, SelectItem } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { now, ZonedDateTime } from "@internationalized/date";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -71,7 +71,13 @@ const formSchema = z.object({
     }),
 });
 
-const EditDetailsInformationForm = () => {
+interface EditDetailsInformationFormProps {
+  onCancel?: () => void;
+}
+
+const EditDetailsInformationForm: React.FC<EditDetailsInformationFormProps> = ({
+  onCancel,
+}) => {
   const { user, resetUserEducations } = useUserStore();
   const {
     setIsModalEditProfileOpen,
@@ -147,6 +153,7 @@ const EditDetailsInformationForm = () => {
     setIsModalEditProfileOpen(false);
     setIsDifferentPhoneNumber(false);
     resetUserEducations();
+    if (onCancel) onCancel();
 
     setTimeout(() => {
       form.reset();

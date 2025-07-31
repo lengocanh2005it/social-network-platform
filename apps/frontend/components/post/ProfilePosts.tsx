@@ -6,6 +6,7 @@ import ViewTaggedUsersModal from "@/components/modal/ViewTaggedUsersModal";
 import ParentPostDetails from "@/components/post/ParentPostDetails";
 import PostMediaItem from "@/components/post/PostMediaItem";
 import PostOptions from "@/components/post/PostOptions";
+import { TaggedUsersText } from "@/components/TaggedUsersText";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
 import { useDeletePost, useUpdatePost } from "@/hooks";
@@ -36,7 +37,15 @@ import {
   PostPrivaciesEnum,
   PostPrivaciesType,
 } from "@repo/db";
-import { Ellipsis, EyeOff, Lock, SquarePen, Trash, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Ellipsis,
+  EyeOff,
+  Lock,
+  SquarePen,
+  Trash,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -218,33 +227,6 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
     });
   };
 
-  const renderTaggedUsersText = () => {
-    const taggedUsersLength = post.total_tagged_users;
-
-    return (
-      <div className="relative text-sm">
-        <span className="text-gray-600 dark:text-white/80">with</span>{" "}
-        <span
-          className="hover:underline cursor-pointer"
-          onClick={() => viewProfileClick(post.tagged_users.data[0].username)}
-        >
-          {post.tagged_users.data[0].full_name}
-        </span>
-        {taggedUsersLength > 1 && (
-          <>
-            <span className="text-gray-600 dark:text-white/80"> and </span>
-            <span
-              className="hover:underline cursor-pointer"
-              onClick={() => setIsShowTaggedUsersModal(true)}
-            >
-              {`${taggedUsersLength - 1} other${taggedUsersLength > 2 ? "s" : ""}`}
-            </span>
-          </>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
       {user && (
@@ -280,8 +262,14 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                           post.user.profile.last_name}
                       </h4>
 
-                      {post.tagged_users?.data?.length > 0 &&
-                        renderTaggedUsersText()}
+                      {post.tagged_users?.data?.length > 0 && (
+                        <TaggedUsersText
+                          taggedUsers={post.tagged_users.data}
+                          totalTaggedUsers={post.total_tagged_users}
+                          onViewProfile={viewProfileClick}
+                          onOpenModal={() => setIsShowTaggedUsersModal(true)}
+                        />
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-white/70">
@@ -403,29 +391,36 @@ const ProfilePosts: React.FC<ProfilePostsProps> = ({ post }) => {
                 </section>
               )}
 
-              {post?.images?.length > 0 && (
-                <div
-                  className={`grid gap-3 md:mt-3 mt-2 ${
-                    post.images.length === 1
-                      ? "grid-cols-1"
-                      : post.images.length === 2
-                        ? "grid-cols-2"
-                        : "grid-cols-3"
-                  }`}
-                >
-                  {post.images.map((image) => (
-                    <PostMediaItem key={image.id} post={post} image={image} />
-                  ))}
-                </div>
-              )}
+              <PostMediaItem images={post.images} post={post} />
 
-              {post?.parent_post && (
-                <ParentPostDetails
-                  parentPost={post.parent_post}
-                  onClick={() => {
-                    setIsShowParentPostModal(true);
-                  }}
-                />
+              {post.parent_post_id && (
+                <>
+                  {post.parent_post ? (
+                    <>
+                      <ParentPostDetails
+                        parentPost={post.parent_post}
+                        onClick={() => {
+                          setIsShowParentPostModal(true);
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div
+                        className="p-6 flex flex-col items-center justify-center
+                      text-center border border-black/10 dark:border-white/20
+                      rounded-lg gap-2 md:mb-3 mb-2"
+                      >
+                        <AlertTriangle className="text-yellow-500 w-10 h-10 flex-shrink-0" />
+
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          This content is no longer available. It may have been
+                          removed by an admin or the user who shared it.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
 
               <PostOptions

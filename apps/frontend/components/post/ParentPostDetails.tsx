@@ -18,7 +18,7 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
 }) => {
   return (
     <div
-      className="p-6 border border-black/10 rounded-lg md:mb-3 mb-2"
+      className="p-6 border border-black/10 dark:border-white/20 rounded-lg md:mb-3 mb-2"
       onClick={onClick}
     >
       <div className="flex items-center mb-3 gap-2">
@@ -39,7 +39,7 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
               parentPost.user.profile.last_name}
           </h4>
 
-          <div className="flex items-center gap-1 text-sm text-gray-500">
+          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-white/80">
             <span className="leading-none">
               {formatDateTime(new Date(parentPost.created_at))}
             </span>
@@ -67,7 +67,7 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
         parentPost?.hashtags?.length !== 0) && (
         <section className="flex flex-col md:gap-2 gap-1 relative">
           {parentPost?.contents?.length !== 0 && (
-            <div className="flex flex-col relative md:gap-2 gap-1 text-black/80">
+            <div className="flex flex-col relative md:gap-2 gap-1 text-black/80 dark:text-white/80">
               {parentPost.contents.map((ct) => (
                 <p className="text-sm whitespace-pre-wrap" key={ct.id}>
                   {ct.content}
@@ -82,7 +82,7 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
                 <span
                   key={tag.id}
                   className="text-xs cursor-pointer text-blue-500 bg-blue-100 
-                          px-2 py-0.5 rounded-full"
+                  px-2 py-0.5 rounded-full"
                 >
                   #{tag.hashtag}
                 </span>

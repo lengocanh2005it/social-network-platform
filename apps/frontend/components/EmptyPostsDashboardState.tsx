@@ -1,13 +1,16 @@
 "use client";
 import { Button } from "@heroui/react";
 import { SearchX } from "lucide-react";
+import React from "react";
 
-export const EmptyState = ({
-  hasActiveFilters,
-  onClearFilters,
-}: {
-  hasActiveFilters: boolean;
-  onClearFilters?: () => void;
+interface EmptyPostsDashboardStateProps {
+  hasActiveFilter: boolean;
+  onClearFilter?: () => void;
+}
+
+const EmptyPostsDashboardState: React.FC<EmptyPostsDashboardStateProps> = ({
+  hasActiveFilter,
+  onClearFilter,
 }) => {
   return (
     <div
@@ -20,22 +23,24 @@ export const EmptyState = ({
 
       <div>
         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-          {hasActiveFilters
-            ? "No users match your filters"
-            : "No users available"}
+          {hasActiveFilter
+            ? "No posts match your filters"
+            : "No posts available"}
         </h3>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {hasActiveFilters
+          {hasActiveFilter
             ? "Try adjusting or clearing your filters."
-            : "There aren't any users to display at the moment."}
+            : "There aren't any posts to display at the moment."}
         </p>
       </div>
 
-      {hasActiveFilters && onClearFilters && (
-        <Button onPress={onClearFilters} size="sm" variant="flat">
+      {hasActiveFilter && onClearFilter && (
+        <Button onPress={onClearFilter} size="sm" variant="flat">
           Clear filters
         </Button>
       )}
     </div>
   );
 };
+
+export default EmptyPostsDashboardState;

@@ -171,7 +171,7 @@ const SideBarPage: React.FC = () => {
               >
                 <Users className="w-10 h-10 text-gray-400" />
                 <h1 className="text-xl font-semibold">No Friends</h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-white/80">
                   Add some friends to get started!
                 </p>
               </div>

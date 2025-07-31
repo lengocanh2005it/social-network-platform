@@ -1,6 +1,9 @@
 import {
   GetActivitiesQueryDto,
+  GetPostsQueryDto,
+  GetSharePostsQueryDto,
   GetUsersQueryDto,
+  UpdatePostStatusDto,
   UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
 import { GetUserQueryDto } from '@app/common/dtos/users';
@@ -70,6 +73,72 @@ export class AdminController {
       userId,
       email,
       updateUserSuspensionDto,
+    );
+  }
+
+  @Get('posts')
+  async getPosts(
+    @Query() getPostsQueryDto: GetPostsQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.getPosts(getPostsQueryDto, email);
+  }
+
+  @Patch('posts/:postId/status')
+  async updatePostStatus(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() updatePostStatusDto: UpdatePostStatusDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    const { is_active, reason } = updatePostStatusDto;
+
+    if (is_active === true && reason)
+      throw new HttpException(
+        'Reason must not be provided when the post is active.',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    return this.adminService.updatePostStatus(
+      postId,
+      updatePostStatusDto,
+      email,
+    );
+  }
+
+  @Get('posts/:postId/shares')
+  async getSharesOfPost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Query() getSharePostsQueryDto: GetSharePostsQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.getSharesOfPost(
+      postId,
+      getSharePostsQueryDto,
+      email,
     );
   }
 }

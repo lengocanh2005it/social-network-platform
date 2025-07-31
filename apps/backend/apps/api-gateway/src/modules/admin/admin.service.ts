@@ -1,6 +1,9 @@
 import {
   GetActivitiesQueryDto,
+  GetPostsQueryDto,
+  GetSharePostsQueryDto,
   GetUsersQueryDto,
+  UpdatePostStatusDto,
   UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
 import { GetUserQueryDto } from '@app/common/dtos/users';
@@ -22,6 +25,9 @@ export class AdminService implements OnModuleInit {
       'get-growth-overview',
       'get-users-dashboard',
       'update-user-suspension',
+      'get-posts-dashboard',
+      'update-post-status',
+      'get-shares-of-post',
     ];
     patterns.forEach((p) => this.adminClient.subscribeToResponseOf(p));
     this.usersClient.subscribeToResponseOf('get-user-by-field');
@@ -77,6 +83,40 @@ export class AdminService implements OnModuleInit {
       userId,
       email,
       updateUserSuspensionDto,
+    });
+  };
+
+  public getPosts = async (
+    getPostsQueryDto: GetPostsQueryDto,
+    email: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'get-posts-dashboard', {
+      getPostsQueryDto: toPlain(getPostsQueryDto),
+      email,
+    });
+  };
+
+  public updatePostStatus = async (
+    postId: string,
+    updatePostStatusDto: UpdatePostStatusDto,
+    email: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'update-post-status', {
+      postId,
+      updatePostStatusDto: toPlain(updatePostStatusDto),
+      email,
+    });
+  };
+
+  public getSharesOfPost = async (
+    postId: string,
+    getSharePostsQueryDto: GetSharePostsQueryDto,
+    email: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'get-shares-of-post', {
+      postId,
+      getSharePostsQueryDto: toPlain(getSharePostsQueryDto),
+      email,
     });
   };
 }

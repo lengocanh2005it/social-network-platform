@@ -21,7 +21,7 @@ import {
 } from "@/store";
 import { CreateCommentReplyDto, formatDateTime, GroupedComment } from "@/utils";
 import { Avatar, Spinner } from "@heroui/react";
-import { PostContentType, PostContentTypeEnum } from "@repo/db";
+import { PostContentType, PostContentTypeEnum, RoleEnum } from "@repo/db";
 import {
   Camera,
   SendHorizontal,
@@ -39,6 +39,11 @@ interface CommentItemProps {
   level?: number;
   hasSibling?: boolean;
   parentId?: string;
+  shouldHideLikeButton?: boolean;
+  shouldHideCommentButton?: boolean;
+  onDelete?: () => void;
+  cursor?: string;
+  loadNewComments?: () => void;
 }
 
 const icons = [
@@ -74,6 +79,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
   post,
   level = 0,
   parentId,
+  shouldHideCommentButton,
+  shouldHideLikeButton,
+  onDelete,
+  cursor,
+  loadNewComments,
 }) => {
   const [showReplyBox, setShowReplyBox] = React.useState<boolean>(false);
   const [replyText, setReplyText] = React.useState<string>("");
@@ -89,7 +99,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     addOldReplies,
     updateReply,
   } = useCommentStore();
-  const { updatePost } = usePostStore();
+  const { updatePost, updateHomePost } = usePostStore();
   const { mutate: mutateDeleteComment } = useDeleteComment();
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -113,10 +123,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {
         onSuccess: (data) => {
           if (data) {
+            updateHomePost(post.id, data);
             updatePost(post.id, data);
-            toast.success(`Your comment has been successfully deleted.`, {
-              position: "bottom-right",
-            });
+
             deleteComment(postId, commentId);
 
             if (parentId) {
@@ -136,6 +145,23 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 total_replies: repliesByCommentId[parentId].length - 1,
               });
             }
+
+            if (
+              commentsByPostId[post.id].length - 1 <= 2 &&
+              cursor &&
+              loadNewComments
+            ) {
+              setTimeout(() => {
+                loadNewComments();
+              }, 150);
+            }
+
+            toast.success(
+              `${user?.id === comment.user.id ? "Your comment has been successfully deleted." : "This comment has been deleted successfully."}`,
+              {
+                position: "bottom-right",
+              },
+            );
           }
         },
       },
@@ -188,6 +214,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
             total_replies: data?.parentComment?.total_replies,
           });
         }
+        updatePost(post.id, {
+          ...post,
+          total_comments: post.total_comments + 1,
+        });
+        updateHomePost(post.id, {
+          ...post,
+          total_comments: post.total_comments + 1,
+        });
         setIsOpen(true);
         setReplyText("");
         setShowReplyBox(false);
@@ -220,7 +254,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleLoadMoreReplies = async () => {
-    if (!nextCursor) return;
+    if (!nextCursor || loadMore) return;
 
     setLoadMore(true);
 
@@ -307,29 +341,40 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
               <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-white/70">
                 <span>{formatDateTime(comment.created_at)}</span>
-                <button
-                  onClick={handleToggleLikeComment}
-                  className={`cursor-pointer transition-colors ${
-                    liked
-                      ? "text-blue-600"
-                      : "hover:text-gray-700 dark:hover:text-white/50"
-                  }`}
-                >
-                  {liked ? "Liked" : "Like"}
-                </button>
-                <button
-                  className="cursor-pointer hover:text-gray-700 dark:hover:text-white/50"
-                  onClick={() => setShowReplyBox((prev) => !prev)}
-                >
-                  Reply
-                </button>
+                {!shouldHideLikeButton && (
+                  <button
+                    onClick={handleToggleLikeComment}
+                    className={`cursor-pointer transition-colors ${
+                      liked
+                        ? "text-blue-600"
+                        : "hover:text-gray-700 dark:hover:text-white/50"
+                    }`}
+                  >
+                    {liked ? "Liked" : "Like"}
+                  </button>
+                )}
+                {!shouldHideCommentButton && (
+                  <button
+                    className="cursor-pointer hover:text-gray-700 dark:hover:text-white/50"
+                    onClick={() => setShowReplyBox((prev) => !prev)}
+                  >
+                    Reply
+                  </button>
+                )}
 
                 {((user?.id === comment.user.id &&
                   post?.user?.id !== user?.id) ||
-                  post?.user?.id === user?.id) && (
+                  post?.user?.id === user?.id ||
+                  user?.role === RoleEnum.admin) && (
                   <button
                     className="cursor-pointer hover:text-gray-700 dark:hover:text-white/50"
-                    onClick={() => handleDelete(comment.id, post.id)}
+                    onClick={() => {
+                      if (onDelete) {
+                        onDelete();
+                      } else {
+                        handleDelete(comment.id, post.id);
+                      }
+                    }}
                   >
                     Delete
                   </button>
@@ -436,6 +481,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 }
                 parentId={comment.id}
                 post={post}
+                shouldHideCommentButton={user?.role === RoleEnum.admin}
+                shouldHideLikeButton={user?.role === RoleEnum.admin}
+                onDelete={
+                  user?.role === RoleEnum.admin
+                    ? () => {
+                        console.log("Hello World!");
+                      }
+                    : undefined
+                }
               />
             ))}
           </div>

@@ -778,3 +778,17 @@ export type UpdateUserSuspensionData = {
   userId: string;
   updateUserSuspensionDto: UpdateUserSuspensionDto;
 };
+
+export type GetPostsDashboardQueryDto = GetFeedQueryDto & {
+  email?: string;
+};
+
+export type UpdatePostStatusData = {
+  postId: string;
+  updatePostStatusDto: {
+    is_active: boolean;
+    reason?: string;
+  };
+};
+
+export type GetSharesPostQueryDto = GetFeedQueryDto;

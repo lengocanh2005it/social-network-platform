@@ -1,16 +1,30 @@
 import {
   CreateActivityDto,
   GetActivitiesQueryDto,
+  GetPostsQueryDto,
+  GetSharePostsQueryDto,
   GetUsersQueryDto,
+  UpdatePostStatusDto,
 } from '@app/common/dtos/admin';
+import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { decodeCursor, encodeCursor, sendWithTimeout } from '@app/common/utils';
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
-import { RoleEnum, UserSesstionsType, UsersType } from '@repo/db';
+import {
+  decodeCursor,
+  encodeCursor,
+  generateNotificationMessage,
+  sendWithTimeout,
+} from '@app/common/utils';
+import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ClientKafka, RpcException } from '@nestjs/microservices';
+import {
+  NotificationTypeEnum,
+  RoleEnum,
+  UserSesstionsType,
+  UsersType,
+} from '@repo/db';
+import { endOfMonth, format, startOfMonth, subMonths } from 'date-fns';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
-import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
 
 @Injectable()
 export class AdminService implements OnModuleInit {
@@ -19,6 +33,8 @@ export class AdminService implements OnModuleInit {
     private readonly usersClient: ClientKafka,
     @Inject('POSTS_SERVICE') private readonly postsClient: ClientKafka,
     private readonly prismaService: PrismaService,
+    @Inject('NOTIFICATIONS_SERVICE')
+    private readonly notificationsClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -29,6 +45,7 @@ export class AdminService implements OnModuleInit {
       'get-posts-today',
       'get-new-comments',
       'get-active-reports',
+      'get-formatted-post',
     ];
     postPatterns.forEach((p) => this.postsClient.subscribeToResponseOf(p));
   }
@@ -305,6 +322,274 @@ export class AdminService implements OnModuleInit {
       nextCursor: hasNextPage
         ? encodeCursor({
             id: items[items.length - 1].id,
+          })
+        : null,
+    };
+  };
+
+  public getPosts = async (
+    getPostsQueryDto: GetPostsQueryDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const limit = getPostsQueryDto?.limit ?? 10;
+
+    const decodedCursor = getPostsQueryDto?.after
+      ? decodeCursor(getPostsQueryDto.after)
+      : null;
+
+    const posts = await this.prismaService.posts.findMany({
+      where: getPostsQueryDto?.email?.trim()
+        ? {
+            user: {
+              is: {
+                email: getPostsQueryDto.email,
+              },
+            },
+          }
+        : {},
+      take: limit + 1,
+      skip: decodedCursor ? 1 : 0,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+      }),
+      orderBy: [{ created_at: 'desc' }],
+      include: {
+        user: true,
+        contents: true,
+        images: true,
+        videos: true,
+        hashtags: true,
+        parent: {
+          include: {
+            user: true,
+            contents: true,
+            images: true,
+            hashtags: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+            shares: true,
+          },
+        },
+      },
+    });
+
+    const hasNextPage = posts.length > limit;
+    const items = hasNextPage ? posts.slice(0, -1) : posts;
+
+    return {
+      data: await Promise.all(
+        items.map((item) =>
+          sendWithTimeout(
+            this.postsClient,
+            'get-formatted-post',
+            JSON.stringify({
+              postId: item.id,
+              userId: admin.id,
+              parentPostId: item?.parent_post_id,
+              withDeleted: true,
+            }),
+          ),
+        ),
+      ),
+      nextCursor: hasNextPage
+        ? encodeCursor({
+            id: items[items.length - 1].id,
+            created_at: items[items.length - 1].created_at,
+          })
+        : null,
+    };
+  };
+
+  public updatePostStatus = async (
+    postId: string,
+    updatePostStatusDto: UpdatePostStatusDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Post not found.',
+      });
+
+    const { is_active, reason } = updatePostStatusDto;
+
+    if (post.deleted_at && is_active === false)
+      throw new RpcException({
+        statusCode: HttpStatus.CONFLICT,
+        message:
+          'Cannot deactivate a post that has already been deleted by the system.',
+      });
+
+    if (!post.deleted_at && is_active === true)
+      throw new RpcException({
+        statusCode: HttpStatus.CONFLICT,
+        message: 'Post is already active and cannot be activated again.',
+      });
+
+    await this.prismaService.posts.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        deleted_at: is_active === true ? null : new Date(),
+      },
+    });
+
+    const createNotificationDto: CreateNotificationDto = {
+      type:
+        is_active === true
+          ? NotificationTypeEnum.post_restored_by_admin
+          : NotificationTypeEnum.post_removed_by_admin,
+      content: generateNotificationMessage(
+        is_active === true
+          ? NotificationTypeEnum.post_restored_by_admin
+          : NotificationTypeEnum.post_removed_by_admin,
+        {
+          ...(is_active === false && {
+            reason,
+          }),
+        },
+      ),
+      recipient_id: post.user_id,
+      sender_id: admin.id,
+      metadata: {
+        post_id: post.id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
+
+    return {
+      success: true,
+      message:
+        is_active === true
+          ? 'Post has been restored successfully.'
+          : 'Post has been deactivated successfully.',
+    };
+  };
+
+  public getSharesOfPost = async (
+    postId: string,
+    getSharePostsQueryDto: GetSharePostsQueryDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Post not found.`,
+      });
+
+    const limit = getSharePostsQueryDto?.limit ?? 10;
+
+    const decodedCursor = getSharePostsQueryDto?.after
+      ? decodeCursor(getSharePostsQueryDto.after)
+      : null;
+
+    const shares = await this.prismaService.posts.findMany({
+      where: {
+        parent_post_id: post.id,
+      },
+      take: limit + 1,
+      skip: decodedCursor ? 1 : 0,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+      }),
+      orderBy: [{ created_at: 'desc' }],
+      include: {
+        user: true,
+        contents: true,
+        images: true,
+        videos: true,
+        hashtags: true,
+        parent: {
+          include: {
+            user: true,
+            contents: true,
+            images: true,
+            hashtags: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true,
+            shares: true,
+          },
+        },
+      },
+    });
+
+    const hasNextPage = shares.length > limit;
+    const items = hasNextPage ? shares.slice(0, -1) : shares;
+
+    return {
+      data: await Promise.all(
+        items.map((item) =>
+          sendWithTimeout(
+            this.postsClient,
+            'get-formatted-post',
+            JSON.stringify({
+              postId: item.id,
+              userId: admin.id,
+              parentPostId: item?.parent_post_id,
+              withDeleted: true,
+            }),
+          ),
+        ),
+      ),
+      nextCursor: hasNextPage
+        ? encodeCursor({
+            id: items[items.length - 1].id,
+            created_at: items[items.length - 1].created_at,
           })
         : null,
     };

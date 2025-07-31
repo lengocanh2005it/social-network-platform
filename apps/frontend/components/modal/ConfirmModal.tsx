@@ -75,7 +75,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <ModalBody className="flex flex-col">
               <h1 className="md:text-lg text-center text-lg">{title}</h1>
 
-              <p className="text-sm text-center text-gray-700">{description}</p>
+              <p className="text-sm text-center text-gray-700 dark:text-white/80">
+                {description}
+              </p>
             </ModalBody>
 
             <ModalFooter className="flex items-center justify-center">

@@ -1,12 +1,11 @@
 "use client";
+import AdminProfileModalBody from "@/components/AdminProfileModalBody";
 import { useSignOut } from "@/hooks";
 import { useUserStore } from "@/store";
 import {
-  Button,
   Modal,
   ModalBody,
   ModalContent,
-  ModalFooter,
   ModalHeader,
   Skeleton,
   useDisclosure,
@@ -88,28 +87,18 @@ export default function AdminProfileModal() {
           },
         }}
         onOpenChange={onOpenChange}
+        size="lg"
+        isDismissable={false}
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                Modal Title
+                Your Profile
               </ModalHeader>
               <ModalBody className="dark:text-white text-black">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Nullam pulvinar risus non risus hendrerit venenatis.
-                  Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                </p>
+                <AdminProfileModalBody onClose={onOpenChange} />
               </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
-                </Button>
-              </ModalFooter>
             </>
           )}
         </ModalContent>

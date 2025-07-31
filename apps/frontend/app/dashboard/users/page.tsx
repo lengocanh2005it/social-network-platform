@@ -95,6 +95,17 @@ const DashboardUsersPage = () => {
     }
   };
 
+  const onReset = () => {
+    setFilters({
+      fullName: "",
+      username: "",
+      email: "",
+      phoneNumber: "",
+      exactMatch: false,
+    });
+    handleSearchUsers({});
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <motion.div
@@ -115,25 +126,21 @@ const DashboardUsersPage = () => {
         </p>
       </motion.div>
 
-      <UserFilterForm
-        filters={filters}
-        setFilters={setFilters}
-        showAdvanced={showAdvancedFilters}
-        toggleAdvanced={() => setShowAdvancedFilters(!showAdvancedFilters)}
-        hasActiveFilters={hasActiveFilters}
-        onReset={() => {
-          setFilters({
-            fullName: "",
-            username: "",
-            email: "",
-            phoneNumber: "",
-            exactMatch: false,
-          });
-
-          handleSearchUsers({});
-        }}
-        onSearch={onSearch}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <UserFilterForm
+          filters={filters}
+          setFilters={setFilters}
+          showAdvanced={showAdvancedFilters}
+          toggleAdvanced={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          hasActiveFilters={hasActiveFilters}
+          onReset={onReset}
+          onSearch={onSearch}
+        />
+      </motion.div>
 
       <Divider className="dark:bg-white/20 mt-3" />
 
@@ -174,7 +181,10 @@ const DashboardUsersPage = () => {
             )}
           </AnimatePresence>
         ) : hasFetchedOnce ? (
-          <EmptyState hasActiveFilters={hasActiveFilters} />
+          <EmptyState
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={onReset}
+          />
         ) : null}
       </div>
     </div>

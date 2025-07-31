@@ -1,8 +1,9 @@
 "use client";
 import ViewPostModal from "@/components/modal/ViewPostModal";
 import ParentPostDetails from "@/components/post/ParentPostDetails";
+import PostMediaItem from "@/components/post/PostMediaItem";
 import { PostDetails } from "@/store";
-import Image from "next/image";
+import { AlertTriangle } from "lucide-react";
 import React, { useState } from "react";
 
 interface PostContentProps {
@@ -44,7 +45,11 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
         </section>
       )}
 
-      <div
+      {homePost?.images?.length > 0 && (
+        <PostMediaItem post={homePost} images={homePost.images} />
+      )}
+
+      {/* <div
         className={`grid gap-3 md:mt-3 mt-2 ${
           homePost.images.length === 1
             ? "grid-cols-1"
@@ -68,13 +73,33 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
             />
           </div>
         ))}
-      </div>
+      </div> */}
 
-      {homePost?.parent_post && (
-        <ParentPostDetails
-          parentPost={homePost.parent_post}
-          onClick={() => setIsShowParentPostModal(true)}
-        />
+      {homePost?.parent_post_id && (
+        <>
+          {homePost?.parent_post ? (
+            <>
+              <ParentPostDetails
+                parentPost={homePost.parent_post}
+                onClick={() => setIsShowParentPostModal(true)}
+              />
+            </>
+          ) : (
+            <>
+              <div
+                className="p-6 flex flex-col items-center justify-center
+              text-center border border-black/10 dark:border-white/20
+              rounded-lg gap-2 md:mb-3 mb-2"
+              >
+                <AlertTriangle className="text-yellow-500 w-10 h-10 flex-shrink-0" />
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  This content is no longer available. It may have been removed
+                  by an admin or the user who shared it.
+                </p>
+              </div>
+            </>
+          )}
+        </>
       )}
 
       {isShowParentPostModal && homePost.parent_post && (

@@ -322,4 +322,19 @@ export class PostsController {
   async getActiveReports() {
     return JSON.stringify(await this.postsService.getActiveReports());
   }
+
+  @MessagePattern('get-formatted-post')
+  async getFormattedPost(
+    @Payload('postId') postId: string,
+    @Payload('userId') userId: string,
+    @Payload('parentPostId') parentPostId?: string,
+    @Payload('withDeleted') withDeleted?: boolean,
+  ) {
+    return this.postsService.getFormattedPost(
+      postId,
+      userId,
+      parentPostId,
+      withDeleted,
+    );
+  }
 }

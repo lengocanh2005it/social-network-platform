@@ -247,6 +247,7 @@ export type NotificationParams = {
   senderName?: string;
   postTitle?: string;
   commentContent?: string;
+  reason?: string;
 };
 
 export const fieldDisplayMap: Record<string, string> = {

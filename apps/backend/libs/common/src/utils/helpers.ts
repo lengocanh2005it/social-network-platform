@@ -293,6 +293,10 @@ export const generateNotificationMessage = (
       return `${params.senderName} added a new story.`;
     case 'system_announcement':
       return `There is a new system announcement.`;
+    case 'post_removed_by_admin':
+      return `Your post was removed by an admin for the following reason: "${params.reason}".`;
+    case 'post_restored_by_admin':
+      return `Your post has been restored by an admin.`;
     default:
       return `You have a new notification.`;
   }

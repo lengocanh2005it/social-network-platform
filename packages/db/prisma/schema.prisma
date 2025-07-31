@@ -557,6 +557,8 @@ enum NotificationType {
   tagged_in_post
   story_added_by_friend
   system_announcement
+  post_removed_by_admin
+  post_restored_by_admin
 }
 
 enum FriendShipStatus {

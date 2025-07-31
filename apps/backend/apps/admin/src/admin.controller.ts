@@ -1,7 +1,10 @@
 import {
   CreateActivityDto,
   GetActivitiesQueryDto,
+  GetPostsQueryDto,
+  GetSharePostsQueryDto,
   GetUsersQueryDto,
+  UpdatePostStatusDto,
 } from '@app/common/dtos/admin';
 import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -37,5 +40,40 @@ export class AdminController {
   @MessagePattern('get-users-dashboard')
   async getUsers(@Payload() getUsersQueryDto: GetUsersQueryDto) {
     return this.adminService.getUsers(getUsersQueryDto);
+  }
+
+  @MessagePattern('get-posts-dashboard')
+  async getPosts(
+    @Payload('getPostsQueryDto') getPostsQueryDto: GetPostsQueryDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.getPosts(getPostsQueryDto, email);
+  }
+
+  @MessagePattern('update-post-status')
+  async updatePostStatus(
+    @Payload('postId') postId: string,
+    @Payload('updatePostStatusDto') updatePostStatusDto: UpdatePostStatusDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.updatePostStatus(
+      postId,
+      updatePostStatusDto,
+      email,
+    );
+  }
+
+  @MessagePattern('get-shares-of-post')
+  async getSharesOfPost(
+    @Payload('postId') postId: string,
+    @Payload('getSharePostsQueryDto')
+    getSharePostsQueryDto: GetSharePostsQueryDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.getSharesOfPost(
+      postId,
+      getSharePostsQueryDto,
+      email,
+    );
   }
 }

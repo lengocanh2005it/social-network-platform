@@ -412,14 +412,16 @@ export class PostsService implements OnModuleInit {
       );
   };
 
-  private getFormattedPost = async (
+  public getFormattedPost = async (
     postId: string,
     userId: string,
     parent_post_id?: string,
+    with_deleted = false,
   ) => {
     const item = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
+        ...(with_deleted ? {} : { deleted_at: null }),
       },
       include: {
         user: {
@@ -690,7 +692,7 @@ export class PostsService implements OnModuleInit {
       },
     });
 
-    if (!parentPost) return null;
+    if (!parentPost || parentPost?.deleted_at) return null;
 
     return this.transformPostItem(parentPost, userId);
   }
@@ -1445,22 +1447,56 @@ export class PostsService implements OnModuleInit {
       commentId,
     );
 
-    if (comment.user_id !== user.id && post.user_id !== user.id)
+    if (
+      comment.user_id !== user.id &&
+      post.user_id !== user.id &&
+      user.role === RoleEnum.user
+    )
       throw new RpcException({
         statusCode: HttpStatus.FORBIDDEN,
         message: `You can only delete your own comment.`,
       });
 
-    await this.prismaService.posts.update({
+    const childrenComments = await this.prismaService.comments.findMany({
       where: {
-        id: postId,
-      },
-      data: {
-        total_comments: {
-          decrement: 1,
-        },
+        parent_comment_id: comment.id,
       },
     });
+
+    if (comment.post_image_id && comment.post_image) {
+      await this.prismaService.postImages.update({
+        where: {
+          id: comment.post_image_id,
+        },
+        data: {
+          total_comments: {
+            decrement: 1,
+          },
+        },
+      });
+    } else if (comment.post_video_id && comment.post_video) {
+      await this.prismaService.postVideos.update({
+        where: {
+          id: comment.post_video_id,
+        },
+        data: {
+          total_comments: {
+            decrement: 1,
+          },
+        },
+      });
+    } else {
+      await this.prismaService.posts.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          total_comments: {
+            decrement: 1 + childrenComments.length,
+          },
+        },
+      });
+    }
 
     await this.prismaService.comments.delete({
       where: {
@@ -1930,6 +1966,12 @@ export class PostsService implements OnModuleInit {
       where: {
         id: commentId,
       },
+      include: {
+        post_image: true,
+        post: true,
+        post_video: true,
+        comment: true,
+      },
     });
 
     if (!comment)
@@ -2156,6 +2198,17 @@ export class PostsService implements OnModuleInit {
         createNotificationDto,
       );
     }
+
+    await this.prismaService.posts.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        total_shares: {
+          increment: 1,
+        },
+      },
+    });
 
     return this.getFormattedPost(newPost.id, user.id, postId);
   };
@@ -2529,7 +2582,8 @@ export class PostsService implements OnModuleInit {
     if (
       !isFriend &&
       post.privacy !== PostPrivaciesEnum.public &&
-      currentUser.id !== user.id
+      currentUser.id !== user.id &&
+      currentUser.role === RoleEnum.user
     )
       return null;
 
@@ -2537,6 +2591,7 @@ export class PostsService implements OnModuleInit {
       postId,
       currentUser.id,
       post?.parent_post_id ? post.parent_post_id : undefined,
+      true,
     );
   };
 
