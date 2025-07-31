@@ -53,4 +53,4 @@ apps/backend/data
 # logs
 apps/backend/logs
 
-tsconfig.tsbuildinfo
+apps/frontend/tsconfig.tsbuildinfo
