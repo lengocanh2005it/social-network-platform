@@ -1,15 +1,21 @@
 "use client";
 import NewsletterInput from "@/components/input/NewsletterInput";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { SiFacebook, SiInstagram, SiLinkedin, SiX } from "react-icons/si";
 
 const FooterSection = () => {
+  const [year, setYear] = useState<number | null>(null);
   const socialIcons = [
     { icon: SiFacebook, href: "https://facebook.com" },
     { icon: SiX, href: "https://twitter.com" },
     { icon: SiInstagram, href: "https://instagram.com" },
     { icon: SiLinkedin, href: "https://linkedin.com" },
   ];
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   return (
     <motion.footer
@@ -81,7 +87,7 @@ const FooterSection = () => {
       </div>
 
       <div className="mt-10 text-center text-sm text-gray-500 dark:text-gray-400">
-        © {new Date().getFullYear()} SocialNet. All rights reserved.
+        {year !== null && <>© {year} SocialNet. All rights reserved.</>}
       </div>
     </motion.footer>
   );

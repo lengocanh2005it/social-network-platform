@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Navigation, Autoplay } from "swiper/modules";
@@ -13,6 +14,14 @@ const images = (process.env.NEXT_PUBLIC_APP_SCREEN_URLS ?? "")
   .filter(Boolean);
 
 const SliderSection = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
+
   return (
     <section className="py-20 bg-white dark:bg-neutral-900 relative">
       <motion.h2
@@ -43,8 +52,8 @@ const SliderSection = () => {
           <div className="absolute top-1/2 -left-8 transform -translate-y-1/2 z-10">
             <button
               className="swiper-button-prev-custom bg-white/80 dark:bg-neutral-800 
-          text-black dark:text-white p-2 rounded-full shadow-md 
-          hover:scale-105 transition cursor-pointer"
+                text-black dark:text-white p-2 rounded-full shadow-md 
+                hover:scale-105 transition cursor-pointer"
             >
               <ChevronLeft size={24} />
             </button>
@@ -52,8 +61,8 @@ const SliderSection = () => {
           <div className="absolute top-1/2 -right-8 transform -translate-y-1/2 z-10">
             <button
               className="swiper-button-next-custom bg-white/80 dark:bg-neutral-800
-           text-black dark:text-white p-2 rounded-full 
-           shadow-md hover:scale-105 transition cursor-pointer"
+                text-black dark:text-white p-2 rounded-full 
+                shadow-md hover:scale-105 transition cursor-pointer"
             >
               <ChevronRight size={24} />
             </button>
@@ -62,12 +71,17 @@ const SliderSection = () => {
           <Swiper
             spaceBetween={30}
             pagination={{ clickable: true }}
-            navigation={{
-              nextEl: ".swiper-button-next-custom",
-              prevEl: ".swiper-button-prev-custom",
-            }}
             autoplay={{ delay: 4000 }}
             modules={[Pagination, Navigation, Autoplay]}
+            onBeforeInit={(swiper) => {
+              if (
+                swiper.params.navigation &&
+                typeof swiper.params.navigation !== "boolean"
+              ) {
+                swiper.params.navigation.prevEl = ".swiper-button-prev-custom";
+                swiper.params.navigation.nextEl = ".swiper-button-next-custom";
+              }
+            }}
             className="rounded-xl overflow-hidden"
           >
             {images.map((src, idx) => (
@@ -76,7 +90,7 @@ const SliderSection = () => {
                   src={src}
                   alt={`Slide ${idx + 1}`}
                   className="w-full h-[450px] object-cover rounded-lg shadow-xl 
-                select-none cursor-pointer"
+                    select-none cursor-pointer"
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   transition={{ duration: 0.5 }}

@@ -8,6 +8,7 @@ const NewsletterInput = () => {
   return (
     <div className="relative w-full">
       <input
+        suppressHydrationWarning
         type="email"
         placeholder="Your email"
         value={email}
