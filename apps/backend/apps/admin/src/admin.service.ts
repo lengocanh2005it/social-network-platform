@@ -93,21 +93,38 @@ export class AdminService implements OnModuleInit {
       : null;
 
     const name = getActivitiesQueryDto?.fullName?.trim();
+    let profileWhereClause: any = {};
+
+    if (name) {
+      const nameParts = name.split(' ').filter(Boolean);
+
+      if (nameParts.length === 1) {
+        const single = nameParts[0];
+        profileWhereClause = {
+          OR: [
+            { first_name: { contains: single, mode: 'insensitive' } },
+            { last_name: { contains: single, mode: 'insensitive' } },
+          ],
+        };
+      } else if (nameParts.length >= 2) {
+        const [first, ...rest] = nameParts;
+        const last = rest.join(' ');
+        profileWhereClause = {
+          AND: [
+            { first_name: { contains: first, mode: 'insensitive' } },
+            { last_name: { contains: last, mode: 'insensitive' } },
+          ],
+        };
+      }
+    }
 
     const activities = await this.prismaService.activities.findMany({
       where: {
-        ...(name && name.length > 0
-          ? {
-              user: {
-                profile: {
-                  OR: [
-                    { first_name: { contains: name, mode: 'insensitive' } },
-                    { last_name: { contains: name, mode: 'insensitive' } },
-                  ],
-                },
-              },
-            }
-          : {}),
+        ...(profileWhereClause && {
+          user: {
+            profile: profileWhereClause,
+          },
+        }),
       },
       take: limit + 1,
       orderBy: {

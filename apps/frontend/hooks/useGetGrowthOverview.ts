@@ -6,7 +6,7 @@ export const useGetGrowthOverview = (userId: string) => {
     queryKey: [`${userId}/growth/overview`],
     queryFn: getGrowthOverview,
     refetchOnMount: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: !!userId,
   });
 };

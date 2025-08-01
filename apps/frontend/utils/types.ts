@@ -714,7 +714,9 @@ export type UpdateThemeDto = {
 
 export type Color = keyof typeof colorMap;
 
-export type GetActivitiesQueryDto = GetFeedQueryDto;
+export type GetActivitiesQueryDto = GetFeedQueryDto & {
+  fullName?: string;
+};
 
 export type Activity = {
   id: string;

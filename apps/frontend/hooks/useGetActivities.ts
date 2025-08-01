@@ -4,13 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useGetActivities = (
   userId: string,
-  getActivitiesQueryDto: GetActivitiesQueryDto,
+  query: GetActivitiesQueryDto,
 ) => {
   return useQuery({
-    queryKey: [`${userId}/activities`],
-    queryFn: () => getActivities(getActivitiesQueryDto),
+    queryKey: [`${userId}/activities`, query],
+    queryFn: () => getActivities(query),
     refetchOnMount: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     enabled: !!userId,
   });
 };
