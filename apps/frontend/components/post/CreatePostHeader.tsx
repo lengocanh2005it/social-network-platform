@@ -80,7 +80,7 @@ const CreatePostHeader: React.FC<CreatePostHeaderProps> = ({
                 aria-labelledby="privacies"
                 aria-label="privacies"
                 className="text-sm"
-                selectedKeys={selectedKey}
+                selectedKeys={selectedKey ?? []}
                 onSelectionChange={handleSelectionChange}
                 renderValue={(selected) => {
                   const item = Array.from(selected)[0];

@@ -15,6 +15,7 @@ import {
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
+  RoleEnum,
   UsersType,
 } from '@repo/db';
 import { omit } from 'lodash';
@@ -239,7 +240,10 @@ export class StoriesService implements OnModuleInit {
         message: 'The story you are looking for could not be found.',
       });
 
-    if (new Date(story.expires_at).getTime() >= new Date().getTime()) {
+    if (
+      new Date(story.expires_at).getTime() >= new Date().getTime() &&
+      user.role === RoleEnum.user
+    ) {
       await this.prismaService.storyViews.upsert({
         where: {
           story_id_viewer_id: {
@@ -392,10 +396,7 @@ export class StoriesService implements OnModuleInit {
     };
   };
 
-  private getFormattedStory = async (
-    storyId: string,
-    currentUserId: string,
-  ) => {
+  public getFormattedStory = async (storyId: string, currentUserId: string) => {
     const findStory = await this.prismaService.stories.findUnique({
       where: {
         id: storyId,

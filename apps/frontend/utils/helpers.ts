@@ -1,6 +1,11 @@
 import { SimpleDate } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
+import {
+  DateValue,
+  fromDate,
+  toZoned,
+  ZonedDateTime,
+} from "@internationalized/date";
 import { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { decodeJwt } from "jose";
@@ -230,3 +235,8 @@ export function capitalize(s: string) {
 export const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
 };
+
+export function dateValueToDate(value?: DateValue): Date | undefined {
+  if (!value) return undefined;
+  return new Date(value.year, value.month - 1, value.day);
+}

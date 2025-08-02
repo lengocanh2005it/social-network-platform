@@ -105,3 +105,10 @@ export const statConfig = [
     sub: "needs attention",
   },
 ] as const;
+
+export const reasonOptions = [
+  { key: "inappropriate", label: "Inappropriate content" },
+  { key: "violation", label: "Violation of community guidelines" },
+  { key: "reported", label: "Reported by multiple users" },
+  { key: "misleading", label: "Misleading information" },
+];

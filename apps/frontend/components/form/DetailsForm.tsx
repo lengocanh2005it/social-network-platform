@@ -129,6 +129,11 @@ const DetailsForm = ({ form, onBack, isLoading }: DetailsFormProps) => {
                   placeholder="Female"
                   {...field}
                   defaultSelectedKeys={[form.getValues().gender]}
+                  selectedKeys={field.value ? [field.value] : []}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    field.onChange(selected);
+                  }}
                 >
                   {genders.map((gender) => (
                     <SelectItem

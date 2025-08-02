@@ -3,8 +3,10 @@ import {
   GetActivitiesQueryDto,
   GetPostsDashboardQueryDto,
   GetSharesPostQueryDto,
+  GetStoriesDashboardQueryDto,
   GetUsersDashboardQueryDto,
   UpdatePostStatusData,
+  UpdateStoryStatusData,
   UpdateUserSuspensionData,
 } from "@/utils";
 
@@ -89,6 +91,32 @@ export const getSharesOfPost = async (
   const response = await axios.get(`/admin/dashboard/posts/${postId}/shares`, {
     params: getSharesPostQueryDto,
   });
+
+  return response.data;
+};
+
+export const getStoriesDashboard = async (
+  getStoriesDashboardQueryDto: GetStoriesDashboardQueryDto,
+) => {
+  const response = await axios.get(`/admin/dashboard/stories`, {
+    params: getStoriesDashboardQueryDto,
+    paramsSerializer: {
+      indexes: null,
+    },
+  });
+
+  return response.data;
+};
+
+export const updateStoryStatus = async (
+  updateStoryStatusData: UpdateStoryStatusData,
+) => {
+  const { storyId, updateStoryStatusDto } = updateStoryStatusData;
+
+  const response = await axios.patch(
+    `/admin/dashboard/stories/${storyId}/status`,
+    updateStoryStatusDto,
+  );
 
   return response.data;
 };

@@ -217,7 +217,7 @@ const PostSharedModal: React.FC<PostShareModalProps> = ({ post }) => {
                           isRequired
                           aria-labelledby="privacies"
                           aria-label="privacies"
-                          selectedKeys={selectedKey}
+                          selectedKeys={selectedKey ?? []}
                           onSelectionChange={handleSelectionChange}
                         >
                           <SelectItem key={PostPrivaciesEnum.public}>

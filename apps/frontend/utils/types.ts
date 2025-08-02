@@ -16,6 +16,7 @@ import {
   PostContentType,
   PostPrivaciesEnum,
   PostPrivaciesType,
+  StoryStatusEnum,
   ThemeEnum,
   UserEducationsType,
   UserProfilesType,
@@ -590,6 +591,7 @@ export type GetStoryViewersQueryDto = GetFeedQueryDto;
 export type Story = {
   id: string;
   content_type: ContentStoryType;
+  status: StoryStatusEnum;
   content_url: string | null;
   text_content: string | null;
   created_at: string;
@@ -794,3 +796,15 @@ export type UpdatePostStatusData = {
 };
 
 export type GetSharesPostQueryDto = GetFeedQueryDto;
+
+export type GetStoriesDashboardQueryDto = GetFeedQueryDto & {
+  email?: string;
+};
+
+export type UpdateStoryStatusData = {
+  storyId: string;
+  updateStoryStatusDto: {
+    status: StoryStatusEnum;
+    reason?: string;
+  };
+};

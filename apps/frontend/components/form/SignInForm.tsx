@@ -220,6 +220,7 @@ const SignInForm = () => {
                   placeholder="johndoe01@gmail.com"
                   startContent={<Mail className="dark:text-white" />}
                   isClearable
+                  suppressHydrationWarning
                   aria-label="email"
                   aria-labelledby="email"
                   value={field.value || ""}

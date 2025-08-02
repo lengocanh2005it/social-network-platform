@@ -317,6 +317,7 @@ model CommentLikes {
 model Stories {
   id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content_type ContentStoryType @default(text)
+  status       StoryStatus      @default(active)
   content_url  String?
   text_content String?
   created_at   DateTime         @default(now())
@@ -559,6 +560,9 @@ enum NotificationType {
   system_announcement
   post_removed_by_admin
   post_restored_by_admin
+  story_locked_by_admin
+  story_unlocked_by_admin
+  story_expired_notification
 }
 
 enum FriendShipStatus {
@@ -582,4 +586,10 @@ enum Theme {
   system
   dark
   light
+}
+
+enum StoryStatus {
+  active
+  inactive
+  expired
 }

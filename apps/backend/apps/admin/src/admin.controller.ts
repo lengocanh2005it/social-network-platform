@@ -3,8 +3,10 @@ import {
   GetActivitiesQueryDto,
   GetPostsQueryDto,
   GetSharePostsQueryDto,
+  GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateStoryStatusDto,
 } from '@app/common/dtos/admin';
 import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -73,6 +75,27 @@ export class AdminController {
     return this.adminService.getSharesOfPost(
       postId,
       getSharePostsQueryDto,
+      email,
+    );
+  }
+
+  @MessagePattern('get-stories-dashboard')
+  async getStories(
+    @Payload('getStoriesQueryDto') getStoriesQueryDto: GetStoriesQueryDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.getStories(getStoriesQueryDto, email);
+  }
+
+  @MessagePattern('update-story-status')
+  async updateStoryStatus(
+    @Payload('storyId', ParseUUIDPipe) storyId: string,
+    @Payload('updateStoryStatusDto') updateStoryStatusDto: UpdateStoryStatusDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.updateStoryStatus(
+      storyId,
+      updateStoryStatusDto,
       email,
     );
   }

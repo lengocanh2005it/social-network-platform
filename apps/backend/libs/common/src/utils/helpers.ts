@@ -297,6 +297,12 @@ export const generateNotificationMessage = (
       return `Your post was removed by an admin for the following reason: "${params.reason}".`;
     case 'post_restored_by_admin':
       return `Your post has been restored by an admin.`;
+    case 'story_locked_by_admin':
+      return `Your story has been locked by an admin for the following reason: "${params.reason}".`;
+    case 'story_unlocked_by_admin':
+      return `Your story has been unlocked by an admin.`;
+    case 'story_expired_notification':
+      return `Your story has expired and is no longer visible to others.`;
     default:
       return `You have a new notification.`;
   }

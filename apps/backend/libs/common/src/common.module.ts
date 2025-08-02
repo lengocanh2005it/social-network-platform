@@ -28,6 +28,7 @@ import {
 import { TwilioModule } from 'nestjs-twilio';
 import { CommonService } from './common.service';
 import { SentryModule } from '@sentry/nestjs/setup';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Global()
 @Module({
@@ -78,6 +79,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     }),
     PrometheusModule.register(),
     SentryModule.forRoot(),
+    ScheduleModule.forRoot(),
   ],
   providers: [
     CommonService,
@@ -116,6 +118,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     ...MetricsProviders,
     SentryModule,
     UserActivityInterceptor,
+    ScheduleModule,
   ],
 })
 export class CommonModule {}

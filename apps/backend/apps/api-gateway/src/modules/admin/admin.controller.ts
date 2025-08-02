@@ -2,8 +2,10 @@ import {
   GetActivitiesQueryDto,
   GetPostsQueryDto,
   GetSharePostsQueryDto,
+  GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateStoryStatusDto,
   UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
 import { GetUserQueryDto } from '@app/common/dtos/users';
@@ -138,6 +140,43 @@ export class AdminController {
     return this.adminService.getSharesOfPost(
       postId,
       getSharePostsQueryDto,
+      email,
+    );
+  }
+
+  @Get('stories')
+  async getStories(
+    @Query() getStoriesQueryDto: GetStoriesQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.getStories(getStoriesQueryDto, email);
+  }
+
+  @Patch('stories/:storyId/status')
+  async updateStoryStatus(
+    @Param('storyId', ParseUUIDPipe) storyId: string,
+    @Body() updateStoryStatusDto: UpdateStoryStatusDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.updateStoryStatus(
+      storyId,
+      updateStoryStatusDto,
       email,
     );
   }

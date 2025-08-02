@@ -3,8 +3,10 @@ import {
   GetActivitiesQueryDto,
   GetPostsQueryDto,
   GetSharePostsQueryDto,
+  GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateStoryStatusDto,
 } from '@app/common/dtos/admin';
 import { CreateNotificationDto } from '@app/common/dtos/notifications';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
@@ -19,6 +21,7 @@ import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   NotificationTypeEnum,
   RoleEnum,
+  StoryStatusEnum,
   UserSesstionsType,
   UsersType,
 } from '@repo/db';
@@ -35,9 +38,11 @@ export class AdminService implements OnModuleInit {
     private readonly prismaService: PrismaService,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('STORIES_SERVICE') private readonly storiesClient: ClientKafka,
   ) {}
 
   onModuleInit() {
+    this.storiesClient.subscribeToResponseOf('get-formatted-story');
     this.usersClient.subscribeToResponseOf('get-users-stats');
     this.usersClient.subscribeToResponseOf('get-user-by-field');
     const postPatterns = [
@@ -609,6 +614,179 @@ export class AdminService implements OnModuleInit {
             created_at: items[items.length - 1].created_at,
           })
         : null,
+    };
+  };
+
+  public getStories = async (
+    getStoriesQueryDto: GetStoriesQueryDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const limit = getStoriesQueryDto?.limit ?? 10;
+
+    const decodedCursor = getStoriesQueryDto?.after
+      ? decodeCursor(getStoriesQueryDto.after)
+      : null;
+
+    const {
+      email: emailSearch,
+      username,
+      from,
+      to,
+      status,
+    } = getStoriesQueryDto;
+
+    const whereClause = {
+      ...(emailSearch || username
+        ? {
+            user: {
+              ...(emailSearch ? { email: emailSearch } : {}),
+              ...(username
+                ? {
+                    profile: {
+                      is: {
+                        username,
+                      },
+                    },
+                  }
+                : {}),
+            },
+          }
+        : {}),
+      ...(status ? { status } : {}),
+      ...(from || to
+        ? {
+            created_at: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const stories = await this.prismaService.stories.findMany({
+      where: whereClause,
+      take: limit + 1,
+      skip: decodedCursor ? 1 : 0,
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+      }),
+      orderBy: [{ created_at: 'desc' }],
+    });
+
+    const hasNextPage = stories.length > limit;
+    const items = hasNextPage ? stories.slice(0, -1) : stories;
+
+    return {
+      data: await Promise.all(
+        items.map((item) =>
+          sendWithTimeout(
+            this.storiesClient,
+            'get-formatted-story',
+            JSON.stringify({
+              storyId: item.id,
+              currentUserId: admin.id,
+            }),
+          ),
+        ),
+      ),
+      nextCursor: hasNextPage
+        ? encodeCursor({
+            id: items[items.length - 1].id,
+            created_at: items[items.length - 1].created_at,
+          })
+        : null,
+    };
+  };
+
+  public updateStoryStatus = async (
+    storyId: string,
+    updateStoryStatusDto: UpdateStoryStatusDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const story = await this.prismaService.stories.findUnique({
+      where: {
+        id: storyId,
+      },
+    });
+
+    if (!story)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Story not found.`,
+      });
+
+    const { status, reason } = updateStoryStatusDto;
+
+    if (status === StoryStatusEnum.inactive && !reason)
+      throw new RpcException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'A reason must be provided when deactivating a story.',
+      });
+
+    if (status === StoryStatusEnum.expired) {
+      await this.prismaService.stories.delete({
+        where: {
+          id: storyId,
+        },
+      });
+    } else {
+      await this.prismaService.stories.update({
+        where: {
+          id: storyId,
+        },
+        data: {
+          status,
+        },
+      });
+    }
+
+    const typeNotification =
+      status === StoryStatusEnum.active
+        ? NotificationTypeEnum.story_unlocked_by_admin
+        : status === StoryStatusEnum.inactive
+          ? NotificationTypeEnum.story_locked_by_admin
+          : NotificationTypeEnum.story_expired_notification;
+
+    const createNotificationDto: CreateNotificationDto = {
+      type: typeNotification,
+      content: generateNotificationMessage(typeNotification, {
+        ...(status === StoryStatusEnum.inactive && {
+          reason,
+        }),
+      }),
+      recipient_id: story.user_id,
+      sender_id: admin.id,
+      metadata: {
+        story_id: story.id,
+      },
+    };
+
+    this.notificationsClient.emit('create-notification', createNotificationDto);
+
+    return {
+      success: true,
+      message: 'Story status updated successfully.',
     };
   };
 }
