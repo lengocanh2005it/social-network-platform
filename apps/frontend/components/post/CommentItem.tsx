@@ -44,6 +44,7 @@ interface CommentItemProps {
   onDelete?: () => void;
   cursor?: string;
   loadNewComments?: () => void;
+  setPosts?: React.Dispatch<React.SetStateAction<PostDetails[]>>;
 }
 
 const icons = [
@@ -84,6 +85,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onDelete,
   cursor,
   loadNewComments,
+  setPosts,
 }) => {
   const [showReplyBox, setShowReplyBox] = React.useState<boolean>(false);
   const [replyText, setReplyText] = React.useState<string>("");
@@ -123,6 +125,23 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {
         onSuccess: (data) => {
           if (data) {
+            console.log("Data: ", data);
+            console.log("Set posts function: ", setPosts);
+
+            if (setPosts) {
+              setPosts((prev) =>
+                prev.map((p) => {
+                  if (p.id === post.id) {
+                    return {
+                      ...p,
+                      total_comments: data?.total_comments ?? 0,
+                    };
+                  }
+                  return p;
+                }),
+              );
+            }
+
             updateHomePost(post.id, data);
             updatePost(post.id, data);
 
@@ -483,13 +502,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 post={post}
                 shouldHideCommentButton={user?.role === RoleEnum.admin}
                 shouldHideLikeButton={user?.role === RoleEnum.admin}
-                onDelete={
-                  user?.role === RoleEnum.admin
-                    ? () => {
-                        console.log("Hello World!");
-                      }
-                    : undefined
-                }
+                setPosts={setPosts}
               />
             ))}
           </div>

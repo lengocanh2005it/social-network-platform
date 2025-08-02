@@ -194,6 +194,7 @@ const ViewUserCommentsModal: React.FC<ViewUserCommentsModalProps> = ({
                                   user?.role === RoleEnum.admin
                                 }
                                 onDelete={() => handleDeleteComment(comment.id)}
+                                setPosts={setPosts}
                               />
                             ))}
 
