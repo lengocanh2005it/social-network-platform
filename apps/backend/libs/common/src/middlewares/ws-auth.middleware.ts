@@ -2,16 +2,18 @@ import { KeycloakProvider } from '@app/common/providers';
 import { ClientKafka } from '@nestjs/microservices';
 import * as cookie from 'cookie';
 import { firstValueFrom } from 'rxjs';
+import { Socket } from 'socket.io';
 
 export const createWsAuthMiddleware = (
   keycloakProvider: KeycloakProvider,
   usersClient: ClientKafka,
 ) => {
-  return async (socket: any, next: (err?: any) => void) => {
+  return async (socket: Socket, next: (err?: any) => void) => {
     try {
       usersClient.subscribeToResponseOf('get-user-by-field');
 
       const cookies = socket.handshake.headers.cookie;
+      const fingerprint = socket.handshake.query.fingerprint;
 
       if (!cookies) {
         return next(new Error('Unauthorized'));
@@ -53,7 +55,10 @@ export const createWsAuthMiddleware = (
         return next(new Error('Unauthorized'));
       }
 
-      socket.data.user = user;
+      socket.data.user = {
+        ...user,
+        fingerprint,
+      };
 
       next();
     } catch (error) {

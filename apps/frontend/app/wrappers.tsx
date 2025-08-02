@@ -10,7 +10,7 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <HeroUIProvider>
-        <NextThemesProvider attribute="class" enableSystem defaultTheme="light">
+        <NextThemesProvider attribute="class" enableSystem defaultTheme="dark">
           {children}
         </NextThemesProvider>
       </HeroUIProvider>

@@ -30,6 +30,7 @@ import { RoleEnum } from '@repo/db';
 import { Request, Response } from 'express';
 import { KeycloakUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
+import { SkipUserActivity } from '@app/common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -206,6 +207,7 @@ export class AuthController {
       .json({ success: true, message: `Password changed successfully.` });
   }
 
+  @SkipUserActivity()
   @Post('sign-out')
   @Roles(RoleEnum.admin, RoleEnum.user)
   async signOut(

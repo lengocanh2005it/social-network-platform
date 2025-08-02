@@ -1,5 +1,6 @@
 "use client";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
+import PostMediaItem from "@/components/post/PostMediaItem";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDeleteBookMarks, useGetBookMarks } from "@/hooks";
 import { getBookMarks } from "@/lib/api/bookmarks";
@@ -153,15 +154,19 @@ const BookMarksTab: React.FC = () => {
   if (isLoading) return <PrimaryLoading />;
 
   return (
-    <div className="bg-white rounded-lg w-full shadow p-4 flex flex-col md:gap-4 gap-3 relative">
+    <div
+      className="bg-white rounded-lg w-full shadow dark:shadow-none p-4 flex 
+      flex-col md:gap-4 gap-3 relative
+    dark:bg-black dark:text-white"
+    >
       <div className="flex flex-col text-medium">
         <h1 className="text-medium">Your Bookmarks</h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-white/60">
           View and manage posts you&apos;ve saved.
         </p>
       </div>
 
-      <Divider className="bg-gray-200" />
+      <Divider className="bg-gray-200 dark:bg-white/20" />
 
       <>
         {currentPageData.length === 0 && !isLoading ? (
@@ -170,19 +175,23 @@ const BookMarksTab: React.FC = () => {
               className="text-center text-gray-500 mt-4 flex flex-col items-center justify-center
             h-[20vh]"
             >
-              <Bookmark className="mx-auto w-10 h-10 text-gray-400 mb-2" />
+              <Bookmark
+                className="mx-auto w-10 h-10 text-gray-400 mb-2
+              dark:text-white/70"
+              />
               <p> You don&apos;t have any bookmarks yet.</p>
             </div>
           </>
         ) : (
           <>
             <ScrollArea className="max-h-[450px]">
-              <div className="grid grid-cols-1 md:gap-3 gap-2">
+              <div className="grid grid-cols-1 md:gap-3 gap-2 pb-2">
                 {currentPageData.map((bookmark) => (
                   <div
                     key={bookmark.id}
                     className="duration-250 ease-in-out transition-all
-              p-4 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-200"
+              p-4 hover:bg-gray-50 rounded-lg cursor-pointer border-b border-gray-200
+              dark:hover:bg-white/10 dark:border-white/20 dark:border"
                   >
                     <div className="flex items-start justify-between w-full">
                       <div className="flex items-center gap-3 mb-3">
@@ -192,11 +201,11 @@ const BookMarksTab: React.FC = () => {
                           className="w-10 h-10 flex-shrink-0 cursor-pointer select-none"
                         />
                         <div>
-                          <p className="text-medium font-medium text-gray-700">
+                          <p className="text-medium font-medium text-gray-700 dark:text-white/80">
                             {bookmark.post.user.profile.first_name}{" "}
                             {bookmark.post.user.profile.last_name}
                           </p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <p className="text-xs text-gray-500 flex items-center gap-1 dark:text-white/70">
                             <ClockIcon className="w-3 h-3" />
                             {format(
                               new Date(bookmark.post.created_at),
@@ -216,12 +225,15 @@ const BookMarksTab: React.FC = () => {
 
                         <Dropdown
                           placement="bottom-end"
-                          className="text-black"
+                          className="text-black dark:text-white"
                           shouldBlockScroll={false}
                         >
                           <DropdownTrigger>
                             <Button isIconOnly className="bg-transparent">
-                              <Ellipsis className="text-gray-700 focus:outline-none" />
+                              <Ellipsis
+                                className="text-gray-700 focus:outline-none
+                              dark:text-white/80"
+                              />
                             </Button>
                           </DropdownTrigger>
                           <DropdownMenu aria-label="" variant="flat">
@@ -253,7 +265,8 @@ const BookMarksTab: React.FC = () => {
                             {bookmark.post.contents.map((c) => (
                               <p
                                 key={c.id}
-                                className="text-sm text-gray-800 max-w-full truncate"
+                                className="text-sm text-gray-800 max-w-full truncate
+                                dark:text-white/80"
                               >
                                 {c.content}
                               </p>
@@ -277,19 +290,16 @@ const BookMarksTab: React.FC = () => {
                     </div>
 
                     {bookmark?.post?.images?.length > 0 && (
-                      <div className="flex items-center md:gap-2 gap-1 w-full">
-                        {bookmark.post.images.map((image) => (
-                          <img
-                            key={image.id}
-                            src={image.image_url}
-                            alt="Post content"
-                            className="w-40 h-40 object-cover rounded-md mb-3 select-none cursor-pointer"
-                          />
-                        ))}
-                      </div>
+                      <PostMediaItem
+                        post={bookmark.post}
+                        images={bookmark.post.images}
+                      />
                     )}
 
-                    <div className="flex items-center justify-between text-sm mt-6 text-gray-500">
+                    <div
+                      className="flex items-center justify-between text-sm mt-6 text-gray-500
+                    dark:text-white/80"
+                    >
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1">
                           <HeartIcon size={15} />
@@ -305,7 +315,10 @@ const BookMarksTab: React.FC = () => {
                         </span>
                       </div>
 
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <p
+                        className="text-xs text-gray-500 flex items-center gap-1
+                      dark:text-white/80"
+                      >
                         Saved at:{" "}
                         {format(
                           new Date(bookmark.saved_at),

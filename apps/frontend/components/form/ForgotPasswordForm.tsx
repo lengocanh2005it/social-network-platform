@@ -64,6 +64,7 @@ const ForgotPasswordForm = () => {
                 <Input
                   startContent={<Mail />}
                   placeholder="johndoe01@gmail.com"
+                  suppressHydrationWarning
                   isClearable
                   value={field.value}
                   onChange={field.onChange}

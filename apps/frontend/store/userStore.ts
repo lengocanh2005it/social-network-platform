@@ -18,6 +18,8 @@ export type FullUserType = UsersType & {
   work_places: UserWorkPlacesType[];
 } & {
   total_friends: number;
+  is_online: boolean;
+  last_seen_at: string | null;
 };
 
 interface UserState {

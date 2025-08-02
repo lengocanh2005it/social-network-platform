@@ -1,6 +1,11 @@
 import { SimpleDate } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
-import { fromDate, toZoned, ZonedDateTime } from "@internationalized/date";
+import {
+  DateValue,
+  fromDate,
+  toZoned,
+  ZonedDateTime,
+} from "@internationalized/date";
 import { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { decodeJwt } from "jose";
@@ -225,4 +230,13 @@ export function formatDateTimeFacebookStyle(date: Date | string): string {
 
 export function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
+}
+
+export const isValidEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+};
+
+export function dateValueToDate(value?: DateValue): Date | undefined {
+  if (!value) return undefined;
+  return new Date(value.year, value.month - 1, value.day);
 }

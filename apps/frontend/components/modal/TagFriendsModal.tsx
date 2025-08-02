@@ -256,7 +256,7 @@ const TagFriendsModal: React.FC<TagFriendsModalProps> = ({
                   ) : (
                     <div
                       className="flex flex-col items-center justify-center py-6 
-                    text-center text-gray-500"
+                    text-center text-gray-500 dark:text-white/70"
                     >
                       <h1 className="text-lg font-semibold">
                         No friends to show

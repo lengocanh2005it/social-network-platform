@@ -235,6 +235,11 @@ const SocialForm: React.FC<SocialFormProps> = ({
                   placeholder="Female"
                   {...field}
                   defaultSelectedKeys={[form.getValues().gender]}
+                  selectedKeys={field.value ? [field.value] : []}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    field.onChange(selected);
+                  }}
                 >
                   {genders.map((gender) => (
                     <SelectItem key={gender.key} className="text-black">

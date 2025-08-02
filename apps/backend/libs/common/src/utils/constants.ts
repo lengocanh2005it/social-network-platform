@@ -117,6 +117,11 @@ export const KAFKA_SERVICES = [
     clientId: 'notifications',
     groupId: 'notifications-group',
   },
+  {
+    serviceName: 'ADMIN_SERVICE',
+    clientId: 'admin',
+    groupId: 'admin-group',
+  },
 ] as const;
 
 export enum AuthMethod {
@@ -242,6 +247,7 @@ export type NotificationParams = {
   senderName?: string;
   postTitle?: string;
   commentContent?: string;
+  reason?: string;
 };
 
 export const fieldDisplayMap: Record<string, string> = {
@@ -258,3 +264,18 @@ export enum FriendListType {
   REQUESTS = 'requests',
   SUGGESTIONS = 'suggestions',
 }
+
+export type StatsType = {
+  value: number;
+  percent: number;
+  trend: 'up' | 'down';
+};
+
+export type ActivityType =
+  | 'post'
+  | 'comment'
+  | 'reply_comment'
+  | 'story'
+  | 'profile'
+  | 'report'
+  | 'delete';
