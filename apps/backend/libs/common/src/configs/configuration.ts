@@ -52,4 +52,5 @@ export default () => ({
     api_token: process.env.HUGGING_FACE_API_TOKEN,
     api_url: process.env.HUGGING_FACE_API_URL,
   },
+  google_gemini_api_key: process.env.GOOGLE_GEMINI_API_KEY,
 });

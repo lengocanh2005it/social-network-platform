@@ -9,6 +9,7 @@ import {
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
   CloudfareProvider,
+  geminiProvider,
   HuggingFaceProvider,
   InfisicalProvider,
   KeycloakProvider,
@@ -19,6 +20,8 @@ import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import {
   KeycloakConnectModule,
@@ -27,8 +30,6 @@ import {
 } from 'nest-keycloak-connect';
 import { TwilioModule } from 'nestjs-twilio';
 import { CommonService } from './common.service';
-import { SentryModule } from '@sentry/nestjs/setup';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Global()
 @Module({
@@ -95,6 +96,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ...MetricsProviders,
     RpcToHttpExceptionInterceptor,
     UserActivityInterceptor,
+    geminiProvider,
   ],
   exports: [
     ConfigModule,
@@ -119,6 +121,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     SentryModule,
     UserActivityInterceptor,
     ScheduleModule,
+    geminiProvider,
   ],
 })
 export class CommonModule {}

@@ -2180,6 +2180,9 @@ export class UsersService implements OnModuleInit {
           },
         ],
       },
+      include: {
+        user: true,
+      },
     });
 
     return userProfiles;

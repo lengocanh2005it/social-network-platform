@@ -125,9 +125,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {
         onSuccess: (data) => {
           if (data) {
-            console.log("Data: ", data);
-            console.log("Set posts function: ", setPosts);
-
             if (setPosts) {
               setPosts((prev) =>
                 prev.map((p) => {

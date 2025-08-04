@@ -278,7 +278,12 @@ const SignInForm = () => {
           </>
         ) : (
           <>
-            <Button type="submit" className="w-fit mx-auto" color="primary">
+            <Button
+              type="submit"
+              className="w-fit mx-auto"
+              color="primary"
+              suppressHydrationWarning
+            >
               Sign In
             </Button>
           </>

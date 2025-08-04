@@ -181,7 +181,7 @@ const ChatBoxContent: React.FC<ChatBoxContentProps> = ({
                 <div
                   key={msg.id}
                   ref={isFirst ? topMessageRef : undefined}
-                  className={`flex ${isEdited || msg.parent_message ? "items-end" : "items-center"} 
+                  className={`flex ${isEdited || msg.parent_message ? "items-end" : "items-start"} 
                   group relative md:gap-2 gap-1 ${
                     isMine ? "justify-end" : "justify-start"
                   }`}

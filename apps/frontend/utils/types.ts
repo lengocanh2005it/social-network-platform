@@ -559,6 +559,7 @@ export type Message = {
     full_name: string;
     avatar_url: string;
     username: string;
+    is_online: boolean;
   };
   parent_message?: Message;
   is_read_by_receiver: boolean;
