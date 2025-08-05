@@ -8,28 +8,35 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useGetConversations, useInfiniteScroll } from "@/hooks";
 import { useUserStore } from "@/store";
 import { Input } from "@heroui/react";
-import { debounce } from "lodash";
 import { MessageCircle, SearchIcon } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const ConversationsDropdown: React.FC = () => {
   const { user } = useUserStore();
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [mode, setMode] = useState<"default" | "search">("default");
   const iconRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    fetchNextPage,
-    hasNextPage,
-    refetch,
-  } = useGetConversations(user?.id ?? "", {
-    full_name: searchTerm,
-  });
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
+
+  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
+    useGetConversations(
+      user?.id ?? "",
+      debouncedSearchTerm.trim() !== ""
+        ? { full_name: debouncedSearchTerm.trim() }
+        : undefined,
+    );
 
   const conversations = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -61,26 +68,6 @@ const ConversationsDropdown: React.FC = () => {
     };
   }, [showDropdown]);
 
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(() => {
-        refetch();
-      }, 500),
-    [refetch],
-  );
-
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      debouncedSearch();
-    } else {
-      refetch();
-    }
-
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [searchTerm, debouncedSearch, refetch]);
-
   return (
     <section className="relative dark:text-white">
       <div ref={iconRef}>
@@ -107,38 +94,40 @@ const ConversationsDropdown: React.FC = () => {
             } mt-2 text-sm text-gray-700 relative 
             border-t border-t-black/10 dark:border-t-white/20 py-2 pr-2`}
           >
-            {isLoading ? (
-              <PrimaryLoading />
-            ) : (
-              <section className="flex flex-col md:gap-3 gap-2">
-                <Input
-                  className="w-[90%] mx-auto dark:caret-white dark:text-white"
-                  placeholder="Enter name..."
-                  startContent={<SearchIcon className="dark:text-white/80" />}
-                  value={searchTerm}
-                  onValueChange={(value) => {
-                    setSearchTerm(value);
-                    setMode(value.trim() ? "search" : "default");
-                  }}
-                  isClearable
-                />
+            <section className="flex flex-col md:gap-3 gap-2">
+              <Input
+                className="w-[90%] mx-auto dark:caret-white dark:text-white"
+                placeholder="Enter name..."
+                startContent={<SearchIcon className="dark:text-white/80" />}
+                value={searchTerm}
+                onValueChange={(value) => {
+                  setSearchTerm(value);
+                  setMode(value.trim() ? "search" : "default");
+                }}
+                isClearable
+              />
 
-                {conversations.length === 0 ? (
-                  mode === "default" ? (
-                    <EmptyDefault />
+              {isLoading ? (
+                <PrimaryLoading />
+              ) : (
+                <>
+                  {conversations.length === 0 ? (
+                    mode === "default" ? (
+                      <EmptyDefault />
+                    ) : (
+                      <EmptySearch />
+                    )
                   ) : (
-                    <EmptySearch />
-                  )
-                ) : (
-                  <ConversationsList
-                    conversations={conversations}
-                    hasMore={!!hasNextPage}
-                    ref={lastPostRef}
-                    setShowDropdown={setShowDropdown}
-                  />
-                )}
-              </section>
-            )}
+                    <ConversationsList
+                      conversations={conversations}
+                      hasMore={!!hasNextPage}
+                      ref={lastPostRef}
+                      setShowDropdown={setShowDropdown}
+                    />
+                  )}
+                </>
+              )}
+            </section>
           </ScrollArea>
         </div>
       )}

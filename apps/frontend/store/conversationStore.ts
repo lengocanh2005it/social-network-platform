@@ -1,4 +1,4 @@
-import { Conversation, Message } from "@/utils";
+import { Conversation, ConversationDropdownType, Message } from "@/utils";
 import { create } from "zustand";
 
 interface ConversationState {
@@ -19,6 +19,10 @@ interface ConversationState {
   clearConversations: () => void;
   hasNewMessageMap: Record<string, boolean>;
   setHasNewMessage: (conversationId: string, hasNewMessage: boolean) => void;
+  conversationsDashboard: ConversationDropdownType[];
+  setConversationsDashboard: (
+    conversationsDashboard: ConversationDropdownType[],
+  ) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set) => ({
@@ -26,6 +30,7 @@ export const useConversationStore = create<ConversationState>((set) => ({
   messages: {},
   nextCursor: null,
   hasNewMessageMap: {},
+  conversationsDashboard: [],
 
   setHasNewMessage: (conversationId, hasNewMessage) =>
     set((state) => ({
@@ -98,5 +103,10 @@ export const useConversationStore = create<ConversationState>((set) => ({
     set({
       conversations: {},
       messages: {},
+    }),
+
+  setConversationsDashboard: (conversationsDashboard) =>
+    set({
+      conversationsDashboard,
     }),
 }));

@@ -1,6 +1,7 @@
 "use client";
+import { useUserStore } from "@/store";
 import { ConversationDropdownType } from "@/utils";
-import { Avatar } from "@heroui/react";
+import { Avatar, Tooltip } from "@heroui/react";
 import clsx from "clsx";
 import { formatDistanceToNow } from "date-fns";
 import React from "react";
@@ -20,6 +21,12 @@ const ContactItem: React.FC<ContactItemProps> = ({
   isOnlyMessages,
   userId,
 }) => {
+  const { user } = useUserStore();
+
+  const time = formatDistanceToNow(new Date(contact.last_message_at), {
+    addSuffix: true,
+  });
+
   return (
     <div
       key={contact.id}
@@ -60,13 +67,25 @@ const ContactItem: React.FC<ContactItemProps> = ({
             {contact.target_user.full_name}
           </h3>
 
-          <span
-            className={`${!isOnlyMessages ? "text-xs" : "text-sm"} text-gray-500 dark:text-gray-400`}
-          >
-            {formatDistanceToNow(new Date(contact.last_message_at), {
-              addSuffix: true,
-            })}
-          </span>
+          {isOnlyMessages ? (
+            <>
+              <span className={`text-sm text-gray-500 dark:text-gray-400`}>
+                {formatDistanceToNow(new Date(contact.last_message_at), {
+                  addSuffix: true,
+                })}
+              </span>
+            </>
+          ) : (
+            <>
+              <Tooltip content={time}>
+                <span
+                  className={`text-xs max-w-[70px] truncate text-gray-500 dark:text-gray-400`}
+                >
+                  {time}
+                </span>
+              </Tooltip>
+            </>
+          )}
         </div>
         <div
           className={`flex ${!isOnlyMessages && "justify-between"} items-center`}
@@ -86,7 +105,8 @@ const ContactItem: React.FC<ContactItemProps> = ({
             {contact.last_message.content}
           </p>
 
-          {!contact.last_message.is_read_by_receiver ? (
+          {!contact.last_message.is_read_by_receiver &&
+          contact.last_message.user.id !== user?.id ? (
             <span
               className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full 
             bg-blue-500 text-xs font-medium text-white"

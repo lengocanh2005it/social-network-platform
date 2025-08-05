@@ -4,11 +4,16 @@ import ChatHeader from "@/components/messages/ChatHeader";
 import MessageBubble from "@/components/messages/MessageBubble";
 import MessageInput from "@/components/messages/MessageInput";
 import {
+  useCreateMessage,
+  useFingerprint,
   useGetConversationWithTargetUser,
   useGetMessagesOfConversation,
+  useInfiniteScroll,
+  useSocket,
 } from "@/hooks";
 import { getProfile } from "@/lib/api/users";
 import { useConversationStore, useUserStore } from "@/store";
+import { CreateMessageDto, Message, SocketNamespace } from "@/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -23,7 +28,26 @@ const MessagesDetailsPage = () => {
   const [conversationId, setConversationId] = useState("");
   const [newMessage, setNewMessage] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, setNextCursor, setMessages } = useConversationStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
+  const isInitialMount = useRef(true);
+  const prevScrollHeightRef = useRef(0);
+  const isScrollingRef = useRef(false);
+  const {
+    messages,
+    setMessages,
+    addMessage,
+    conversations,
+    setHasNewMessage,
+    setConversationsDashboard,
+    conversationsDashboard,
+  } = useConversationStore();
+  const { mutate: mutateCreateMessage, isPending } = useCreateMessage();
+  const finger_print = useFingerprint();
+  const { on, off, emit } = useSocket(
+    SocketNamespace.CONVERSATIONS,
+    finger_print ?? "",
+  );
 
   const { data: targetUser, isLoading: isTargetUserLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -35,8 +59,13 @@ const MessagesDetailsPage = () => {
   const { data: conversationData, isLoading } =
     useGetConversationWithTargetUser(user?.id ?? "", targetUser?.id ?? "");
 
-  const { data: messagesData, isLoading: isMessagesLoading } =
-    useGetMessagesOfConversation(user?.id ?? "", conversationId, {});
+  const {
+    data: messagesData,
+    isLoading: isMessagesLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetMessagesOfConversation(user?.id ?? "", conversationId);
 
   useEffect(() => {
     if (conversationData?.id) {
@@ -46,40 +75,174 @@ const MessagesDetailsPage = () => {
 
   useEffect(() => {
     if (messagesData && conversationId) {
-      setMessages(conversationId, messagesData.data || []);
-      setNextCursor(messagesData.nextCursor ?? null);
+      const allMessages =
+        messagesData?.pages
+          .slice()
+          .reverse()
+          .flatMap((page) => page.data) ?? [];
+      setMessages(conversationId, allMessages);
     }
-  }, [messagesData, conversationId, setMessages, setNextCursor]);
+  }, [messagesData, conversationId, setMessages]);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current && !isScrollingRef.current) {
+      isScrollingRef.current = true;
+      messagesEndRef.current.scrollIntoView({ behavior });
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 500);
+    }
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el || isScrollingRef.current) return;
+
+    const scrollTop = el.scrollTop;
+    const scrollHeight = el.scrollHeight;
+    const clientHeight = el.clientHeight;
+
+    const atBottom = scrollHeight - (scrollTop + clientHeight) < 50;
+    setIsUserAtBottom(atBottom);
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  const currentMessages = conversationId ? messages[conversationId] || [] : [];
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      setTimeout(() => scrollToBottom("auto"), 100);
+    }
+  }, [scrollToBottom]);
+
+  useEffect(() => {
+    if (isUserAtBottom && !isFetchingNextPage) {
+      scrollToBottom();
+    }
+  }, [
+    currentMessages.length,
+    isUserAtBottom,
+    isFetchingNextPage,
+    scrollToBottom,
+  ]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isFetchingNextPage || !hasNextPage) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    prevScrollHeightRef.current = prevScrollHeight;
+  }, [isFetchingNextPage, hasNextPage]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || isFetchingNextPage || !prevScrollHeightRef.current)
+      return;
+
+    const newScrollHeight = container.scrollHeight;
+    const scrollDifference = newScrollHeight - prevScrollHeightRef.current;
+    container.scrollTop = scrollDifference;
+    prevScrollHeightRef.current = 0;
+  }, [isFetchingNextPage, currentMessages.length]);
 
   const handleSendMessage = useCallback(() => {
-    if (!newMessage.trim()) return;
-    console.log("Sending message:", newMessage);
-    setNewMessage("");
-    setTimeout(scrollToBottom, 100);
-  }, [newMessage, scrollToBottom]);
+    if (!newMessage.trim() || !targetUser?.id) return;
+
+    const createMessageDto: CreateMessageDto = {
+      content: newMessage,
+      target_id: targetUser.id,
+    };
+
+    mutateCreateMessage(createMessageDto, {
+      onSuccess: (data: Message) => {
+        if (data) {
+          const updatedDashboard = conversationsDashboard.map((item) =>
+            item.id === data.conversation_id
+              ? {
+                  ...item,
+                  last_message: data,
+                  last_message_at: data.created_at,
+                }
+              : item,
+          );
+
+          setConversationsDashboard(updatedDashboard);
+          emit("sendMessage", {
+            newMessage: data,
+            target_id: createMessageDto.target_id,
+          });
+          setHasNewMessage(conversations[targetUser?.id]?.id, true);
+          setTimeout(() => {
+            setHasNewMessage(conversations[targetUser?.id]?.id, false);
+          }, 800);
+          setNewMessage("");
+          scrollToBottom();
+        }
+      },
+    });
+  }, [
+    newMessage,
+    conversations,
+    emit,
+    mutateCreateMessage,
+    setHasNewMessage,
+    targetUser?.id,
+    setConversationsDashboard,
+    conversationsDashboard,
+    scrollToBottom,
+  ]);
+
+  useEffect(() => {
+    if (!conversationId || !targetUser?.id) return;
+
+    const messageHandler = (data: Message) => {
+      addMessage(conversationId, data);
+      if (isUserAtBottom) scrollToBottom();
+    };
+
+    on("newMessage", messageHandler);
+
+    return () => {
+      off("newMessage", messageHandler);
+    };
+  }, [
+    addMessage,
+    conversationId,
+    on,
+    off,
+    scrollToBottom,
+    targetUser?.id,
+    isUserAtBottom,
+  ]);
 
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
+      if (isPending) return;
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSendMessage();
       }
     },
-    [handleSendMessage],
+    [handleSendMessage, isPending],
   );
+
+  const lastMessageRef = useInfiniteScroll(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, hasNextPage);
 
   if (isLoading || isMessagesLoading || isTargetUserLoading)
     return <PrimaryLoading />;
 
-  const currentMessages = messages[conversationId] || [];
   const fullName = `${targetUser?.profile?.first_name ?? ""} ${targetUser?.profile?.last_name ?? ""}`;
 
   return (
@@ -99,6 +262,7 @@ const MessagesDetailsPage = () => {
       />
 
       <motion.main
+        ref={scrollContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -110,21 +274,26 @@ const MessagesDetailsPage = () => {
             <p className="text-sm">Start the conversation</p>
           </div>
         ) : (
-          currentMessages.map((message) => {
-            const isSelf = message.user.id === user?.id;
-            return (
-              <div
-                key={message.id}
-                className={`flex ${isSelf ? "justify-end" : "justify-start"}`}
-              >
-                <MessageBubble
-                  message={message}
-                  isSelf={isSelf}
-                  user={user ?? undefined}
-                />
-              </div>
-            );
-          })
+          <>
+            {isFetchingNextPage && <PrimaryLoading />}
+
+            {currentMessages.map((message, i) => {
+              const isSelf = message.user.id === user?.id;
+              return (
+                <div
+                  key={message.id}
+                  className={`flex ${isSelf ? "justify-end" : "justify-start"}`}
+                  ref={i === 0 ? lastMessageRef : null}
+                >
+                  <MessageBubble
+                    message={message}
+                    isSelf={isSelf}
+                    user={user ?? undefined}
+                  />
+                </div>
+              );
+            })}
+          </>
         )}
         <div ref={messagesEndRef} />
       </motion.main>
@@ -135,6 +304,7 @@ const MessagesDetailsPage = () => {
         onSend={handleSendMessage}
         onKeyPress={handleKeyPress}
         theme={theme as "light" | "dark" | "system"}
+        isPending={isPending}
       />
     </motion.div>
   );

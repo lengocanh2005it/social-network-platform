@@ -1,6 +1,6 @@
 "use client";
 import { format } from "date-fns";
-import { IoCheckmarkDone } from "react-icons/io5";
+import { IoCheckmarkDone, IoEye } from "react-icons/io5";
 import { Message } from "@/utils";
 import { FullUserType } from "@/store";
 
@@ -41,15 +41,12 @@ const MessageBubble = ({ message, isSelf, user }: Props) => (
       <span className="text-xs opacity-70">
         {format(new Date(message.created_at), "h:mm a")}
       </span>
-      {isSelf && (
-        <IoCheckmarkDone
-          className={`text-xs ${
-            message.is_read_by_receiver
-              ? "text-blue-200"
-              : "text-gray-200 dark:text-gray-400"
-          }`}
-        />
-      )}
+      {isSelf &&
+        (message.is_read_by_receiver ? (
+          <IoEye className="text-xs text-blue-200" />
+        ) : (
+          <IoCheckmarkDone className="text-xs text-black/80 dark:text-white/80" />
+        ))}
     </div>
   </div>
 );

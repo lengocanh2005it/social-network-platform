@@ -9,6 +9,7 @@ type Props = {
   onSend: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
   theme?: string;
+  isPending: boolean;
 };
 
 const MessageInput = ({
@@ -17,6 +18,7 @@ const MessageInput = ({
   onSend,
   onKeyPress,
   theme,
+  isPending,
 }: Props) => {
   const isDark = theme === "system" || "dark";
 
@@ -60,7 +62,7 @@ const MessageInput = ({
 
         <button
           onClick={onSend}
-          disabled={!value.trim()}
+          disabled={!value.trim() || isPending}
           aria-label="Send message"
           className={`p-2 rounded-md transition-all flex items-center justify-center ${
             value.trim()

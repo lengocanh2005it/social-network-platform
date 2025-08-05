@@ -4,8 +4,7 @@ import LoadingComponent from "@/components/loading/LoadingComponent";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useGetConversations, useInfiniteScroll } from "@/hooks";
-import { useUserStore } from "@/store";
-import { ConversationDropdownType } from "@/utils";
+import { useConversationStore, useUserStore } from "@/store";
 import { Input } from "@heroui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -27,6 +26,8 @@ const ContactsSidebar: React.FC = () => {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetConversations(user?.id ?? "");
   const queryClient = useQueryClient();
+  const { setConversationsDashboard, conversationsDashboard } =
+    useConversationStore();
 
   const isOnlyMessages = pathname === "/dashboard/messages";
 
@@ -34,10 +35,12 @@ const ContactsSidebar: React.FC = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const conversations: ConversationDropdownType[] =
-    data?.pages.flatMap((page) => page.data) ?? [];
+  useEffect(() => {
+    if (data)
+      setConversationsDashboard(data?.pages.flatMap((page) => page.data) ?? []);
+  }, [setConversationsDashboard, data]);
 
-  const filteredContacts = conversations.filter((conversation) =>
+  const filteredContacts = conversationsDashboard.filter((conversation) =>
     conversation.target_user.full_name
       .toLowerCase()
       .includes(searchTerm.toLowerCase()),

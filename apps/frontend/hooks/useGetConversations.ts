@@ -12,12 +12,12 @@ export const useGetConversations = (
       userId,
       queryParams ? JSON.stringify(queryParams) : "",
     ],
-    queryFn: ({ pageParam = null }) =>
+    queryFn: ({ pageParam }) =>
       getConversations({
         ...queryParams,
-        after: pageParam ? pageParam : undefined,
+        after: pageParam,
       }),
-    initialPageParam: null,
+    initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage?.nextCursor ?? null,
     enabled: !!userId,
     refetchOnMount: true,
