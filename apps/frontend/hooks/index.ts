@@ -57,6 +57,7 @@ export * from "./useLikeComment";
 export * from "./useLikeMediaPost";
 export * from "./useLikePost";
 export * from "./useOAuthCallback";
+export * from "./useReportPost";
 export * from "./useResetPassword";
 export * from "./useResponseToFriendRequest";
 export * from "./useSendOtp";

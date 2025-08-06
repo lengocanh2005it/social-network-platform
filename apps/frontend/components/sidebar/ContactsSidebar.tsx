@@ -20,14 +20,17 @@ const ContactsSidebar: React.FC = () => {
   const { user } = useUserStore();
   const { theme, setTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useGetConversations(user?.id ?? "");
   const queryClient = useQueryClient();
-  const { setConversationsDashboard, conversationsDashboard } =
-    useConversationStore();
+  const {
+    setConversationsDashboard,
+    conversationsDashboard,
+    selectedContact,
+    setSelectedContact,
+  } = useConversationStore();
 
   const isOnlyMessages = pathname === "/dashboard/messages";
 

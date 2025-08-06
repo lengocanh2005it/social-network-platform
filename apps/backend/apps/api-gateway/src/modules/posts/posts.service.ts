@@ -8,6 +8,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -46,6 +47,7 @@ export class PostsService implements OnModuleInit {
       'like-media-post',
       'get-post-of-user',
       'get-tagged-users-of-post',
+      'report-post',
     ];
 
     patterns.forEach((pattern) =>
@@ -327,6 +329,18 @@ export class PostsService implements OnModuleInit {
       postId,
       userId: user.id,
       getTaggedUsersQueryDto: toPlain(getTaggedUsersQueryDto),
+    });
+  };
+
+  public reportPost = async (
+    email: string,
+    postId: string,
+    reportPostDto: ReportPostDto,
+  ) => {
+    return sendWithTimeout(this.postsClient, 'report-post', {
+      email,
+      postId,
+      reportPostDto: toPlain(reportPostDto),
     });
   };
 }

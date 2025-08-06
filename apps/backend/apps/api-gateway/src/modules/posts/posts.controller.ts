@@ -9,6 +9,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -452,5 +453,22 @@ export class PostsController {
       email,
       getTaggedUsersQueryDto,
     );
+  }
+
+  @Post(':id/report')
+  async reportPost(
+    @Param('id', ParseUUIDPipe) postId: string,
+    @Body() reportPostDto: ReportPostDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.postsService.reportPost(email, postId, reportPostDto);
   }
 }

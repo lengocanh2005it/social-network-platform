@@ -1,4 +1,4 @@
-import { SimpleDate } from "@/utils";
+import { Message, SimpleDate } from "@/utils";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 import {
   DateValue,
@@ -239,4 +239,25 @@ export const isValidEmail = (email: string) => {
 export function dateValueToDate(value?: DateValue): Date | undefined {
   if (!value) return undefined;
   return new Date(value.year, value.month - 1, value.day);
+}
+
+export function groupMessagesByDate(messages: Message[]) {
+  return messages.reduce(
+    (acc, message) => {
+      const date = new Date(message.created_at);
+
+      let groupLabel = format(date, "yyyy-MM-dd");
+
+      if (isToday(date)) groupLabel = "Today";
+      else if (isYesterday(date)) groupLabel = "Yesterday";
+
+      if (!acc[groupLabel]) {
+        acc[groupLabel] = [];
+      }
+
+      acc[groupLabel].push(message);
+      return acc;
+    },
+    {} as Record<string, Message[]>,
+  );
 }

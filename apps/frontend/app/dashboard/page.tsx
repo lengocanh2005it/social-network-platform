@@ -29,18 +29,13 @@ export default function DashboardPage() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
 
-  const {
-    data: activitiesData,
-    isLoading: isActivitiesDataLoading,
-    isFetching: isActivitiesFetching,
-  } = useGetActivities(user?.id ?? "", {
-    fullName: debouncedSearchTerm.trim() || undefined,
-  });
-  const {
-    data: statsData,
-    isLoading: isStatsLoading,
-    isFetching: isStatsFetching,
-  } = useGetStats(user?.id ?? "");
+  const { data: activitiesData, isLoading: isActivitiesDataLoading } =
+    useGetActivities(user?.id ?? "", {
+      fullName: debouncedSearchTerm.trim() || undefined,
+    });
+  const { data: statsData, isLoading: isStatsLoading } = useGetStats(
+    user?.id ?? "",
+  );
 
   useEffect(() => {
     if (statsData) {
@@ -104,7 +99,7 @@ export default function DashboardPage() {
           Overview
         </motion.h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {isStatsLoading || isStatsFetching
+          {isStatsLoading
             ? statConfig.map((_, idx) => <StatCardSkeleton key={idx} />)
             : stats.map((item, idx) => <StatCard key={idx} stats={item} />)}
         </div>
@@ -147,7 +142,6 @@ export default function DashboardPage() {
 
               <ScrollArea className="max-h-[300px]">
                 {isActivitiesDataLoading ||
-                isActivitiesFetching ||
                 (activities.length === 0 && searchTerm.trim() === "") ? (
                   <div className="h-[300px] flex flex-col items-center justify-center">
                     <PrimaryLoading />

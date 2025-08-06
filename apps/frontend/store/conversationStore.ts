@@ -23,6 +23,8 @@ interface ConversationState {
   setConversationsDashboard: (
     conversationsDashboard: ConversationDropdownType[],
   ) => void;
+  selectedContact: string | null;
+  setSelectedContact: (selectedContact: string | null) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set) => ({
@@ -31,6 +33,12 @@ export const useConversationStore = create<ConversationState>((set) => ({
   nextCursor: null,
   hasNewMessageMap: {},
   conversationsDashboard: [],
+  selectedContact: null,
+
+  setSelectedContact: (selectedContact) =>
+    set({
+      selectedContact,
+    }),
 
   setHasNewMessage: (conversationId, hasNewMessage) =>
     set((state) => ({

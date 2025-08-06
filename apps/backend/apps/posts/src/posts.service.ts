@@ -16,6 +16,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -84,8 +85,22 @@ export class PostsService implements OnModuleInit {
       ? decodeCursor(getPostQueryDto.after)
       : null;
 
+    const reports = await this.prismaService.reports.findMany({
+      where: {
+        type: 'post',
+        reporter_id: user_id,
+      },
+    });
+
+    const reportedPostIds = reports.map((r) => r.target_id);
+
     let posts = await this.prismaService.posts.findMany({
-      where: this.buildProfilePostWhereClause(user_id),
+      where: {
+        ...this.buildProfilePostWhereClause(user_id),
+        id: {
+          notIn: reportedPostIds,
+        },
+      },
       orderBy: { created_at: 'desc' },
       take: limit + 1,
       ...(decodedCursor && {
@@ -160,6 +175,15 @@ export class PostsService implements OnModuleInit {
       ? decodeCursor(getPostQueryDto.after)
       : null;
 
+    const reports = await this.prismaService.reports.findMany({
+      where: {
+        type: 'post',
+        reporter_id: user_id,
+      },
+    });
+
+    const reportedPostIds = reports.map((r) => r.target_id);
+
     const posts = await this.prismaService.posts.findMany({
       where: {
         OR: [
@@ -168,6 +192,9 @@ export class PostsService implements OnModuleInit {
         ],
         privacy: PostPrivaciesEnum.public,
         deleted_at: null,
+        id: {
+          notIn: reportedPostIds,
+        },
       },
       orderBy: { created_at: 'desc' },
       take: limit + 1,
@@ -3023,7 +3050,7 @@ export class PostsService implements OnModuleInit {
     const activeReportsLastWeek = await this.prismaService.reports.count({
       where: {
         status: ReportStatusEnum.pending,
-        createdAt: {
+        created_at: {
           gte: lastWeekStart,
           lte: lastWeekEnd,
         },
@@ -3047,6 +3074,69 @@ export class PostsService implements OnModuleInit {
       value: activeReportsNow,
       percent,
       trend,
+    };
+  };
+
+  public reportPost = async (
+    email: string,
+    postId: string,
+    reportPostDto: ReportPostDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        user: true,
+        tags: true,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Post not found',
+      });
+
+    if (
+      !(
+        post.user.id !== user.id ||
+        !post.tags.some((t) => t.tagged_user_id === user.id)
+      )
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'You do not have permission to interact with this post.',
+      });
+
+    const { type, reason } = reportPostDto;
+
+    await this.prismaService.reports.create({
+      data: {
+        type,
+        reason,
+        reporter: {
+          connect: {
+            id: user.id,
+          },
+        },
+        target_id: postId,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Post reported successfully.',
     };
   };
 }

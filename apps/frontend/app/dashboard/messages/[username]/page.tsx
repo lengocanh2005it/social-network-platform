@@ -13,7 +13,12 @@ import {
 } from "@/hooks";
 import { getProfile } from "@/lib/api/users";
 import { useConversationStore, useUserStore } from "@/store";
-import { CreateMessageDto, Message, SocketNamespace } from "@/utils";
+import {
+  CreateMessageDto,
+  groupMessagesByDate,
+  Message,
+  SocketNamespace,
+} from "@/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -41,6 +46,7 @@ const MessagesDetailsPage = () => {
     setHasNewMessage,
     setConversationsDashboard,
     conversationsDashboard,
+    setSelectedContact,
   } = useConversationStore();
   const { mutate: mutateCreateMessage, isPending } = useCreateMessage();
   const finger_print = useFingerprint();
@@ -69,9 +75,10 @@ const MessagesDetailsPage = () => {
 
   useEffect(() => {
     if (conversationData?.id) {
+      setSelectedContact(conversationData.id);
       setConversationId(conversationData.id);
     }
-  }, [conversationData?.id]);
+  }, [conversationData?.id, setSelectedContact]);
 
   useEffect(() => {
     if (messagesData && conversationId) {
@@ -115,6 +122,8 @@ const MessagesDetailsPage = () => {
   }, [handleScroll]);
 
   const currentMessages = conversationId ? messages[conversationId] || [] : [];
+
+  const groupedMessages = groupMessagesByDate(currentMessages);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -277,7 +286,7 @@ const MessagesDetailsPage = () => {
           <>
             {isFetchingNextPage && <PrimaryLoading />}
 
-            {currentMessages.map((message, i) => {
+            {/* {currentMessages.map((message, i) => {
               const isSelf = message.user.id === user?.id;
               return (
                 <div
@@ -292,7 +301,39 @@ const MessagesDetailsPage = () => {
                   />
                 </div>
               );
-            })}
+            })} */}
+            {Object.entries(groupedMessages).map(
+              ([dateLabel, messages], groupIndex) => (
+                <div key={dateLabel} className="space-y-2">
+                  <div
+                    className="text-center text-xs font-medium text-gray-500 
+                dark:text-gray-400 my-4"
+                  >
+                    {dateLabel}
+                  </div>
+
+                  {messages.map((message, i) => {
+                    const isSelf = message.user.id === user?.id;
+
+                    const isFirstMessage = groupIndex === 0 && i === 0;
+
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${isSelf ? "justify-end" : "justify-start"}`}
+                        ref={isFirstMessage ? lastMessageRef : null}
+                      >
+                        <MessageBubble
+                          message={message}
+                          isSelf={isSelf}
+                          user={user ?? undefined}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ),
+            )}
           </>
         )}
         <div ref={messagesEndRef} />

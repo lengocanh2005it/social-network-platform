@@ -13,6 +13,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -336,5 +337,14 @@ export class PostsController {
       parentPostId,
       withDeleted,
     );
+  }
+
+  @MessagePattern('report-post')
+  async reportPost(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+    @Payload('reportPostDto') reportPostDto: ReportPostDto,
+  ) {
+    return this.postsService.reportPost(email, postId, reportPostDto);
   }
 }

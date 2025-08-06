@@ -1,3 +1,4 @@
+import { ReportReasonEnum } from "@repo/db";
 import { AlertCircle, FileText, MessageSquare, Users } from "lucide-react";
 
 export const genders = [
@@ -111,4 +112,13 @@ export const reasonOptions = [
   { key: "violation", label: "Violation of community guidelines" },
   { key: "reported", label: "Reported by multiple users" },
   { key: "misleading", label: "Misleading information" },
+];
+
+export const reasonReportOptions: { key: ReportReasonEnum; label: string }[] = [
+  { key: "abuse", label: "Abusive or harmful content" },
+  { key: "spam", label: "Spam or misleading" },
+  { key: "inappropriate", label: "Inappropriate content" },
+  { key: "harassment", label: "Harassment or bullying" },
+  { key: "misinformation", label: "False or misleading information" },
+  { key: "other", label: "Other" },
 ];

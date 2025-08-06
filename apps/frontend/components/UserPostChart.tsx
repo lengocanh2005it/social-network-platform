@@ -20,7 +20,7 @@ export function UserPostChart() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [growthData, setGrowthData] = useState<GrowthOverviewType[]>([]);
-  const { data, isLoading, isFetching } = useGetGrowthOverview(user?.id ?? "");
+  const { data, isLoading } = useGetGrowthOverview(user?.id ?? "");
 
   const colors = {
     axisColor: isDark ? "#9CA3AF" : "#4B5563",
@@ -34,7 +34,7 @@ export function UserPostChart() {
 
   return (
     <>
-      {isLoading || isFetching ? (
+      {isLoading ? (
         <div className="h-full w-full flex items-center justify-center">
           <PrimaryLoading />
         </div>

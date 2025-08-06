@@ -1,4 +1,5 @@
 "use client";
+import ReportPostModal from "@/components/modal/ReportPostModal";
 import GlobalIcon from "@/components/ui/icons/global";
 import UndoPostToast from "@/components/UndoPostToast";
 import { useCreateBookMark, useDeleteBookMarks } from "@/hooks";
@@ -21,11 +22,10 @@ import {
   CircleX,
   Ellipsis,
   MessageSquareWarning,
-  UserX,
   XIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import toast from "react-hot-toast";
 
 interface PostHeaderProps {
@@ -50,6 +50,8 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   const { addBookmark, deleteBookmark } = useBookMarkStore();
   const { mutate: mutateDeleteBookMarks, isPending: isDeletePending } =
     useDeleteBookMarks();
+  const [isShowReportPostModal, setIsShowReportPostModal] =
+    useState<boolean>(false);
 
   const viewProfileClick = (username: string) => {
     router.push(`/profile/${username}`);
@@ -229,20 +231,9 @@ const PostHeader: React.FC<PostHeaderProps> = ({
               know who reported this.`}
                 key="report-post"
                 startContent={<MessageSquareWarning />}
+                onClick={() => setIsShowReportPostModal(true)}
               >
                 Report post
-              </DropdownItem>
-
-              <DropdownItem
-                description="You won't be able to see or contact each other."
-                key="block-user"
-                startContent={<UserX />}
-              >
-                Block{" "}
-                {homePost.user.profile.first_name +
-                  " " +
-                  homePost.user.profile.last_name}
-                &apos;s profile
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
@@ -255,6 +246,14 @@ const PostHeader: React.FC<PostHeaderProps> = ({
             />
           )}
         </div>
+      )}
+
+      {isShowReportPostModal && (
+        <ReportPostModal
+          isOpen={isShowReportPostModal}
+          setIsOpen={setIsShowReportPostModal}
+          post={homePost}
+        />
       )}
     </div>
   );

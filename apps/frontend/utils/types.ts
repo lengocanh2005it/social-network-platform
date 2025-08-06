@@ -16,6 +16,8 @@ import {
   PostContentType,
   PostPrivaciesEnum,
   PostPrivaciesType,
+  ReportReasonEnum,
+  ReportTypeEnum,
   StoryStatusEnum,
   ThemeEnum,
   UserEducationsType,
@@ -808,4 +810,10 @@ export type UpdateStoryStatusData = {
     status: StoryStatusEnum;
     reason?: string;
   };
+};
+
+export type ReportPostDto = {
+  postId: string;
+  reason: ReportReasonEnum;
+  type: ReportTypeEnum;
 };

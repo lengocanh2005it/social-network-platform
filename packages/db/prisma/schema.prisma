@@ -457,8 +457,8 @@ model Reports {
   target_id   String
   reason      ReportReason
   status      ReportStatus @default(pending)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
 
   reporter Users @relation(fields: [reporter_id], references: [id])
 }
