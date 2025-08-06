@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import "swiper/css";
@@ -43,6 +44,14 @@ const testimonials = [
 ];
 
 const TestimonialsSection = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
+
   return (
     <section className="py-20 bg-white dark:bg-neutral-950 text-center relative">
       <motion.h2
@@ -68,13 +77,18 @@ const TestimonialsSection = () => {
         <Swiper
           modules={[Navigation, Pagination, A11y]}
           spaceBetween={30}
-          navigation={{
-            nextEl: ".swiper-next",
-            prevEl: ".swiper-prev",
-          }}
           slidesPerView={3}
           pagination={{ clickable: true }}
           loop
+          onBeforeInit={(swiper) => {
+            if (
+              swiper.params.navigation &&
+              typeof swiper.params.navigation !== "boolean"
+            ) {
+              swiper.params.navigation.prevEl = ".swiper-prev";
+              swiper.params.navigation.nextEl = ".swiper-next";
+            }
+          }}
         >
           {testimonials.map((t, idx) => (
             <SwiperSlide key={idx}>
@@ -82,8 +96,7 @@ const TestimonialsSection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                className="p-6 bg-gray-100 dark:bg-neutral-800 rounded-xl shadow-lg
-                cursor-pointer"
+                className="p-6 bg-gray-100 dark:bg-neutral-800 rounded-xl shadow-lg cursor-pointer"
               >
                 <div className="mb-4">
                   <img
@@ -112,7 +125,7 @@ const TestimonialsSection = () => {
           <div className="absolute top-1/2 -left-8 transform -translate-y-1/2 z-10">
             <button
               className="swiper-prev p-2 bg-indigo-600 hover:bg-indigo-700 
-          text-white rounded-full shadow transition cursor-pointer"
+              text-white rounded-full shadow transition cursor-pointer"
             >
               <ArrowLeft size={20} />
             </button>
@@ -121,7 +134,7 @@ const TestimonialsSection = () => {
           <div className="absolute top-1/2 -right-8 transform -translate-y-1/2 z-10">
             <button
               className="swiper-next p-2 bg-indigo-600 hover:bg-indigo-700 
-          text-white rounded-full shadow transition cursor-pointer"
+              text-white rounded-full shadow transition cursor-pointer"
             >
               <ArrowRight size={20} />
             </button>

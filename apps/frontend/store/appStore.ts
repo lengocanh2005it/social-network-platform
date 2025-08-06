@@ -1,10 +1,4 @@
-import {
-  AuthMethod,
-  OAuthNames,
-  Provider,
-  RelationshipType,
-  Tokens,
-} from "@/utils";
+import { AuthMethod, OAuthNames, Provider, Tokens } from "@/utils";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -49,6 +43,10 @@ interface AppState {
   setIsConfirmDisable2Fa: (isConfirmDisable2Fa: boolean) => void;
   cloudfareToken: string | null;
   setCloudfareToken: (cloudfareToken: string | null) => void;
+  isAccountSuspendedModalOpen: boolean;
+  setIsAccountSuspendedModalOpen: (
+    isAccountSuspendedModalOpen: boolean,
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -103,6 +101,11 @@ export const useAppStore = create<AppState>()(
         set({ isConfirmDisable2Fa }),
       cloudfareToken: null,
       setCloudfareToken: (cloudfareToken) => set({ cloudfareToken }),
+      isAccountSuspendedModalOpen: false,
+      setIsAccountSuspendedModalOpen: (isAccountSuspendedModalOpen) =>
+        set({
+          isAccountSuspendedModalOpen,
+        }),
     }),
     {
       name: "app-storage",

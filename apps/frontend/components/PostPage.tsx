@@ -20,7 +20,7 @@ import {
   GroupedComment,
 } from "@/utils";
 import { Avatar, Spinner } from "@heroui/react";
-import { PostContentType, PostContentTypeEnum } from "@repo/db";
+import { PostContentType, PostContentTypeEnum, RoleEnum } from "@repo/db";
 import { AxiosError } from "axios";
 import {
   Camera,
@@ -237,7 +237,7 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
         <>
           <section className="flex flex-col md:gap-3 gap-2 relative max-w-2xl mx-auto md:pb-4 pb-3">
             <div
-              className="flex flex-col border border-black/10 p-2 rounded-lg 
+              className="flex flex-col border border-black/10 p-3 px-5 rounded-lg 
             dark:border-white/30"
             >
               <PostHeader homePost={post} shouldHiddenXCloseIcon />
@@ -258,6 +258,10 @@ const PostPageDetails: React.FC<PostPageProps> = ({ username, postId }) => {
                           key={comment.id}
                           post={post}
                           comment={comment}
+                          shouldHideCommentButton={
+                            user?.role === RoleEnum.admin
+                          }
+                          shouldHideLikeButton={user?.role === RoleEnum.admin}
                         />
                       ))}
 

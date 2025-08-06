@@ -1,6 +1,7 @@
 "use client";
 import SocialsAuthForm from "@/components/form/SocialsAuthForm";
 import PasswordToggleInput from "@/components/input/PasswordToggleInput";
+import AccountSuspendedModal from "@/components/modal/AccountSuspendedModal";
 import OTPVerification2FaModal from "@/components/modal/OTPVerification2FaModal";
 import VerifyOTPModal from "@/components/modal/VerifyOTPModal";
 import {
@@ -26,6 +27,7 @@ import {
 } from "@/utils";
 import { Button, Checkbox, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AxiosError } from "axios";
 import { Lock, Mail } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -48,6 +50,7 @@ const SignInForm = () => {
     setIs2FAModalOpen,
     isModalOTPOpen,
     setIsModalOTPOpen,
+    isAccountSuspendedModalOpen,
   } = useAppStore();
   const {
     mutate: mutateVerify2Fa,
@@ -63,6 +66,7 @@ const SignInForm = () => {
   const [deviceDetails, setDeviceDetails] = useState<DeviceDetails | null>(
     null,
   );
+  const [reason, setReason] = useState<string>("");
 
   useEffect(() => {
     const fetchDeviceDetails = async () => {
@@ -90,7 +94,22 @@ const SignInForm = () => {
       fingerprint,
     };
 
-    mutateSignIn(signInDto);
+    mutateSignIn(signInDto, {
+      onError: (error: AxiosError) => {
+        const responseData = error?.response?.data as Record<
+          string,
+          string | number
+        >;
+
+        if (
+          responseData?.statusCode === 403 &&
+          responseData?.message &&
+          typeof responseData.message === "string"
+        ) {
+          setReason(responseData.message);
+        }
+      },
+    });
   }
 
   useEffect(() => {
@@ -201,6 +220,7 @@ const SignInForm = () => {
                   placeholder="johndoe01@gmail.com"
                   startContent={<Mail className="dark:text-white" />}
                   isClearable
+                  suppressHydrationWarning
                   aria-label="email"
                   aria-labelledby="email"
                   value={field.value || ""}
@@ -258,7 +278,12 @@ const SignInForm = () => {
           </>
         ) : (
           <>
-            <Button type="submit" className="w-fit mx-auto" color="primary">
+            <Button
+              type="submit"
+              className="w-fit mx-auto"
+              color="primary"
+              suppressHydrationWarning
+            >
               Sign In
             </Button>
           </>
@@ -380,6 +405,10 @@ const SignInForm = () => {
             />
           )}
         </>
+      )}
+
+      {isAccountSuspendedModalOpen && reason?.trim() && (
+        <AccountSuspendedModal reason={reason.trim()} setReason={setReason} />
       )}
     </Form>
   );

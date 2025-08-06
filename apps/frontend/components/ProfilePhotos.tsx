@@ -118,7 +118,7 @@ const ProfilePhotos: React.FC<ProfilePhotosProps> = ({ photos, isLoading }) => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-white/80">
             {viewedUser?.id === user?.id ? (
               <>
                 <h1 className="text-medium font-semibold">

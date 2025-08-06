@@ -9,7 +9,7 @@ export const useGetBlockedUsersList = (
   return useQuery({
     queryKey: [`${userId}/blocked-users-list`],
     queryFn: () => getBlockedUsersList(getBlockedUsersListQueryDto),
-    enabled: Boolean(userId?.trim()),
+    enabled: !!userId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   });

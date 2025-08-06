@@ -1,12 +1,26 @@
 import { getConversations } from "@/lib/api/conversations";
-import { useQuery } from "@tanstack/react-query";
+import { GetConversationsQueryDto } from "@/utils";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-export const useGetConversations = (userId: string) => {
-  return useQuery({
-    queryKey: [`/conversations/?userid=${userId}`],
-    queryFn: () => getConversations(),
+export const useGetConversations = (
+  userId: string,
+  queryParams?: Omit<GetConversationsQueryDto, "after">,
+) => {
+  return useInfiniteQuery({
+    queryKey: [
+      "conversations",
+      userId,
+      queryParams ? JSON.stringify(queryParams) : "",
+    ],
+    queryFn: ({ pageParam }) =>
+      getConversations({
+        ...queryParams,
+        after: pageParam,
+      }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage?.nextCursor ?? null,
+    enabled: !!userId,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    enabled: !!userId,
   });
 };

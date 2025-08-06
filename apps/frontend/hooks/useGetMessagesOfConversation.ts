@@ -1,18 +1,23 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { getMessagesOfConversation } from "@/lib/api/conversations";
 import { GetMessagesQueryDto } from "@/utils";
-import { useQuery } from "@tanstack/react-query";
 
 export const useGetMessagesOfConversation = (
   userId: string,
   conversationId: string,
-  getMessagesQueryDto?: GetMessagesQueryDto,
+  initialQueryDto?: Omit<GetMessagesQueryDto, "after">,
 ) => {
-  return useQuery({
-    queryKey: [`/conversations/${conversationId}/messages/?userId=${userId}`],
-    queryFn: () =>
-      getMessagesOfConversation(conversationId, getMessagesQueryDto),
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
+  return useInfiniteQuery({
+    queryKey: ["messages", conversationId, userId],
+    queryFn: ({ pageParam }) =>
+      getMessagesOfConversation(conversationId, {
+        ...initialQueryDto,
+        after: pageParam,
+      }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: !!userId && !!conversationId,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };

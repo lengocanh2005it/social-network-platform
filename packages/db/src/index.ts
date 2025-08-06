@@ -21,6 +21,7 @@ export type {
   UserSocials as UserSocialsType,
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
+  StoryStatus as StoryStatusType,
 } from "../@generated/default.js";
 
 export type { Prisma } from "../@generated/default.js";
@@ -37,4 +38,9 @@ export {
   Role as RoleEnum,
   SessionStatus as SessionStatusEnum,
   Theme as ThemeEnum,
+  ReportReason as ReportReasonEnum,
+  ReportStatus as ReportStatusEnum,
+  ReportType as ReportTypeEnum,
+  ProfileStatus as ProfileStatusEnum,
+  StoryStatus as StoryStatusEnum,
 } from "../@generated/default.js";

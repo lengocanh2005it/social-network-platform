@@ -9,23 +9,23 @@ datasource db {
 }
 
 model Users {
-  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email                 String?           @unique @db.VarChar(255)
-  password              String?           @db.VarChar(255)
-  is_email_verified     Boolean           @default(false)
-  two_factor_enabled    Boolean           @default(false)
-  role                  Role              @default(user)
-  blockedBy             Blocks[]          @relation("BlockedUsers")
-  blockedUsers          Blocks[]          @relation("UserBlocks")
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                 String?              @unique @db.VarChar(255)
+  password              String?              @db.VarChar(255)
+  is_email_verified     Boolean              @default(false)
+  two_factor_enabled    Boolean              @default(false)
+  role                  Role                 @default(user)
+  blockedBy             Blocks[]             @relation("BlockedUsers")
+  blockedUsers          Blocks[]             @relation("UserBlocks")
   comment_likes         CommentLikes[]
   comments              Comments[]
-  conversationAsUser1   Conversations[]   @relation("User1")
-  conversationAsUser2   Conversations[]   @relation("User2")
-  initiators            Friends[]         @relation("InitiatorUser")
-  targets               Friends[]         @relation("TargetUser")
+  conversationAsUser1   Conversations[]      @relation("User1")
+  conversationAsUser2   Conversations[]      @relation("User2")
+  initiators            Friends[]            @relation("InitiatorUser")
+  targets               Friends[]            @relation("TargetUser")
   messages              Messages[]
-  receivedNotifications Notifications[]   @relation("ReceivedNotifications")
-  sentNotifications     Notifications[]   @relation("SentNotifications")
+  receivedNotifications Notifications[]      @relation("ReceivedNotifications")
+  sentNotifications     Notifications[]      @relation("SentNotifications")
   oauth_account         OAuthAccounts?
   post_image_likes      PostImageLikes[]
   post_image_shares     PostImageShares[]
@@ -44,6 +44,10 @@ model Users {
   work_places           UserWorkPlaces[]
   photos                Photos[]
   book_marks            BookMarks[]
+  activities            Activities[]
+  reports               Reports[]
+  suspensions           AccountSuspensions[] @relation("UserSuspensions")
+  adminSuspensions      AccountSuspensions[] @relation("AdminActions")
 }
 
 model UserProfiles {
@@ -136,6 +140,8 @@ model UserSessions {
   expires_at    DateTime      @db.Timestamp(6)
   last_login_at DateTime      @default(now()) @db.Timestamp(6)
   status        SessionStatus @default(active)
+  is_online     Boolean       @default(false)
+  last_seen_at  DateTime?     @db.Timestamp(6)
   user          Users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, finger_print])
@@ -311,6 +317,7 @@ model CommentLikes {
 model Stories {
   id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   content_type ContentStoryType @default(text)
+  status       StoryStatus      @default(active)
   content_url  String?
   text_content String?
   created_at   DateTime         @default(now())
@@ -432,6 +439,63 @@ model BookMarks {
   @@unique([user_id, post_id])
 }
 
+model Activities {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  action     String   @db.Text
+  user_id    String   @db.Uuid
+  metadata   Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model Reports {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporter_id String       @db.Uuid
+  type        ReportType
+  target_id   String
+  reason      ReportReason
+  status      ReportStatus @default(pending)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  reporter Users @relation(fields: [reporter_id], references: [id])
+}
+
+model AccountSuspensions {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reason         String?   @db.Text
+  suspended_at   DateTime  @default(now())
+  unsuspended_at DateTime?
+  user_id        String    @db.Uuid
+  admin_id       String    @db.Uuid
+
+  user  Users @relation("UserSuspensions", fields: [user_id], references: [id], onDelete: Cascade)
+  admin Users @relation("AdminActions", fields: [admin_id], references: [id], onDelete: Cascade)
+}
+
+enum ReportReason {
+  spam
+  abuse
+  inappropriate
+  harassment
+  misinformation
+  other
+}
+
+enum ReportStatus {
+  pending
+  resolved
+  rejected
+}
+
+enum ReportType {
+  post
+  comment
+  story
+}
+
 enum PhotoType {
   AVATAR
   COVER
@@ -494,6 +558,11 @@ enum NotificationType {
   tagged_in_post
   story_added_by_friend
   system_announcement
+  post_removed_by_admin
+  post_restored_by_admin
+  story_locked_by_admin
+  story_unlocked_by_admin
+  story_expired_notification
 }
 
 enum FriendShipStatus {
@@ -517,4 +586,10 @@ enum Theme {
   system
   dark
   light
+}
+
+enum StoryStatus {
+  active
+  inactive
+  expired
 }

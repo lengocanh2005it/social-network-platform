@@ -12,6 +12,7 @@ import {
   GetFeedQueryDto,
   GetTaggedUsersQueryDto,
   LikeMediaPostPayload,
+  ReportPostDto,
   UnlikeMediaPostPayload,
   UpdatePostType,
 } from "@/utils";
@@ -247,6 +248,14 @@ export const getTaggedUsersOfPost = async (
   const response = await axios.get(`/posts/${postId}/tagged-users`, {
     params: getTaggedUsersQueryDto,
   });
+
+  return response.data;
+};
+
+export const reportPost = async (reportPostDto: ReportPostDto) => {
+  const { postId, ...res } = reportPostDto;
+
+  const response = await axios.post(`/posts/${postId}/report`, res);
 
   return response.data;
 };

@@ -124,11 +124,11 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
 
       <div
         className="relative z-50 w-[95%] max-w-8xl bg-white rounded-lg overflow-hidden 
-      shadow-xl flex dark:bg-white dark:text-black"
+      shadow-xl flex dark:bg-black dark:text-white dark:border dark:border-white/10"
       >
         <Button
           startContent={<XIcon />}
-          className="absolute top-2 bg-transparent right-2 text-black text-2xl z-50"
+          className="absolute top-2 bg-transparent right-2 text-black dark:text-white text-2xl z-50"
           onPress={onClose}
           isIconOnly
         />
@@ -220,7 +220,10 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
             <>
               {storyViewers?.length > 0 ? (
                 <div className="flex flex-col md:gap-3 gap-2 overflow-hidden">
-                  <div className="flex items-center md:gap-2 gap-1 pb-2 border-b border-black/20">
+                  <div
+                    className="flex items-center md:gap-2 gap-1 pb-2 border-b border-black/20
+                  dark:border-white/20"
+                  >
                     <Tooltip content="Total viewers" showArrow>
                       <EyeIcon
                         className="cursor-pointer focus:outline-none
@@ -233,14 +236,15 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
                     </span>
                   </div>
 
-                  <div className="flex flex-col md:gap-4 gap-3 px-4">
+                  <div className="flex flex-col md:gap-2 gap-1 px-4">
                     {storyViewers.map((viewer, index) => (
                       <div
                         key={viewer.user_id}
                         ref={
                           index === storyViewers.length - 1 ? lastPostRef : null
                         }
-                        className="flex items-center justify-between"
+                        className="flex items-center justify-between p-2
+                        hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg cursor-pointer"
                       >
                         <div className="flex items-center gap-3">
                           <Image
@@ -259,7 +263,7 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
                                 : viewer.full_name}
                             </span>
 
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-500 dark:text-white/80">
                               @{viewer.username}
                             </span>
                           </div>
@@ -287,7 +291,7 @@ const StoryModal: React.FC<StoryModalProps> = ({ story, onClose }) => {
                 <>
                   <div
                     className="text-center p-6 h-full text-gray-500 flex 
-                  flex-col items-center justify-center"
+                  flex-col items-center justify-center dark:text-white/80"
                   >
                     <EyeOff className="w-10 h-10 mb-2" />
 

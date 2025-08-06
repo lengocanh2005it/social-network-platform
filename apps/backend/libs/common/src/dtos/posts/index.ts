@@ -11,5 +11,6 @@ export * from './get-post-query.dto';
 export * from './get-tagged-users-query.dto';
 export * from './get-user-likes-query.dto';
 export * from './like-post-media.dto';
+export * from './report-post.dto';
 export * from './unlike-media-post.dto-query.dto';
 export * from './update-post.dto';

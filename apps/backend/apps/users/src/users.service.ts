@@ -1,3 +1,4 @@
+import { UpdateUserSuspensionDto } from '@app/common/dtos/admin';
 import { UpdatePasswordDto } from '@app/common/dtos/auth';
 import {
   CreateFriendRequestDto,
@@ -30,11 +31,13 @@ import {
   encodeCursor,
   fieldDisplayMap,
   FriendListType,
+  generateActionContent,
   generateNotificationMessage,
   hashPassword,
   REFRESH_TOKEN_LIFE,
   ResponseFriendRequestAction,
   sendWithTimeout,
+  StatsType,
   SyncOptions,
   toPascalCase,
   UploadUserImageTypeEnum,
@@ -48,8 +51,12 @@ import {
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
+  ProfileStatusEnum,
+  RoleEnum,
   SessionStatusEnum,
+  UserSesstionsType,
 } from '@repo/db';
+import { endOfMonth, startOfMonth, subMonths } from 'date-fns';
 import { omit } from 'lodash';
 
 @Injectable()
@@ -61,6 +68,7 @@ export class UsersService implements OnModuleInit {
     private readonly notificationsClient: ClientKafka,
     private readonly keycloakProvider: KeycloakProvider,
     private readonly infisicalProvider: InfisicalProvider,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -161,6 +169,7 @@ export class UsersService implements OnModuleInit {
         ...include,
         targets: true,
         initiators: true,
+        sessions: true,
       },
     });
 
@@ -193,7 +202,18 @@ export class UsersService implements OnModuleInit {
 
     return omit(
       {
-        ...findUser,
+        ...omit(findUser, ['sessions']),
+        is_online:
+          findUser?.sessions?.some((s) => s.is_online === true) ?? false,
+        last_seen_at: findUser?.sessions?.length
+          ? (findUser.sessions
+              .map((s: UserSesstionsType) => s.last_seen_at)
+              .filter(Boolean)
+              .sort(
+                (a: Date, b: Date) =>
+                  new Date(b).getTime() - new Date(a).getTime(),
+              )[0] ?? null)
+          : null,
         total_friends,
       },
       ['password', 'targets', 'initiators'],
@@ -240,6 +260,18 @@ export class UsersService implements OnModuleInit {
 
     if (infoDetails)
       await this.updateInfoDetails(infoDetails, existingUserEmail.id);
+
+    if (existingUserEmail.role !== RoleEnum.admin) {
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('profile'),
+          },
+          userId: existingUserEmail.id,
+        }),
+      );
+    }
 
     return this.handleGetMe(email, {
       includeProfile: true,
@@ -556,8 +588,14 @@ export class UsersService implements OnModuleInit {
         refresh_token,
         expires_at: new Date(new Date().getTime() + REFRESH_TOKEN_LIFE),
         status: SessionStatusEnum.active,
+        is_online: true,
+        last_seen_at: new Date(),
       },
-      create: createUserSessionDto,
+      create: {
+        ...createUserSessionDto,
+        is_online: true,
+        last_seen_at: new Date(),
+      },
     });
   };
 
@@ -588,15 +626,21 @@ export class UsersService implements OnModuleInit {
           finger_print,
         },
       },
+      include: {
+        user: true,
+      },
     });
 
-    if (!session || session?.status !== SessionStatusEnum.active)
+    if (
+      (!session || session?.status !== SessionStatusEnum.active) &&
+      session?.user?.role === RoleEnum.user
+    )
       throw new RpcException({
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Your session has expired. Please log in again.',
       });
 
-    return session;
+    return omit(session, ['user.password']);
   };
 
   public deactivateOtherSessions = async (
@@ -619,19 +663,24 @@ export class UsersService implements OnModuleInit {
   public updateUserSession = async (
     updateUserSessionDto: UpdateUserSessionDto,
   ) => {
-    const { user_id, finger_print, status } = updateUserSessionDto;
+    const { user_id, finger_print, status, is_online, last_seen_at } =
+      updateUserSessionDto;
 
-    await this.prismaService.userSessions.update({
-      where: {
-        user_id_finger_print: {
-          user_id,
-          finger_print,
+    if (user_id?.trim() && finger_print?.trim()) {
+      await this.prismaService.userSessions.update({
+        where: {
+          user_id_finger_print: {
+            user_id,
+            finger_print,
+          },
         },
-      },
-      data: {
-        status,
-      },
-    });
+        data: {
+          status,
+          is_online,
+          last_seen_at,
+        },
+      });
+    }
   };
 
   public handleGetUserByField = async (
@@ -2131,6 +2180,9 @@ export class UsersService implements OnModuleInit {
           },
         ],
       },
+      include: {
+        user: true,
+      },
     });
 
     return userProfiles;
@@ -2333,5 +2385,121 @@ export class UsersService implements OnModuleInit {
       includeWorkPlaces: true,
       includeSocials: true,
     });
+  };
+
+  public getUsersStats = async (): Promise<StatsType> => {
+    const now = new Date();
+
+    const currentMonthStart = startOfMonth(now);
+    const currentMonthEnd = endOfMonth(now);
+
+    const lastMonthDate = subMonths(now, 1);
+    const lastMonthStart = startOfMonth(lastMonthDate);
+    const lastMonthEnd = endOfMonth(lastMonthDate);
+
+    const current = await this.prismaService.users.count({
+      where: {
+        role: RoleEnum.user,
+        profile: {
+          created_at: {
+            gte: currentMonthStart,
+            lte: currentMonthEnd,
+          },
+        },
+      },
+    });
+
+    const lastMonth = await this.prismaService.users.count({
+      where: {
+        role: RoleEnum.user,
+        profile: {
+          created_at: {
+            gte: lastMonthStart,
+            lte: lastMonthEnd,
+          },
+        },
+      },
+    });
+
+    const percent =
+      lastMonth === 0
+        ? '100.0'
+        : (((current - lastMonth) / lastMonth) * 100).toFixed(1);
+
+    return {
+      value: current,
+      percent: parseFloat(percent),
+      trend: current >= lastMonth ? 'up' : 'down',
+    };
+  };
+
+  public updateUserSuspension = async (
+    email: string,
+    userId: string,
+    updateUserSuspensionDto: UpdateUserSuspensionDto,
+  ) => {
+    const admin = await this.prismaService.users.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!admin || (admin && admin.role !== RoleEnum.admin))
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Admin not found.`,
+      });
+
+    const user = await this.prismaService.users.findUnique({
+      where: {
+        id: userId,
+      },
+      include: {
+        suspensions: true,
+      },
+    });
+
+    if (!user)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `User not found.`,
+      });
+
+    if (user.id === admin.id)
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `You cannot perform actions on your own account.`,
+      });
+
+    const { reason, is_suspended } = updateUserSuspensionDto;
+
+    const suspension = await this.prismaService.accountSuspensions.create({
+      data: {
+        admin_id: admin.id,
+        user_id: user.id,
+        ...(reason?.trim() && { reason }),
+        ...(is_suspended
+          ? { suspended_at: new Date() }
+          : { unsuspended_at: new Date() }),
+      },
+    });
+
+    await this.prismaService.userProfiles.update({
+      where: {
+        user_id: user.id,
+      },
+      data: {
+        status: is_suspended
+          ? ProfileStatusEnum.inactive
+          : ProfileStatusEnum.active,
+      },
+    });
+
+    return {
+      message: is_suspended
+        ? 'User has been suspended successfully.'
+        : 'User has been unsuspended successfully.',
+      suspension,
+    };
   };
 }

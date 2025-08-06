@@ -1,5 +1,12 @@
 import { SessionStatusEnum, SessionStatusType } from '@repo/db';
-import { IsEnum, IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import {
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 
 export class UpdateUserSessionDto {
   @IsUUID()
@@ -11,4 +18,10 @@ export class UpdateUserSessionDto {
 
   @IsEnum(SessionStatusEnum)
   readonly status!: SessionStatusType;
+
+  @IsBoolean()
+  readonly is_online!: boolean;
+
+  @IsDate()
+  readonly last_seen_at!: Date;
 }

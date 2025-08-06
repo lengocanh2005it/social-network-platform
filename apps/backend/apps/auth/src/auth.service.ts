@@ -57,6 +57,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   OAuthProviderEnum,
+  ProfileStatusEnum,
   RoleEnum,
   SessionStatusEnum,
   UserDevicesType,
@@ -146,6 +147,31 @@ export class AuthService implements OnModuleInit {
         statusCode: HttpStatus.BAD_REQUEST,
         message: `The password you entered is incorrect. Please try again.`,
       });
+
+    if (existingUser?.profile?.status === ProfileStatusEnum.inactive) {
+      const suspension = await this.prismaService.accountSuspensions.findFirst({
+        where: {
+          user_id: existingUser.id,
+          suspended_at: {
+            lte: new Date(),
+          },
+        },
+        orderBy: {
+          suspended_at: 'desc',
+        },
+      });
+
+      if (!suspension)
+        throw new RpcException({
+          statusCode: HttpStatus.NOT_FOUND,
+          message: 'No suspension history found for this user.',
+        });
+
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: suspension.reason,
+      });
+    }
 
     if (!existingUser.is_email_verified && existingUser.profile) {
       const { first_name, last_name } = existingUser.profile;
@@ -964,12 +990,26 @@ export class AuthService implements OnModuleInit {
     if (
       !isMatch ||
       new Date().getTime() > new Date(userSession.expires_at).getTime()
-    )
+    ) {
+      const updateUserSessionDto: UpdateUserSessionDto = {
+        user_id: userSession.user_id,
+        finger_print: userSession.finger_print,
+        status: SessionStatusEnum.expired,
+        is_online: false,
+        last_seen_at: new Date(),
+      };
+
+      this.usersClient.emit(
+        'update-user-session',
+        JSON.stringify(updateUserSessionDto),
+      );
+
       throw new RpcException({
         statusCode: HttpStatus.UNAUTHORIZED,
         message:
           'Looks like your session has expired. Please log in again to keep going.',
       });
+    }
 
     const userDevice = await firstValueFrom<UserDevicesType>(
       this.usersClient.send('get-user-device', {
@@ -1060,7 +1100,14 @@ export class AuthService implements OnModuleInit {
       user_id,
       finger_print,
       status: SessionStatusEnum.inactive,
+      is_online: false,
+      last_seen_at: new Date(),
     };
+
+    this.usersClient.emit(
+      'update-user-session',
+      JSON.stringify(updateUserSessionDto),
+    );
 
     if (refresh_token?.trim())
       await this.keyCloakProvider.revokeToken(refresh_token, 'refresh_token');
@@ -1071,11 +1118,6 @@ export class AuthService implements OnModuleInit {
       } catch (error) {
         console.error(error);
 
-        this.usersClient.emit(
-          'update-user-session',
-          JSON.stringify(updateUserSessionDto),
-        );
-
         if (!refresh_token?.trim())
           throw new RpcException({
             statusCode: HttpStatus.UNAUTHORIZED,
@@ -1083,11 +1125,6 @@ export class AuthService implements OnModuleInit {
           });
       }
     }
-
-    this.usersClient.emit(
-      'update-user-session',
-      JSON.stringify(updateUserSessionDto),
-    );
 
     return {
       message: 'Signed out successfully.',

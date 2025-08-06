@@ -4,10 +4,12 @@ import {
   LoggingInterceptor,
   PerformanceInterceptor,
   RpcToHttpExceptionInterceptor,
+  UserActivityInterceptor,
 } from '@app/common/interceptors';
 import { KafkaModule, PrismaModule } from '@app/common/modules';
 import {
   CloudfareProvider,
+  geminiProvider,
   HuggingFaceProvider,
   InfisicalProvider,
   KeycloakProvider,
@@ -18,6 +20,8 @@ import { HttpModule } from '@nestjs/axios';
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import {
   KeycloakConnectModule,
@@ -26,7 +30,6 @@ import {
 } from 'nest-keycloak-connect';
 import { TwilioModule } from 'nestjs-twilio';
 import { CommonService } from './common.service';
-import { SentryModule } from '@sentry/nestjs/setup';
 
 @Global()
 @Module({
@@ -77,6 +80,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
     }),
     PrometheusModule.register(),
     SentryModule.forRoot(),
+    ScheduleModule.forRoot(),
   ],
   providers: [
     CommonService,
@@ -91,6 +95,8 @@ import { SentryModule } from '@sentry/nestjs/setup';
     PerformanceInterceptor,
     ...MetricsProviders,
     RpcToHttpExceptionInterceptor,
+    UserActivityInterceptor,
+    geminiProvider,
   ],
   exports: [
     ConfigModule,
@@ -113,6 +119,9 @@ import { SentryModule } from '@sentry/nestjs/setup';
     PerformanceInterceptor,
     ...MetricsProviders,
     SentryModule,
+    UserActivityInterceptor,
+    ScheduleModule,
+    geminiProvider,
   ],
 })
 export class CommonModule {}

@@ -10,7 +10,11 @@ import { toast } from "react-hot-toast";
 export const useSignIn = () => {
   const router = useRouter();
   const { setUser } = useUserStore();
-  const { setIs2FAModalOpen, setIsModalOTPOpen } = useAppStore();
+  const {
+    setIs2FAModalOpen,
+    setIsModalOTPOpen,
+    setIsAccountSuspendedModalOpen,
+  } = useAppStore();
   const { setTheme } = useTheme();
 
   return useMutation({
@@ -62,7 +66,7 @@ export const useSignIn = () => {
         if (data?.role === "user") {
           router.push("/home");
         } else if (data?.role === "admin") {
-          router.push("/home/dashboard");
+          router.push("/dashboard");
         }
 
         if (response) setTheme((response as FullUserType).profile.theme);
@@ -72,6 +76,15 @@ export const useSignIn = () => {
         });
       }
     },
-    onError: (error: any) => handleAxiosError(error),
+    onError: (error: any) => {
+      if (
+        error?.response?.data?.statusCode === 403 &&
+        error?.response?.data?.message
+      ) {
+        setIsAccountSuspendedModalOpen(true);
+      } else {
+        handleAxiosError(error);
+      }
+    },
   });
 };

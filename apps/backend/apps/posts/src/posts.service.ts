@@ -16,6 +16,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -26,9 +27,11 @@ import {
   CreateCommentTargetType,
   decodeCursor,
   encodeCursor,
+  generateActionContent,
   generateNotificationMessage,
   isToxic,
   PostMediaEnum,
+  StatsType,
   truncateWithEllipsis,
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
@@ -38,8 +41,11 @@ import {
   PhotoTypeEnum,
   PostPrivaciesEnum,
   PostsType,
+  ReportStatusEnum,
+  RoleEnum,
   UsersType,
 } from '@repo/db';
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { omit, pick } from 'lodash';
 import { firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,6 +59,7 @@ export class PostsService implements OnModuleInit {
     private readonly huggingFaceProvider: HuggingFaceProvider,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -78,8 +85,22 @@ export class PostsService implements OnModuleInit {
       ? decodeCursor(getPostQueryDto.after)
       : null;
 
+    const reports = await this.prismaService.reports.findMany({
+      where: {
+        type: 'post',
+        reporter_id: user_id,
+      },
+    });
+
+    const reportedPostIds = reports.map((r) => r.target_id);
+
     let posts = await this.prismaService.posts.findMany({
-      where: this.buildProfilePostWhereClause(user_id),
+      where: {
+        ...this.buildProfilePostWhereClause(user_id),
+        id: {
+          notIn: reportedPostIds,
+        },
+      },
       orderBy: { created_at: 'desc' },
       take: limit + 1,
       ...(decodedCursor && {
@@ -154,6 +175,15 @@ export class PostsService implements OnModuleInit {
       ? decodeCursor(getPostQueryDto.after)
       : null;
 
+    const reports = await this.prismaService.reports.findMany({
+      where: {
+        type: 'post',
+        reporter_id: user_id,
+      },
+    });
+
+    const reportedPostIds = reports.map((r) => r.target_id);
+
     const posts = await this.prismaService.posts.findMany({
       where: {
         OR: [
@@ -162,6 +192,9 @@ export class PostsService implements OnModuleInit {
         ],
         privacy: PostPrivaciesEnum.public,
         deleted_at: null,
+        id: {
+          notIn: reportedPostIds,
+        },
       },
       orderBy: { created_at: 'desc' },
       take: limit + 1,
@@ -259,6 +292,19 @@ export class PostsService implements OnModuleInit {
     if (tags?.length) await this.createPostTags(tags, newPost.id, user);
 
     if (hashtags?.length) await this.createPostHashTags(hashtags, newPost.id);
+
+    this.adminClient.emit(
+      'create-activity',
+      JSON.stringify({
+        createActivityDto: {
+          action: generateActionContent('post'),
+          metadata: {
+            post_id: newPost.id,
+          },
+        },
+        userId: user.id,
+      }),
+    );
 
     return this.getFormattedPost(newPost.id, user.id);
   };
@@ -393,14 +439,16 @@ export class PostsService implements OnModuleInit {
       );
   };
 
-  private getFormattedPost = async (
+  public getFormattedPost = async (
     postId: string,
     userId: string,
     parent_post_id?: string,
+    with_deleted = false,
   ) => {
     const item = await this.prismaService.posts.findUnique({
       where: {
         id: postId,
+        ...(with_deleted ? {} : { deleted_at: null }),
       },
       include: {
         user: {
@@ -671,7 +719,7 @@ export class PostsService implements OnModuleInit {
       },
     });
 
-    if (!parentPost) return null;
+    if (!parentPost || parentPost?.deleted_at) return null;
 
     return this.transformPostItem(parentPost, userId);
   }
@@ -1089,6 +1137,23 @@ export class PostsService implements OnModuleInit {
     }
 
     comments.forEach((comment) => {
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('comment'),
+            metadata: {
+              comment_id: comment.id,
+              post_id: comment.post_id,
+              ...(comment.parent_comment_id
+                ? { parent_comment_id: comment.parent_comment_id }
+                : {}),
+            },
+          },
+          userId: user.id,
+        }),
+      );
+
       if (user.id !== existingPost.user_id) {
         const createNotificationDto: CreateNotificationDto = {
           type: NotificationTypeEnum.post_commented,
@@ -1409,28 +1474,74 @@ export class PostsService implements OnModuleInit {
       commentId,
     );
 
-    if (comment.user_id !== user.id && post.user_id !== user.id)
+    if (
+      comment.user_id !== user.id &&
+      post.user_id !== user.id &&
+      user.role === RoleEnum.user
+    )
       throw new RpcException({
         statusCode: HttpStatus.FORBIDDEN,
         message: `You can only delete your own comment.`,
       });
 
-    await this.prismaService.posts.update({
+    const childrenComments = await this.prismaService.comments.findMany({
       where: {
-        id: postId,
-      },
-      data: {
-        total_comments: {
-          decrement: 1,
-        },
+        parent_comment_id: comment.id,
       },
     });
+
+    if (comment.post_image_id && comment.post_image) {
+      await this.prismaService.postImages.update({
+        where: {
+          id: comment.post_image_id,
+        },
+        data: {
+          total_comments: {
+            decrement: 1,
+          },
+        },
+      });
+    } else if (comment.post_video_id && comment.post_video) {
+      await this.prismaService.postVideos.update({
+        where: {
+          id: comment.post_video_id,
+        },
+        data: {
+          total_comments: {
+            decrement: 1,
+          },
+        },
+      });
+    } else {
+      await this.prismaService.posts.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          total_comments: {
+            decrement: 1 + childrenComments.length,
+          },
+        },
+      });
+    }
 
     await this.prismaService.comments.delete({
       where: {
         id: commentId,
       },
     });
+
+    if (user.role !== RoleEnum.admin)
+      this.adminClient.emit(
+        'create-activity',
+        JSON.stringify({
+          createActivityDto: {
+            action: generateActionContent('delete'),
+            metadata: comment.id,
+          },
+          userId: user.id,
+        }),
+      );
 
     return this.getFormattedPost(
       postId,
@@ -1484,6 +1595,21 @@ export class PostsService implements OnModuleInit {
 
     if (newComments.length) {
       newComments.forEach((newComment) => {
+        this.adminClient.emit(
+          'create-activity',
+          JSON.stringify({
+            createActivityDto: {
+              action: generateActionContent('reply_comment'),
+              metadata: {
+                comment_id: newComment.id,
+                post_id: comment.post_id,
+                parent_comment_id: comment.id,
+              },
+            },
+            userId: user.id,
+          }),
+        );
+
         if (user.id !== comment.user_id) {
           const createNotificationDto: CreateNotificationDto = {
             type: NotificationTypeEnum.comment_replied,
@@ -1867,6 +1993,12 @@ export class PostsService implements OnModuleInit {
       where: {
         id: commentId,
       },
+      include: {
+        post_image: true,
+        post: true,
+        post_video: true,
+        comment: true,
+      },
     });
 
     if (!comment)
@@ -2093,6 +2225,17 @@ export class PostsService implements OnModuleInit {
         createNotificationDto,
       );
     }
+
+    await this.prismaService.posts.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        total_shares: {
+          increment: 1,
+        },
+      },
+    });
 
     return this.getFormattedPost(newPost.id, user.id, postId);
   };
@@ -2466,7 +2609,8 @@ export class PostsService implements OnModuleInit {
     if (
       !isFriend &&
       post.privacy !== PostPrivaciesEnum.public &&
-      currentUser.id !== user.id
+      currentUser.id !== user.id &&
+      currentUser.role === RoleEnum.user
     )
       return null;
 
@@ -2474,6 +2618,7 @@ export class PostsService implements OnModuleInit {
       postId,
       currentUser.id,
       post?.parent_post_id ? post.parent_post_id : undefined,
+      true,
     );
   };
 
@@ -2802,6 +2947,196 @@ export class PostsService implements OnModuleInit {
       success: true,
       message: `Bookmark${postIds.length > 1 ? 's have' : ' has'} been deleted successfully.`,
       bookMarkIds,
+    };
+  };
+
+  public getPostsToday = async (): Promise<StatsType> => {
+    const todayStart = startOfDay(new Date());
+    const todayEnd = endOfDay(new Date());
+
+    const yesterdayStart = startOfDay(subDays(new Date(), 1));
+    const yesterdayEnd = endOfDay(subDays(new Date(), 1));
+
+    const postsToday = await this.prismaService.posts.count({
+      where: {
+        created_at: {
+          gte: todayStart,
+          lte: todayEnd,
+        },
+      },
+    });
+
+    const postsYesterday = await this.prismaService.posts.count({
+      where: {
+        created_at: {
+          gte: yesterdayStart,
+          lte: yesterdayEnd,
+        },
+      },
+    });
+
+    const percent =
+      postsYesterday === 0
+        ? '100.0'
+        : (((postsToday - postsYesterday) / postsYesterday) * 100).toFixed(1);
+
+    const trend = postsToday >= postsYesterday ? 'up' : 'down';
+
+    return {
+      value: postsToday,
+      percent: parseFloat(percent),
+      trend,
+    };
+  };
+
+  public getNewComments = async (): Promise<StatsType> => {
+    const today = new Date();
+
+    const currentWeekStart = startOfDay(subDays(today, 6));
+    const currentWeekEnd = endOfDay(today);
+
+    const lastWeekStart = startOfDay(subDays(today, 13));
+    const lastWeekEnd = endOfDay(subDays(today, 7));
+
+    const commentsThisWeek = await this.prismaService.comments.count({
+      where: {
+        created_at: {
+          gte: currentWeekStart,
+          lte: currentWeekEnd,
+        },
+      },
+    });
+
+    const commentsLastWeek = await this.prismaService.comments.count({
+      where: {
+        created_at: {
+          gte: lastWeekStart,
+          lte: lastWeekEnd,
+        },
+      },
+    });
+
+    const percent =
+      commentsLastWeek === 0
+        ? 100.0
+        : parseFloat(
+            (
+              ((commentsThisWeek - commentsLastWeek) / commentsLastWeek) *
+              100
+            ).toFixed(1),
+          );
+
+    const trend = commentsThisWeek >= commentsLastWeek ? 'up' : 'down';
+
+    return {
+      value: commentsThisWeek,
+      percent,
+      trend,
+    };
+  };
+
+  public getActiveReports = async () => {
+    const now = new Date();
+
+    const lastWeekStart = startOfDay(subDays(now, 13));
+    const lastWeekEnd = endOfDay(subDays(now, 7));
+
+    const activeReportsNow = await this.prismaService.reports.count({
+      where: {
+        status: ReportStatusEnum.pending,
+      },
+    });
+
+    const activeReportsLastWeek = await this.prismaService.reports.count({
+      where: {
+        status: ReportStatusEnum.pending,
+        created_at: {
+          gte: lastWeekStart,
+          lte: lastWeekEnd,
+        },
+      },
+    });
+
+    const percent =
+      activeReportsLastWeek === 0
+        ? 100.0
+        : parseFloat(
+            (
+              ((activeReportsNow - activeReportsLastWeek) /
+                activeReportsLastWeek) *
+              100
+            ).toFixed(1),
+          );
+
+    const trend = activeReportsNow >= activeReportsLastWeek ? 'up' : 'down';
+
+    return {
+      value: activeReportsNow,
+      percent,
+      trend,
+    };
+  };
+
+  public reportPost = async (
+    email: string,
+    postId: string,
+    reportPostDto: ReportPostDto,
+  ) => {
+    const user = await firstValueFrom<UsersType>(
+      this.usersClient.send(
+        'get-user-by-field',
+        JSON.stringify({
+          field: 'email',
+          value: email,
+        }),
+      ),
+    );
+
+    const post = await this.prismaService.posts.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        user: true,
+        tags: true,
+      },
+    });
+
+    if (!post)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'Post not found',
+      });
+
+    if (
+      !(
+        post.user.id !== user.id ||
+        !post.tags.some((t) => t.tagged_user_id === user.id)
+      )
+    )
+      throw new RpcException({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: 'You do not have permission to interact with this post.',
+      });
+
+    const { type, reason } = reportPostDto;
+
+    await this.prismaService.reports.create({
+      data: {
+        type,
+        reason,
+        reporter: {
+          connect: {
+            id: user.id,
+          },
+        },
+        target_id: postId,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Post reported successfully.',
     };
   };
 }

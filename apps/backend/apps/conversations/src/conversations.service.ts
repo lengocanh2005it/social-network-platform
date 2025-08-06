@@ -5,7 +5,7 @@ import {
   UpdateMessageDto,
 } from '@app/common/dtos/conversations';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { HuggingFaceProvider } from '@app/common/providers';
+import { GeminiProvider, HuggingFaceProvider } from '@app/common/providers';
 import {
   decodeCursor,
   encodeCursor,
@@ -14,10 +14,9 @@ import {
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
-import { UserProfilesType, UsersType } from '@repo/db';
+import { RoleEnum, UserSesstionsType, UsersType } from '@repo/db';
 import { omit } from 'lodash';
 import { firstValueFrom } from 'rxjs';
-import { promiseHooks } from 'v8';
 
 @Injectable()
 export class ConversationsService implements OnModuleInit {
@@ -25,6 +24,7 @@ export class ConversationsService implements OnModuleInit {
     private readonly prismaService: PrismaService,
     @Inject('USERS_SERVICE') private readonly usersClient: ClientKafka,
     private readonly huggingFaceProvider: HuggingFaceProvider,
+    @Inject('GEMINI') private readonly geminiProvider: GeminiProvider,
   ) {}
 
   onModuleInit() {
@@ -209,6 +209,7 @@ export class ConversationsService implements OnModuleInit {
         user: {
           include: {
             profile: true,
+            sessions: true,
           },
         },
       },
@@ -307,6 +308,7 @@ export class ConversationsService implements OnModuleInit {
           user: {
             include: {
               profile: true,
+              sessions: true,
             },
           },
         },
@@ -354,6 +356,7 @@ export class ConversationsService implements OnModuleInit {
           user: {
             include: {
               profile: true,
+              sessions: true,
             },
           },
         },
@@ -375,6 +378,7 @@ export class ConversationsService implements OnModuleInit {
         user: {
           include: {
             profile: true,
+            sessions: true,
           },
         },
       },
@@ -454,6 +458,7 @@ export class ConversationsService implements OnModuleInit {
         user: {
           include: {
             profile: true,
+            sessions: true,
           },
         },
       },
@@ -490,6 +495,7 @@ export class ConversationsService implements OnModuleInit {
           user: {
             include: {
               profile: true,
+              sessions: true,
             },
           },
         },
@@ -511,6 +517,10 @@ export class ConversationsService implements OnModuleInit {
         full_name: `${item.user.profile?.first_name ?? ''} ${item.user.profile?.last_name ?? ''}`,
         avatar_url: item.user.profile?.avatar_url ?? '',
         username: item.user.profile?.username ?? '',
+        is_online:
+          item.user?.sessions?.some(
+            (us: UserSesstionsType) => us.is_online === true,
+          ) ?? false,
       },
       ...(parentMessage && {
         parent_message: await this.getFormattedMessage(parentMessage),
@@ -539,12 +549,15 @@ export class ConversationsService implements OnModuleInit {
     email: string,
     getConversationsQueryDto?: GetConversationsQueryDto,
   ) => {
-    const user = await firstValueFrom<UsersType>(
+    const user = await firstValueFrom<any>(
       this.usersClient.send(
         'get-user-by-field',
         JSON.stringify({
           field: 'email',
           value: email,
+          getUserQueryDto: {
+            includeProfile: true,
+          },
         }),
       ),
     );
@@ -557,9 +570,10 @@ export class ConversationsService implements OnModuleInit {
 
     const full_name = getConversationsQueryDto?.full_name;
     let userProfileIds: string[] = [];
+    let adminProfileIds: string[] = [];
 
     if (full_name) {
-      const userProfiles = await sendWithTimeout<UserProfilesType[]>(
+      const userProfiles = await sendWithTimeout<any[]>(
         this.usersClient,
         'get-users-by-full-name',
         { full_name },
@@ -567,12 +581,28 @@ export class ConversationsService implements OnModuleInit {
 
       userProfileIds = userProfiles.map((profile) => profile.user_id);
 
-      if (userProfileIds.length === 0) {
+      adminProfileIds = userProfiles
+        .filter((p) => p.user.role === RoleEnum.admin)
+        .map((d) => d.user_id);
+
+      if (userProfileIds.length === 0 && adminProfileIds.length === 0) {
         return {
           data: [],
           nextCursor: null,
         };
       }
+    }
+
+    if (adminProfileIds.length > 0 && !adminProfileIds.includes(user.id)) {
+      await Promise.all(
+        adminProfileIds.map((id) =>
+          this.createConversationWithAdmin(
+            id,
+            user.id,
+            `${user.profile.first_name} + " " + ${user.profile.last_name}`,
+          ),
+        ),
+      );
     }
 
     const conversations = await this.prismaService.conversations.findMany({
@@ -597,11 +627,15 @@ export class ConversationsService implements OnModuleInit {
                 },
               ]
             : []),
-          {
-            messages: {
-              some: {},
-            },
-          },
+          ...(adminProfileIds.length > 0 && !adminProfileIds.includes(user.id)
+            ? []
+            : [
+                {
+                  messages: {
+                    some: {},
+                  },
+                },
+              ]),
         ],
       },
       include: {
@@ -646,8 +680,10 @@ export class ConversationsService implements OnModuleInit {
 
           return {
             id: item.id,
-            last_message_at: item.last_message_at,
-            last_message: await this.getFormattedMessage(item.last_message),
+            last_message_at: item?.last_message_at ?? null,
+            last_message: item?.last_message
+              ? await this.getFormattedMessage(item.last_message)
+              : null,
             target_user: {
               user_id: targetUser.id,
               avatar_url: targetUser.profile.avatar_url,
@@ -662,5 +698,52 @@ export class ConversationsService implements OnModuleInit {
       ),
       nextCursor,
     };
+  };
+
+  private createConversationWithAdmin = async (
+    adminId: string,
+    userId: string,
+    userFullName: string,
+  ) => {
+    const [currentUserId, targetUserId] = [userId, adminId].sort((a, b) =>
+      a.localeCompare(b),
+    );
+
+    const newConversation = await this.prismaService.conversations.upsert({
+      where: {
+        user_1_id_user_2_id: {
+          user_1_id: currentUserId,
+          user_2_id: targetUserId,
+        },
+      },
+      create: {
+        user_1_id: currentUserId,
+        user_2_id: targetUserId,
+      },
+      update: {},
+      include: {
+        messages: true,
+      },
+    });
+
+    if (!newConversation.messages.length) {
+      const response = await this.geminiProvider.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: `Write a short and friendly welcome message from an administrator to a user named ${userFullName}. Only return a single sentence, without a subject line or email formatting. The tone should be polite, warm, and encourage the user to start a conversation or ask for help.`,
+      });
+
+      const content =
+        response.text ??
+        `Hi ${userFullName}! I'm here to help with anything you need—feel free to reach out anytime.`;
+
+      await this.createNewMessage(
+        {
+          content,
+          target_id: userId,
+        },
+        adminId,
+        newConversation.id,
+      );
+    }
   };
 }

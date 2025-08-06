@@ -3,7 +3,7 @@ import {
   GetStoryQueryDto,
   GetStoryViewersQueryDto,
 } from '@app/common/dtos/stories';
-import { Controller } from '@nestjs/common';
+import { Controller, ParseUUIDPipe } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { StoriesService } from './stories.service';
 
@@ -55,5 +55,13 @@ export class StoriesController {
     @Payload('email') email: string,
   ) {
     return this.storiesService.getStory(storyId, email);
+  }
+
+  @MessagePattern('get-formatted-story')
+  async getFormattedStory(
+    @Payload('storyId', ParseUUIDPipe) storyId: string,
+    @Payload('currentUserId', ParseUUIDPipe) currentUserId: string,
+  ) {
+    return this.storiesService.getFormattedStory(storyId, currentUserId);
   }
 }

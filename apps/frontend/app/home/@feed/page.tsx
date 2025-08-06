@@ -93,9 +93,11 @@ const FeedPage = () => {
               className="flex flex-col items-center justify-center text-center md:gap-2 gap-1
             md:mt-6 mt-4"
             >
-              <h1 className="text-center text-gray-600">No Activity Yet</h1>
+              <h1 className="text-center text-gray-600 dark:text-white/80">
+                No Activity Yet
+              </h1>
 
-              <p className="text-center text-sm text-gray-500">
+              <p className="text-center text-sm text-gray-500 dark:text-white/70">
                 Your friend hasn&apos;t posted anything yet.
               </p>
             </div>

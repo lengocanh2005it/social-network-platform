@@ -5,13 +5,17 @@ import {
   GetStoryViewersQueryDto,
 } from '@app/common/dtos/stories';
 import { PrismaService } from '@app/common/modules/prisma/prisma.service';
-import { generateNotificationMessage } from '@app/common/utils';
+import {
+  generateActionContent,
+  generateNotificationMessage,
+} from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   NotificationTypeEnum,
   PhotoTypeEnum,
   PostPrivaciesEnum,
+  RoleEnum,
   UsersType,
 } from '@repo/db';
 import { omit } from 'lodash';
@@ -25,6 +29,7 @@ export class StoriesService implements OnModuleInit {
     private readonly usersClient: ClientKafka,
     @Inject('NOTIFICATIONS_SERVICE')
     private readonly notificationsClient: ClientKafka,
+    @Inject('ADMIN_SERVICE') private readonly adminClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -192,6 +197,19 @@ export class StoriesService implements OnModuleInit {
       );
     });
 
+    this.adminClient.emit(
+      'create-activity',
+      JSON.stringify({
+        createActivityDto: {
+          action: generateActionContent('story'),
+          metadata: {
+            story_id: newStory.id,
+          },
+        },
+        userId: user.id,
+      }),
+    );
+
     return this.getFormattedStory(newStory.id, user.id);
   };
 
@@ -222,7 +240,10 @@ export class StoriesService implements OnModuleInit {
         message: 'The story you are looking for could not be found.',
       });
 
-    if (new Date(story.expires_at).getTime() >= new Date().getTime()) {
+    if (
+      new Date(story.expires_at).getTime() >= new Date().getTime() &&
+      user.role === RoleEnum.user
+    ) {
       await this.prismaService.storyViews.upsert({
         where: {
           story_id_viewer_id: {
@@ -375,10 +396,7 @@ export class StoriesService implements OnModuleInit {
     };
   };
 
-  private getFormattedStory = async (
-    storyId: string,
-    currentUserId: string,
-  ) => {
+  public getFormattedStory = async (storyId: string, currentUserId: string) => {
     const findStory = await this.prismaService.stories.findUnique({
       where: {
         id: storyId,

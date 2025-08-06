@@ -29,6 +29,7 @@ const PasswordToggleInput = ({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
+        suppressHydrationWarning
         name={name}
         placeholder={placeholder}
         startContent={startContent}

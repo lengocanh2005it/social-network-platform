@@ -11,5 +11,6 @@ export const useGetMediaOfPost = (
     queryFn: () => getMediaOfPost(postId, mediaId, type),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!postId && !!mediaId,
   });
 };

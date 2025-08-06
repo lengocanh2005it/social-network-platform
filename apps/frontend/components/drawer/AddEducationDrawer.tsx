@@ -168,7 +168,7 @@ const AddEducationDrawer = () => {
             <>
               <DrawerHeader className="flex flex-col gap-1 text-center">
                 <h1>Add New Education</h1>
-                <p className="text-gray-600 font-normal">
+                <p className="text-gray-600 font-normal dark:text-white/70">
                   Fill out the form to add a new education record.
                 </p>
               </DrawerHeader>
@@ -183,7 +183,9 @@ const AddEducationDrawer = () => {
                       name="school_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>School Name</FormLabel>
+                          <FormLabel className="text-black dark:text-white">
+                            School Name
+                          </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="The University of Information Technology"
@@ -200,7 +202,9 @@ const AddEducationDrawer = () => {
                       name="major"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Major</FormLabel>
+                          <FormLabel className="text-black dark:text-white">
+                            Major
+                          </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Software Engineering"
@@ -217,7 +221,9 @@ const AddEducationDrawer = () => {
                       name="degree"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Degree</FormLabel>
+                          <FormLabel className="text-black dark:text-white">
+                            Degree
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="Bachelor" {...field} />
                           </FormControl>
@@ -231,7 +237,7 @@ const AddEducationDrawer = () => {
                       name="start_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black">
+                          <FormLabel className="text-black dark:text-white">
                             Start Date
                           </FormLabel>
                           <FormControl>
@@ -254,7 +260,7 @@ const AddEducationDrawer = () => {
                       name="end_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black">
+                          <FormLabel className="text-black dark:text-white">
                             End Date (Optional)
                           </FormLabel>
                           <FormControl>

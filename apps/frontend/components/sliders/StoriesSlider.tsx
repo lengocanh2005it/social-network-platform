@@ -209,7 +209,7 @@ export default function StorySlider() {
                 h-30 bg-gray-100 rounded-2xl border border-black/10
                 dark:bg-black dark:text-white dark:border dark:border-white/30"
                 >
-                  <p className="text-gray-500 dark:text-white/50 text-sm mb-2">
+                  <p className="text-gray-500 dark:text-white/70 text-sm mb-2">
                     No stories yet
                   </p>
 
