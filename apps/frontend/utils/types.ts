@@ -6,7 +6,7 @@ import {
   FriendListType,
   ResponseFriendRequestAction,
 } from "@/utils/constants";
-import { ZonedDateTime } from "@internationalized/date";
+import { DateValue, ZonedDateTime } from "@internationalized/date";
 import {
   ContentStoryType,
   FriendShipStatusType,
@@ -17,6 +17,7 @@ import {
   PostPrivaciesEnum,
   PostPrivaciesType,
   ReportReasonEnum,
+  ReportsType,
   ReportTypeEnum,
   StoryStatusEnum,
   ThemeEnum,
@@ -25,6 +26,7 @@ import {
   UsersType,
   UserWorkPlacesType,
 } from "@repo/db";
+import { StringNullableChain } from "lodash";
 
 export type DeviceDetails = {
   device_name: string;
@@ -802,6 +804,8 @@ export type GetSharesPostQueryDto = GetFeedQueryDto;
 
 export type GetStoriesDashboardQueryDto = GetFeedQueryDto & {
   email?: string;
+  from?: DateValue;
+  to?: DateValue;
 };
 
 export type UpdateStoryStatusData = {
@@ -816,4 +820,36 @@ export type ReportPostDto = {
   postId: string;
   reason: ReportReasonEnum;
   type: ReportTypeEnum;
+};
+
+export type GetReportsQueryDto = GetFeedQueryDto & {
+  type?: ReportTypeEnum;
+  from?: DateValue;
+  to?: DateValue;
+};
+
+export type ReportsDashboardDetailsType = ReportsType & {
+  reporter: {
+    id: string;
+    email: string;
+    profile: {
+      first_name: string;
+      last_name: string;
+      avatar_url: string;
+      username: string;
+    };
+  };
+};
+
+export type ReportsDashboardType = {
+  targetId: string;
+  type: ReportTypeEnum;
+  count: number;
+  reports: ReportsDashboardDetailsType[];
+  post?: PostDetails;
+  story?: Story;
+};
+
+export type GetReportersOfReportQueryDto = GetFeedQueryDto & {
+  reason?: ReportReasonEnum;
 };

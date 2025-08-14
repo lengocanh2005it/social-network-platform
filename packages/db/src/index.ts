@@ -22,6 +22,7 @@ export type {
   Users as UsersType,
   UserWorkPlaces as UserWorkPlacesType,
   StoryStatus as StoryStatusType,
+  Reports as ReportsType,
 } from "../@generated/default.js";
 
 export type { Prisma } from "../@generated/default.js";

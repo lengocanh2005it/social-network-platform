@@ -1,6 +1,8 @@
 import {
   GetActivitiesQueryDto,
   GetPostsQueryDto,
+  GetReportersOfReportQueryDto,
+  GetReportsQueryDto,
   GetSharePostsQueryDto,
   GetStoriesQueryDto,
   GetUsersQueryDto,
@@ -178,6 +180,33 @@ export class AdminController {
       storyId,
       updateStoryStatusDto,
       email,
+    );
+  }
+
+  @Get('reports')
+  async getReports(
+    @Query() getReportsQueryDto: GetReportsQueryDto,
+    @KeycloakUser() user: any,
+  ) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.adminService.getReports(getReportsQueryDto, email);
+  }
+
+  @Get('reports/:targetId/reporters')
+  async getReportersOfReport(
+    @Query() getRepotersOfReportQueryDto: GetReportersOfReportQueryDto,
+    @Param('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    return this.adminService.getReportersOfReport(
+      getRepotersOfReportQueryDto,
+      targetId,
     );
   }
 }

@@ -2,6 +2,8 @@ import {
   CreateActivityDto,
   GetActivitiesQueryDto,
   GetPostsQueryDto,
+  GetReportersOfReportQueryDto,
+  GetReportsQueryDto,
   GetSharePostsQueryDto,
   GetStoriesQueryDto,
   GetUsersQueryDto,
@@ -97,6 +99,26 @@ export class AdminController {
       storyId,
       updateStoryStatusDto,
       email,
+    );
+  }
+
+  @MessagePattern('get-reports')
+  async getReports(
+    @Payload('getReportsQueryDto') getReportsQueryDto: GetReportsQueryDto,
+    @Payload('email') email: string,
+  ) {
+    return this.adminService.getReports(getReportsQueryDto, email);
+  }
+
+  @MessagePattern('get-reporters-of-report')
+  async getReportersOfReport(
+    @Payload('getReportersOfReportQueryDto')
+    getReportersOfReportQueryDto: GetReportersOfReportQueryDto,
+    @Payload('targetId', ParseUUIDPipe) targetId: string,
+  ) {
+    return this.adminService.getReportersOfReport(
+      getReportersOfReportQueryDto,
+      targetId,
     );
   }
 }

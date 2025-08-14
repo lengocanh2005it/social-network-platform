@@ -1,6 +1,8 @@
 import {
   GetActivitiesQueryDto,
   GetPostsQueryDto,
+  GetReportersOfReportQueryDto,
+  GetReportsQueryDto,
   GetSharePostsQueryDto,
   GetStoriesQueryDto,
   GetUsersQueryDto,
@@ -32,6 +34,8 @@ export class AdminService implements OnModuleInit {
       'get-shares-of-post',
       'get-stories-dashboard',
       'update-story-status',
+      'get-reports',
+      'get-reporters-of-report',
     ];
     patterns.forEach((p) => this.adminClient.subscribeToResponseOf(p));
     this.usersClient.subscribeToResponseOf('get-user-by-field');
@@ -143,6 +147,26 @@ export class AdminService implements OnModuleInit {
       storyId,
       updateStoryStatusDto: toPlain(updateStoryStatusDto),
       email,
+    });
+  };
+
+  public getReports = async (
+    getReportsQueryDto: GetReportsQueryDto,
+    email: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'get-reports', {
+      getReportsQueryDto: toPlain(getReportsQueryDto),
+      email,
+    });
+  };
+
+  public getReportersOfReport = async (
+    getReportersOfReportQueryDto: GetReportersOfReportQueryDto,
+    targetId: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'get-reporters-of-report', {
+      getReportersOfReportQueryDto: toPlain(getReportersOfReportQueryDto),
+      targetId,
     });
   };
 }

@@ -2,6 +2,8 @@ import axios from "@/lib/axios";
 import {
   GetActivitiesQueryDto,
   GetPostsDashboardQueryDto,
+  GetReportersOfReportQueryDto,
+  GetReportsQueryDto,
   GetSharesPostQueryDto,
   GetStoriesDashboardQueryDto,
   GetUsersDashboardQueryDto,
@@ -116,6 +118,34 @@ export const updateStoryStatus = async (
   const response = await axios.patch(
     `/admin/dashboard/stories/${storyId}/status`,
     updateStoryStatusDto,
+  );
+
+  return response.data;
+};
+
+export const getReports = async (getReportsQueryDto: GetReportsQueryDto) => {
+  const response = await axios.get(`/admin/dashboard/reports`, {
+    params: getReportsQueryDto,
+    paramsSerializer: {
+      indexes: null,
+    },
+  });
+
+  return response.data;
+};
+
+export const getReportersOfReport = async (
+  getReportersOfReportQueryDto: GetReportersOfReportQueryDto,
+  targetId: string,
+) => {
+  const response = await axios.get(
+    `/admin/dashboard/reports/${targetId}/reporters`,
+    {
+      params: getReportersOfReportQueryDto,
+      paramsSerializer: {
+        indexes: null,
+      },
+    },
   );
 
   return response.data;

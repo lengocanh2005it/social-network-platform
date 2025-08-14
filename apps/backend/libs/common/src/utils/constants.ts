@@ -1,4 +1,4 @@
-import { RoleEnum } from '@repo/db';
+import { ReportTypeEnum, RoleEnum } from '@repo/db';
 import { config } from 'dotenv';
 
 config();
@@ -279,3 +279,9 @@ export type ActivityType =
   | 'profile'
   | 'report'
   | 'delete';
+
+export type GroupedReport = {
+  target_id: string;
+  type: ReportTypeEnum;
+  _count: { _all: number };
+};

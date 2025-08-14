@@ -43,6 +43,8 @@ export * from "./useGetPostOfUser";
 export * from "./useGetPosts";
 export * from "./useGetPostsDashboard";
 export * from "./useGetProfile";
+export * from "./useGetReportersOfReport";
+export * from "./useGetReportsDashboard";
 export * from "./useGetSharesOfPost";
 export * from "./useGetStats";
 export * from "./useGetStories";

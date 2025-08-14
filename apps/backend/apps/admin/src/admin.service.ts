@@ -2,6 +2,8 @@ import {
   CreateActivityDto,
   GetActivitiesQueryDto,
   GetPostsQueryDto,
+  GetReportersOfReportQueryDto,
+  GetReportsQueryDto,
   GetSharePostsQueryDto,
   GetStoriesQueryDto,
   GetUsersQueryDto,
@@ -14,12 +16,15 @@ import {
   decodeCursor,
   encodeCursor,
   generateNotificationMessage,
+  GroupedReport,
   sendWithTimeout,
 } from '@app/common/utils';
 import { HttpStatus, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ClientKafka, RpcException } from '@nestjs/microservices';
 import {
   NotificationTypeEnum,
+  PostsType,
+  ReportTypeEnum,
   RoleEnum,
   StoryStatusEnum,
   UserSesstionsType,
@@ -787,6 +792,230 @@ export class AdminService implements OnModuleInit {
     return {
       success: true,
       message: 'Story status updated successfully.',
+    };
+  };
+
+  public getReports = async (
+    getReportsQueryDto: GetReportsQueryDto,
+    email: string,
+  ) => {
+    const admin = await sendWithTimeout<UsersType>(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+      }),
+    );
+
+    const limit = getReportsQueryDto?.limit ?? 10;
+    const { from, to, type, after } = getReportsQueryDto;
+    const decodedCursor = after
+      ? (JSON.parse(Buffer.from(after, 'base64').toString()) as {
+          targetId: string;
+          count: number;
+        })
+      : null;
+
+    const whereClause = {
+      ...(from || to
+        ? {
+            created_at: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
+            },
+          }
+        : {}),
+      ...(type && { type }),
+    };
+
+    const grouped = await this.prismaService.reports.groupBy({
+      by: ['target_id', 'type'],
+      _count: { id: true },
+      where: whereClause,
+      orderBy: [{ _count: { id: 'desc' } }, { target_id: 'asc' }],
+      ...(decodedCursor && {
+        having: {
+          OR: [
+            {
+              id: {
+                _count: { lt: decodedCursor.count },
+              },
+            },
+            {
+              AND: [
+                {
+                  id: {
+                    _count: { equals: decodedCursor.count },
+                  },
+                },
+                {
+                  target_id: { gt: decodedCursor.targetId },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+      take: limit + 1,
+    });
+
+    const hasNextPage = grouped.length > limit;
+    const groupsToFetch = hasNextPage ? grouped.slice(0, -1) : grouped;
+
+    const result = await Promise.all(
+      groupsToFetch.map(async (g) => {
+        const reports = await this.prismaService.reports.findMany({
+          where: {
+            target_id: g.target_id,
+            type: g.type,
+          },
+          orderBy: { created_at: 'desc' },
+          include: {
+            reporter: {
+              select: {
+                id: true,
+                email: true,
+                profile: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
+                    avatar_url: true,
+                    username: true,
+                  },
+                },
+              },
+            },
+          },
+          take: 5,
+        });
+
+        let postDetails: any = null;
+        let storyDetails: any = null;
+
+        if (g.type === ReportTypeEnum.post) {
+          const tempPostDetails = await sendWithTimeout<PostsType>(
+            this.postsClient,
+            'get-formatted-post',
+            JSON.stringify({
+              postId: g.target_id,
+              userId: admin.id,
+              withDeleted: true,
+            }),
+          );
+
+          if (tempPostDetails) {
+            postDetails = await sendWithTimeout<PostsType>(
+              this.postsClient,
+              'get-formatted-post',
+              JSON.stringify({
+                postId: tempPostDetails.id,
+                userId: admin.id,
+                withDeleted: true,
+                parentPostId: tempPostDetails?.parent_post_id,
+              }),
+            );
+          }
+        } else if (g.type === ReportTypeEnum.story) {
+          storyDetails = await sendWithTimeout<any>(
+            this.storiesClient,
+            'get-formatted-story',
+            JSON.stringify({
+              storyId: g.target_id,
+              currentUserId: admin.id,
+            }),
+          );
+        }
+
+        return {
+          targetId: g.target_id,
+          type: g.type,
+          count: g._count.id,
+          reports,
+          ...(g.type === ReportTypeEnum.post &&
+            postDetails && {
+              post: postDetails,
+            }),
+          ...(g.type === ReportTypeEnum.story &&
+            storyDetails && {
+              story: storyDetails,
+            }),
+        };
+      }),
+    );
+
+    return {
+      data: result,
+      nextCursor: hasNextPage
+        ? Buffer.from(
+            JSON.stringify({
+              targetId: groupsToFetch[groupsToFetch.length - 1].target_id,
+              count: groupsToFetch[groupsToFetch.length - 1]?._count?.id ?? 0,
+            }),
+          ).toString('base64')
+        : null,
+    };
+  };
+
+  public getReportersOfReport = async (
+    getReportersOfReportQueryDto: GetReportersOfReportQueryDto,
+    targetId: string,
+  ) => {
+    const limit = getReportersOfReportQueryDto?.limit ?? 10;
+
+    const decodedCursor = getReportersOfReportQueryDto?.after
+      ? decodeCursor(getReportersOfReportQueryDto.after)
+      : null;
+
+    const whereClause = {
+      target_id: targetId,
+      ...(getReportersOfReportQueryDto?.reason && {
+        reason: getReportersOfReportQueryDto.reason,
+      }),
+    };
+
+    const reports = await this.prismaService.reports.findMany({
+      where: whereClause,
+      include: {
+        reporter: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              select: {
+                first_name: true,
+                last_name: true,
+                username: true,
+                avatar_url: true,
+              },
+            },
+          },
+        },
+      },
+      take: limit + 1,
+      orderBy: {
+        created_at: 'desc',
+      },
+      ...(decodedCursor && {
+        cursor: {
+          id: decodedCursor.id,
+          created_at: decodedCursor.created_at,
+        },
+        skip: 1,
+      }),
+    });
+
+    const hasNextPage = reports.length > limit;
+    const items = hasNextPage ? reports.slice(0, -1) : reports;
+
+    return {
+      data: items,
+      nextCursor: hasNextPage
+        ? encodeCursor({
+            id: items[items.length - 1].id,
+            created_at: items[items.length - 1].created_at,
+          })
+        : null,
     };
   };
 }
