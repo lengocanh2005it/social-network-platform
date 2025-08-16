@@ -1,23 +1,85 @@
+import ConfirmModal from "@/components/modal/ConfirmModal";
 import PostIcon from "@/components/ui/icons/post";
 import StoryIcon from "@/components/ui/icons/story";
-import { formatRelativeTime, ReportsDashboardType } from "@/utils";
-import { Button, Chip } from "@heroui/react";
-import { ReportTypeEnum } from "@repo/db";
-import { CheckIcon } from "lucide-react";
-import React from "react";
+import { useUpdateReportStatus } from "@/hooks";
+import {
+  formatRelativeTime,
+  ReportsDashboardType,
+  UpdateReportStatusDto,
+} from "@/utils";
+import {
+  Chip,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Tooltip,
+} from "@heroui/react";
+import { ReportStatusEnum, ReportTypeEnum } from "@repo/db";
+import { capitalize } from "lodash";
+import { CheckIcon, Ellipsis, XIcon } from "lucide-react";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 interface ReportCardHeaderProps {
   report: ReportsDashboardType;
-  handleResolve: () => void;
+  setReports: React.Dispatch<React.SetStateAction<ReportsDashboardType[]>>;
 }
 
 const ReportCardHeader: React.FC<ReportCardHeaderProps> = ({
   report,
-  handleResolve,
+  setReports,
 }) => {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [isShowModal, setIsShowModal] = useState<boolean>(false);
+  const { isPending, mutate: mutateUpdateReportStatus } =
+    useUpdateReportStatus();
+  const statusColors = {
+    pending: "bg-yellow-500",
+    resolved: "bg-green-500",
+    rejected: "bg-red-500",
+  };
+
+  const onConfirm = () => {
+    const newStatus =
+      selectedKey === "resolved"
+        ? ReportStatusEnum.resolved
+        : ReportStatusEnum.rejected;
+
+    const updateReportStatusDto: UpdateReportStatusDto = {
+      reportId: report.reports[0].id,
+      status: newStatus,
+    };
+
+    mutateUpdateReportStatus(updateReportStatusDto, {
+      onSuccess: (data: { success: boolean; message: string }) => {
+        if (data) {
+          setReports((prevReports) =>
+            prevReports.map((originalReport) =>
+              originalReport.targetId === report.targetId
+                ? {
+                    ...report,
+                    reports: report.reports.map((rr) => ({
+                      ...rr,
+                      status: newStatus,
+                    })),
+                  }
+                : originalReport,
+            ),
+          );
+          toast.success(data.message, {
+            position: "bottom-right",
+          });
+          setIsShowModal(false);
+          setSelectedKey(null);
+        }
+      },
+    });
+  };
+
   return (
     <div
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 
+      className="flex flex-col sm:flex-row items-start justify-between gap-3 p-4 
     bg-gray-50 dark:bg-gray-800 rounded-t-lg border-b dark:border-gray-700"
     >
       <div className="flex items-center gap-3">
@@ -42,6 +104,13 @@ const ReportCardHeader: React.FC<ReportCardHeaderProps> = ({
                 ID: {report.targetId.slice(0, 6)}
               </Chip>
             </span>
+
+            <Tooltip content={capitalize(report.reports[0].status)}>
+              <span
+                className={`w-2.5 h-2.5 rounded-full inline-block 
+                  ${statusColors[report.reports[0].status] || "bg-gray-400"}`}
+              />
+            </Tooltip>
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Reported{" "}
@@ -53,15 +122,6 @@ const ReportCardHeader: React.FC<ReportCardHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="sm:hidden">
-          <Chip
-            size="sm"
-            className="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100"
-          >
-            ID: {report.targetId.slice(0, 6)}
-          </Chip>
-        </div>
-
         <Chip
           size="sm"
           color="warning"
@@ -70,17 +130,80 @@ const ReportCardHeader: React.FC<ReportCardHeaderProps> = ({
           {report.count} {report.count > 1 ? "reports" : "report"}
         </Chip>
 
-        <Button
-          onPress={handleResolve}
-          size="sm"
-          variant="solid"
-          color="success"
-          className="shadow-sm hover:shadow-md transition-all min-w-[100px] dark:text-white"
-          startContent={<CheckIcon className="w-4 h-4" />}
-        >
-          Resolve
-        </Button>
+        {report.reports[0].status === ReportStatusEnum.pending && (
+          <Dropdown
+            placement="bottom-end"
+            className="text-black dark:text-white"
+            shouldBlockScroll={false}
+          >
+            <DropdownTrigger>
+              <Ellipsis
+                size={30}
+                className="cursor-pointer focus:outline-none"
+              />
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Update Report Status Actions"
+              variant="flat"
+              selectionMode="single"
+              onSelectionChange={(selection) => {
+                const key = Array.from(selection)[0];
+                setSelectedKey(key?.toString() ?? null);
+                setIsShowModal(true);
+              }}
+              disallowEmptySelection={true}
+            >
+              <DropdownItem
+                key="resolved"
+                startContent={<CheckIcon />}
+                color="success"
+              >
+                Resolve
+              </DropdownItem>
+
+              <DropdownItem
+                key="rejected"
+                startContent={<XIcon />}
+                color="danger"
+              >
+                Reject
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        )}
       </div>
+
+      {isShowModal && (
+        <ConfirmModal
+          open={isShowModal}
+          onOpenChange={setIsShowModal}
+          onCancel={() => {
+            setIsShowModal(false);
+            setSelectedKey(null);
+          }}
+          isLoading={isPending}
+          onConfirm={onConfirm}
+          textHeader={
+            selectedKey === "resolved"
+              ? "Confirm Report Resolved"
+              : "Confirm Report Rejected"
+          }
+          title={
+            selectedKey === "resolved"
+              ? "Mark as Resolved?"
+              : "Reject this report?"
+          }
+          description={
+            selectedKey === "resolved"
+              ? "This report will be marked as resolved."
+              : "This report will be rejected and closed."
+          }
+          confirmText={
+            selectedKey === "resolved" ? "Mark Resolved" : "Reject Report"
+          }
+          cancelText="No, go back"
+        />
+      )}
     </div>
   );
 };

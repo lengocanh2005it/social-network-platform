@@ -7,6 +7,7 @@ import {
   GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateReportStatusDto,
   UpdateStoryStatusDto,
   UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
@@ -207,6 +208,17 @@ export class AdminController {
     return this.adminService.getReportersOfReport(
       getRepotersOfReportQueryDto,
       targetId,
+    );
+  }
+
+  @Patch('reports/:reportId/status')
+  async updateReportStatus(
+    @Body() updateReportStatusDto: UpdateReportStatusDto,
+    @Param('reportId', ParseUUIDPipe) reportId: string,
+  ) {
+    return this.adminService.updateReportStatus(
+      updateReportStatusDto,
+      reportId,
     );
   }
 }

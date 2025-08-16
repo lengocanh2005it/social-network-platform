@@ -13,10 +13,6 @@ interface ReportCardProps {
 }
 
 const ReportCard: React.FC<ReportCardProps> = ({ report, setReports }) => {
-  const handleResolve = () => {
-    setReports((prev) => prev.filter((r) => r.targetId !== report.targetId));
-  };
-
   const renderContent = () => {
     if (report.type === ReportTypeEnum.post && report.post) {
       return <ReportPosDetails report={report} />;
@@ -32,7 +28,7 @@ const ReportCard: React.FC<ReportCardProps> = ({ report, setReports }) => {
       className="border dark:border-gray-700 rounded-lg p-5 bg-white 
     dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow"
     >
-      <ReportCardHeader report={report} handleResolve={handleResolve} />
+      <ReportCardHeader report={report} setReports={setReports} />
       {renderContent()}
       <ReportCardDetails report={report} />
     </div>

@@ -8,6 +8,7 @@ import {
   GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateReportStatusDto,
   UpdateStoryStatusDto,
 } from '@app/common/dtos/admin';
 import { CreateNotificationDto } from '@app/common/dtos/notifications';
@@ -1016,6 +1017,37 @@ export class AdminService implements OnModuleInit {
             created_at: items[items.length - 1].created_at,
           })
         : null,
+    };
+  };
+
+  public updateReportStatus = async (
+    updateReportStatusDto: UpdateReportStatusDto,
+    reportId: string,
+  ) => {
+    const report = await this.prismaService.reports.findUnique({
+      where: {
+        id: reportId,
+      },
+    });
+
+    if (!report)
+      throw new RpcException({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: `Report not found.`,
+      });
+
+    await this.prismaService.reports.update({
+      where: {
+        id: reportId,
+      },
+      data: {
+        status: updateReportStatusDto.status,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Report status updated successfully.`,
     };
   };
 }

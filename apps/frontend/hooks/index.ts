@@ -75,6 +75,7 @@ export * from "./useUnlikePost";
 export * from "./useUpdateMessage";
 export * from "./useUpdatePost";
 export * from "./useUpdateProfile";
+export * from "./useUpdateReportStatus";
 export * from "./useUpdateStoryStatus";
 export * from "./useUpdateTheme";
 export * from "./useUpdateUserSuspension";

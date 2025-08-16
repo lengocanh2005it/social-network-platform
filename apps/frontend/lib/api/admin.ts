@@ -8,6 +8,7 @@ import {
   GetStoriesDashboardQueryDto,
   GetUsersDashboardQueryDto,
   UpdatePostStatusData,
+  UpdateReportStatusDto,
   UpdateStoryStatusData,
   UpdateUserSuspensionData,
 } from "@/utils";
@@ -145,6 +146,21 @@ export const getReportersOfReport = async (
       paramsSerializer: {
         indexes: null,
       },
+    },
+  );
+
+  return response.data;
+};
+
+export const updateReportStatus = async (
+  updateReportStatusDto: UpdateReportStatusDto,
+) => {
+  const { reportId, status } = updateReportStatusDto;
+
+  const response = await axios.patch(
+    `/admin/dashboard/reports/${reportId}/status`,
+    {
+      status,
     },
   );
 

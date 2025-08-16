@@ -7,5 +7,6 @@ export * from './get-share-posts-query.dto';
 export * from './get-stories-query.dto';
 export * from './get-users-query.dto';
 export * from './update-post-status.dto';
+export * from './update-report-status.dto';
 export * from './update-story-status.dto';
 export * from './update-user-suspension.dto';

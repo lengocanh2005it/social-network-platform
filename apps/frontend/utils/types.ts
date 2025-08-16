@@ -17,6 +17,7 @@ import {
   PostPrivaciesEnum,
   PostPrivaciesType,
   ReportReasonEnum,
+  ReportStatusEnum,
   ReportsType,
   ReportTypeEnum,
   StoryStatusEnum,
@@ -852,4 +853,9 @@ export type ReportsDashboardType = {
 
 export type GetReportersOfReportQueryDto = GetFeedQueryDto & {
   reason?: ReportReasonEnum;
+};
+
+export type UpdateReportStatusDto = {
+  reportId: string;
+  status: ReportStatusEnum;
 };

@@ -7,6 +7,7 @@ import {
   GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateReportStatusDto,
   UpdateStoryStatusDto,
   UpdateUserSuspensionDto,
 } from '@app/common/dtos/admin';
@@ -36,6 +37,7 @@ export class AdminService implements OnModuleInit {
       'update-story-status',
       'get-reports',
       'get-reporters-of-report',
+      'update-report-status',
     ];
     patterns.forEach((p) => this.adminClient.subscribeToResponseOf(p));
     this.usersClient.subscribeToResponseOf('get-user-by-field');
@@ -167,6 +169,16 @@ export class AdminService implements OnModuleInit {
     return sendWithTimeout(this.adminClient, 'get-reporters-of-report', {
       getReportersOfReportQueryDto: toPlain(getReportersOfReportQueryDto),
       targetId,
+    });
+  };
+
+  public updateReportStatus = async (
+    updateReportStatusDto: UpdateReportStatusDto,
+    reportId: string,
+  ) => {
+    return sendWithTimeout(this.adminClient, 'update-report-status', {
+      updateReportStatusDto: toPlain(updateReportStatusDto),
+      reportId,
     });
   };
 }

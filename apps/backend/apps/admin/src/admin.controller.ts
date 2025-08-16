@@ -8,6 +8,7 @@ import {
   GetStoriesQueryDto,
   GetUsersQueryDto,
   UpdatePostStatusDto,
+  UpdateReportStatusDto,
   UpdateStoryStatusDto,
 } from '@app/common/dtos/admin';
 import { Controller, ParseUUIDPipe } from '@nestjs/common';
@@ -119,6 +120,18 @@ export class AdminController {
     return this.adminService.getReportersOfReport(
       getReportersOfReportQueryDto,
       targetId,
+    );
+  }
+
+  @MessagePattern('update-report-status')
+  async updateReportStatus(
+    @Payload('updateReportStatusDto')
+    updateReportStatusDto: UpdateReportStatusDto,
+    @Payload('reportId') reportId: string,
+  ) {
+    return this.adminService.updateReportStatus(
+      updateReportStatusDto,
+      reportId,
     );
   }
 }
