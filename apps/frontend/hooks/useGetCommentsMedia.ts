@@ -12,5 +12,6 @@ export const useGetCommentsMedia = (
     queryFn: () => getCommentsOfMedia(postId, mediaId, getCommentMediaQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!postId && !!mediaId,
   });
 };

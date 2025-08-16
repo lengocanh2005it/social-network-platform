@@ -160,7 +160,7 @@ const ViewCommentLikedDetailsModal: React.FC<
                                     {user.user.full_name}
                                   </h1>
 
-                                  <p className="text-sm text-gray-700">
+                                  <p className="text-sm text-gray-700 dark:text-white/90">
                                     {formatDateTime(user.liked_at)}
                                   </p>
                                 </div>

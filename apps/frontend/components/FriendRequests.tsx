@@ -132,7 +132,7 @@ const FriendRequests: React.FC = () => {
                 <div
                   key={request.initiator_id + "-" + user?.id}
                   className="flex items-center md:gap-2 gap-1 
-                justify-between hover:bg-gray-100 p-2 rounded-lg pr-0"
+                justify-between hover:bg-gray-100 dark:hover:bg-white/20 p-2 rounded-lg pr-0"
                 >
                   <div className="flex items-center gap-3 w-1/2">
                     <Tooltip content={request.initiator.full_name} delay={3000}>
@@ -169,7 +169,8 @@ const FriendRequests: React.FC = () => {
 
                     <Button
                       className="bg-gray-200 text-xs rounded-medium
-                  hover:bg-gray-300 transition"
+                  hover:bg-gray-300 transition dark:bg-white dark:hover:bg-white/80
+                  dark:text-black"
                       onPress={() =>
                         responseToFriendRequest(
                           ResponseFriendRequestAction.REJECT,

@@ -11,5 +11,6 @@ export const useGetProfile = (
     queryFn: () => getProfile(username, getUserQueryDto),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!username,
   });
 };

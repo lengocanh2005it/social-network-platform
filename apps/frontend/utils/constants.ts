@@ -1,3 +1,6 @@
+import { ReportReasonEnum } from "@repo/db";
+import { AlertCircle, FileText, MessageSquare, Users } from "lucide-react";
+
 export const genders = [
   { key: "male", label: "Male" },
   { key: "female", label: "Female" },
@@ -41,3 +44,81 @@ export const OTP_RESEND_INTERVAL = 120;
 export const HIDE_DURATION = 5000;
 export const MAX_DISPLAY_FRIEND_LISTS = 9;
 export const MAX_VISIBLE_CHATBOX = 3;
+
+export const colorMap = {
+  blue: {
+    border: "hover:border-blue-500",
+    text: "text-blue-400",
+    bg: "bg-blue-900/50",
+    iconBg: "bg-blue-100 dark:bg-blue-900/50",
+    iconColor: "text-blue-600 dark:text-blue-400",
+  },
+  purple: {
+    border: "hover:border-purple-500",
+    text: "text-purple-400",
+    bg: "bg-purple-900/50",
+    iconBg: "bg-purple-100 dark:bg-purple-900/50",
+    iconColor: "text-purple-600 dark:text-purple-400",
+  },
+  green: {
+    border: "hover:border-green-500",
+    text: "text-green-400",
+    bg: "bg-green-900/50",
+    iconBg: "bg-green-100 dark:bg-green-900/50",
+    iconColor: "text-green-600 dark:text-green-400",
+  },
+  red: {
+    border: "hover:border-red-500",
+    text: "text-red-400",
+    bg: "bg-red-900/50",
+    iconBg: "bg-red-100 dark:bg-red-900/50",
+    iconColor: "text-red-600 dark:text-red-400",
+  },
+};
+
+export const statConfig = [
+  {
+    key: "userStats",
+    title: "Total Users",
+    icon: Users,
+    color: "blue",
+    sub: "vs last month",
+  },
+  {
+    key: "postStats",
+    title: "Posts Today",
+    icon: FileText,
+    color: "purple",
+    sub: "vs yesterday",
+  },
+  {
+    key: "newComments",
+    title: "New Comments",
+    icon: MessageSquare,
+    color: "green",
+    sub: "vs last week",
+  },
+  {
+    key: "activeReports",
+    title: "Active Reports",
+    icon: AlertCircle,
+    color: "red",
+    sub: "needs attention",
+  },
+] as const;
+
+export const reasonOptions = [
+  { key: "inappropriate", label: "Inappropriate content" },
+  { key: "violation", label: "Violation of community guidelines" },
+  { key: "reported", label: "Reported by multiple users" },
+  { key: "misleading", label: "Misleading information" },
+];
+
+export const reasonReportOptions: { key: ReportReasonEnum; label: string }[] = [
+  { key: "abuse", label: "Abusive or harmful content" },
+  { key: "spam", label: "Spam or misleading" },
+  { key: "inappropriate", label: "Inappropriate content" },
+  { key: "harassment", label: "Harassment or bullying" },
+  { key: "misinformation", label: "False or misleading information" },
+  { key: "other", label: "Other" },
+];

@@ -53,7 +53,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/home") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/profile")
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/dashboard")
   ) {
     const response = NextResponse.redirect(
       new URL("/auth/sign-in", request.url),

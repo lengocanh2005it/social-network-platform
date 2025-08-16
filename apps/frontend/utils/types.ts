@@ -1,11 +1,12 @@
-import { PostDetails } from "@/store";
+import { FullUserType, PostDetails } from "@/store";
 import {
   AuthMethod,
+  colorMap,
   CreateCommentTargetType,
   FriendListType,
   ResponseFriendRequestAction,
 } from "@/utils/constants";
-import { ZonedDateTime } from "@internationalized/date";
+import { DateValue, ZonedDateTime } from "@internationalized/date";
 import {
   ContentStoryType,
   FriendShipStatusType,
@@ -15,12 +16,18 @@ import {
   PostContentType,
   PostPrivaciesEnum,
   PostPrivaciesType,
+  ReportReasonEnum,
+  ReportStatusEnum,
+  ReportsType,
+  ReportTypeEnum,
+  StoryStatusEnum,
   ThemeEnum,
   UserEducationsType,
   UserProfilesType,
   UsersType,
   UserWorkPlacesType,
 } from "@repo/db";
+import { StringNullableChain } from "lodash";
 
 export type DeviceDetails = {
   device_name: string;
@@ -127,7 +134,6 @@ export interface SocialItem {
 export type GetUserQueryDto = {
   includeProfile?: boolean;
   includeFollowings?: boolean;
-  includeGroups?: boolean;
   includeWorkPlaces?: boolean;
   includeTargets?: boolean;
   includeEducations?: boolean;
@@ -558,6 +564,7 @@ export type Message = {
     full_name: string;
     avatar_url: string;
     username: string;
+    is_online: boolean;
   };
   parent_message?: Message;
   is_read_by_receiver: boolean;
@@ -590,6 +597,7 @@ export type GetStoryViewersQueryDto = GetFeedQueryDto;
 export type Story = {
   id: string;
   content_type: ContentStoryType;
+  status: StoryStatusEnum;
   content_url: string | null;
   text_content: string | null;
   created_at: string;
@@ -710,4 +718,144 @@ export type BookMark = {
 
 export type UpdateThemeDto = {
   theme: ThemeEnum;
+};
+
+export type Color = keyof typeof colorMap;
+
+export type GetActivitiesQueryDto = GetFeedQueryDto & {
+  fullName?: string;
+};
+
+export type Activity = {
+  id: string;
+  action: string;
+  user_id: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  user: FullUserType;
+};
+
+export type StatsType = {
+  title: string;
+  value: number;
+  percent: string;
+  trend: string;
+  icon: React.ElementType;
+  color: Color;
+  sub: string;
+};
+
+export type GrowthOverviewType = {
+  name: string;
+  users: number;
+  posts: number;
+};
+
+export type GetUsersDashboardQueryDto = GetFeedQueryDto & {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type ErrorState = {
+  email?: string;
+  phoneNumber?: string;
+};
+
+export type FilterUserType = {
+  fullName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  exactMatch: boolean;
+};
+
+export type UserDashboardType = UsersType & {
+  profile: UserProfilesType;
+} & {
+  is_online: boolean;
+  last_seen_at: string;
+};
+
+export type UpdateUserSuspensionDto = {
+  is_suspended: boolean;
+  reason?: string;
+};
+
+export type UpdateUserSuspensionData = {
+  userId: string;
+  updateUserSuspensionDto: UpdateUserSuspensionDto;
+};
+
+export type GetPostsDashboardQueryDto = GetFeedQueryDto & {
+  email?: string;
+};
+
+export type UpdatePostStatusData = {
+  postId: string;
+  updatePostStatusDto: {
+    is_active: boolean;
+    reason?: string;
+  };
+};
+
+export type GetSharesPostQueryDto = GetFeedQueryDto;
+
+export type GetStoriesDashboardQueryDto = GetFeedQueryDto & {
+  email?: string;
+  from?: DateValue;
+  to?: DateValue;
+};
+
+export type UpdateStoryStatusData = {
+  storyId: string;
+  updateStoryStatusDto: {
+    status: StoryStatusEnum;
+    reason?: string;
+  };
+};
+
+export type ReportPostDto = {
+  postId: string;
+  reason: ReportReasonEnum;
+  type: ReportTypeEnum;
+};
+
+export type GetReportsQueryDto = GetFeedQueryDto & {
+  type?: ReportTypeEnum;
+  from?: DateValue;
+  to?: DateValue;
+};
+
+export type ReportsDashboardDetailsType = ReportsType & {
+  reporter: {
+    id: string;
+    email: string;
+    profile: {
+      first_name: string;
+      last_name: string;
+      avatar_url: string;
+      username: string;
+    };
+  };
+};
+
+export type ReportsDashboardType = {
+  targetId: string;
+  type: ReportTypeEnum;
+  count: number;
+  reports: ReportsDashboardDetailsType[];
+  post?: PostDetails;
+  story?: Story;
+};
+
+export type GetReportersOfReportQueryDto = GetFeedQueryDto & {
+  reason?: ReportReasonEnum;
+};
+
+export type UpdateReportStatusDto = {
+  reportId: string;
+  status: ReportStatusEnum;
 };

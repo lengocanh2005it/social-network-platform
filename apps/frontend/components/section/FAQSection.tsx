@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const faqs = [
   {
@@ -28,10 +28,17 @@ const faqs = [
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
+
+  if (!isMounted) return null;
 
   return (
     <section className="py-24 bg-gray-50 dark:bg-neutral-950 transition-colors duration-500">

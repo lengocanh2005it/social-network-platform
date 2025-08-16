@@ -6,3 +6,4 @@ export * from './is-valid-access-token.decorator';
 export * from './is-valid-refresh-token.decorator';
 export * from './to-boolean.decrorator';
 export * from './kafka-payload.decorator';
+export * from './skip-user-activity.decorator';

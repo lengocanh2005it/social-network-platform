@@ -82,7 +82,7 @@ const PostOptions: React.FC<PostOptionsProps> = ({
     <>
       <div
         className={`flex flex-col relative md:gap-3 gap-2 border-t border-black/10
-          dark:border-white/40
+          dark:border-white/20
           ${!setIsOpen && "pb-2"} ${post.topLikedUsers?.length !== 0 ? "pt-3" : "pt-2"}`}
       >
         <div className="flex items-center justify-between md:gap-3 gap-2">

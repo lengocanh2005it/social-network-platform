@@ -1,4 +1,4 @@
-import { RoleEnum } from '@repo/db';
+import { ReportTypeEnum, RoleEnum } from '@repo/db';
 import { config } from 'dotenv';
 
 config();
@@ -116,6 +116,11 @@ export const KAFKA_SERVICES = [
     serviceName: 'NOTIFICATIONS_SERVICE',
     clientId: 'notifications',
     groupId: 'notifications-group',
+  },
+  {
+    serviceName: 'ADMIN_SERVICE',
+    clientId: 'admin',
+    groupId: 'admin-group',
   },
 ] as const;
 
@@ -242,6 +247,7 @@ export type NotificationParams = {
   senderName?: string;
   postTitle?: string;
   commentContent?: string;
+  reason?: string;
 };
 
 export const fieldDisplayMap: Record<string, string> = {
@@ -258,3 +264,24 @@ export enum FriendListType {
   REQUESTS = 'requests',
   SUGGESTIONS = 'suggestions',
 }
+
+export type StatsType = {
+  value: number;
+  percent: number;
+  trend: 'up' | 'down';
+};
+
+export type ActivityType =
+  | 'post'
+  | 'comment'
+  | 'reply_comment'
+  | 'story'
+  | 'profile'
+  | 'report'
+  | 'delete';
+
+export type GroupedReport = {
+  target_id: string;
+  type: ReportTypeEnum;
+  _count: { _all: number };
+};

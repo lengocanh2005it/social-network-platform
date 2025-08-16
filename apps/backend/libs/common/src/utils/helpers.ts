@@ -1,5 +1,6 @@
 import {
   ACCESS_TOKEN_LIFE,
+  ActivityType,
   IS_PRODUCTION,
   NotificationParams,
   REFRESH_TOKEN_LIFE,
@@ -9,7 +10,7 @@ import { HttpService } from '@nestjs/axios';
 import { RequestTimeoutException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy } from '@nestjs/microservices';
-import { NotificationType } from '@repo/db';
+import { NotificationType, UserProfilesType, UsersType } from '@repo/db';
 import * as bcryptjs from 'bcryptjs';
 import { instanceToPlain } from 'class-transformer';
 import { config } from 'dotenv';
@@ -23,8 +24,6 @@ import {
 } from 'rxjs';
 import { createLogger, format, transports } from 'winston';
 import * as DailyRotateFile from 'winston-daily-rotate-file';
-import * as path from 'path';
-import * as fs from 'fs';
 
 config();
 
@@ -294,6 +293,16 @@ export const generateNotificationMessage = (
       return `${params.senderName} added a new story.`;
     case 'system_announcement':
       return `There is a new system announcement.`;
+    case 'post_removed_by_admin':
+      return `Your post was removed by an admin for the following reason: "${params.reason}".`;
+    case 'post_restored_by_admin':
+      return `Your post has been restored by an admin.`;
+    case 'story_locked_by_admin':
+      return `Your story has been locked by an admin for the following reason: "${params.reason}".`;
+    case 'story_unlocked_by_admin':
+      return `Your story has been unlocked by an admin.`;
+    case 'story_expired_notification':
+      return `Your story has expired and is no longer visible to others.`;
     default:
       return `You have a new notification.`;
   }
@@ -353,3 +362,24 @@ export const appLogger = createLogger({
     new transports.Console(),
   ],
 });
+
+export const generateActionContent = (type: ActivityType): string => {
+  switch (type) {
+    case 'post':
+      return `created a new post.`;
+    case 'comment':
+      return `commented on a post.`;
+    case 'reply_comment':
+      return `replied to a comment.`;
+    case 'story':
+      return `shared a story.`;
+    case 'profile':
+      return `updated their profile.`;
+    case 'report':
+      return `resolved a report.`;
+    case 'delete':
+      return `deleted a comment.`;
+    default:
+      return `performed an action.`;
+  }
+};

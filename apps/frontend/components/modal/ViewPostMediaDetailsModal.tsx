@@ -3,6 +3,7 @@ import GlobalIcon from "@/components/ui/icons/global";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useCreateComment,
+  useDeleteComment,
   useGetCommentsMedia,
   useGetMediaOfPost,
   useLikeMediaPost,
@@ -14,14 +15,16 @@ import {
   CreateCommentDto,
   CreateCommentTargetType,
   formatDateTime,
+  handleAxiosError,
   MediaCommentType,
   MediaDetails,
 } from "@/utils";
-import { Avatar, Button } from "@heroui/react";
+import { Avatar, Button, Divider } from "@heroui/react";
 import {
   PostContentType,
   PostContentTypeEnum,
   PostPrivaciesEnum,
+  RoleEnum,
 } from "@repo/db";
 import {
   Camera,
@@ -38,6 +41,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface ViewPostMediaDetailsOverlayProps {
   post: PostDetails;
@@ -46,6 +50,7 @@ interface ViewPostMediaDetailsOverlayProps {
   type: "video" | "image";
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  shouldHideAction?: boolean;
 }
 
 const icons = [
@@ -78,7 +83,7 @@ const icons = [
 
 const ViewPostMediaDetailsOverlay: React.FC<
   ViewPostMediaDetailsOverlayProps
-> = ({ post, mediaId, mediaUrl, type, setIsOpen }) => {
+> = ({ post, mediaId, mediaUrl, type, setIsOpen, shouldHideAction }) => {
   const { user } = useUserStore();
   const [comment, setComment] = React.useState<string>("");
   const { data } = useGetMediaOfPost(post.id, mediaId, type);
@@ -88,10 +93,12 @@ const ViewPostMediaDetailsOverlay: React.FC<
   const [media, setMedia] = useState<MediaDetails | null>(null);
   const [liked, setLiked] = useState(media?.likedByCurrentUser);
   const [comments, setComments] = useState<MediaCommentType[]>([]);
-  const [nextCuror, setNextCuror] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const { mutate: mutateLikeMediaPost } = useLikeMediaPost();
   const { mutate: mutateUnlikeMediaPost } = useUnlikeMediaPost();
   const { mutate: mutateCreateComment } = useCreateComment();
+  const { mutate: mutateDeleteComment, isPending } = useDeleteComment();
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
   useEffect(() => {
     setLiked(media?.likedByCurrentUser ? true : false);
@@ -106,8 +113,8 @@ const ViewPostMediaDetailsOverlay: React.FC<
       setComments(commentsData.data);
     }
 
-    setNextCuror(commentsData?.nextCursor ? commentsData.nextCursor : null);
-  }, [data, setMedia, commentsData, setComments, setNextCuror]);
+    setNextCursor(commentsData?.nextCursor ? commentsData.nextCursor : null);
+  }, [data, setMedia, commentsData, setComments, setNextCursor]);
 
   const toggleLike = () => {
     if (liked) {
@@ -203,18 +210,57 @@ const ViewPostMediaDetailsOverlay: React.FC<
   };
 
   const handleLoadMore = async () => {
-    if (!nextCuror) return;
+    if (!nextCursor || hasMore) return;
 
-    const data = await getCommentsOfMedia(post.id, mediaId, {
-      type,
-      after: nextCuror,
-    });
+    setHasMore(true);
 
-    if (data?.data) {
-      setComments((prev) => [...prev, ...data.data]);
+    try {
+      const data = await getCommentsOfMedia(post.id, mediaId, {
+        type,
+        after: nextCursor,
+      });
+
+      if (data?.data) {
+        setComments((prev) => [...prev, ...data.data]);
+      }
+
+      setNextCursor(data?.nextCursor);
+    } catch (error) {
+      handleAxiosError(error);
+    } finally {
+      setHasMore(false);
     }
+  };
 
-    setNextCuror(data?.nextCursor);
+  const handleDeleteComment = (commentId: string) => {
+    mutateDeleteComment(
+      {
+        commentId,
+        postId: post.id,
+      },
+      {
+        onSuccess: async (data) => {
+          if (media && data) {
+            setMedia((prev) => ({
+              ...prev!,
+              total_comments: prev!.total_comments - 1,
+            }));
+
+            setComments((prev) => prev.filter((p) => p.id !== commentId));
+
+            if (comments.length - 1 <= 2 && nextCursor) {
+              setTimeout(() => {
+                handleLoadMore();
+              }, 150);
+            }
+
+            toast.success("This comment has been deleted successfully.", {
+              position: "bottom-right",
+            });
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -315,33 +361,35 @@ const ViewPostMediaDetailsOverlay: React.FC<
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4 text-gray-600">
-                    <div
-                      className={`flex justify-center cursor-pointer items-center gap-2 p-3 
+                  {!shouldHideAction && (
+                    <div className="grid grid-cols-2 gap-4 text-gray-600 dark:text-white/80">
+                      <div
+                        className={`flex justify-center cursor-pointer items-center gap-2 p-3 
           rounded-lg transition-all duration-250 ease-in select-none ${
             liked ? "text-blue-600" : "hover:bg-white/20"
           }`}
-                      onClick={toggleLike}
-                    >
-                      <ThumbsUpIcon
-                        size={20}
-                        fill={liked ? "blue" : "none"}
-                        stroke={liked ? "blue" : "currentColor"}
-                      />
-                      <p className="text-md">{liked ? "Liked" : "Like"}</p>
-                    </div>
+                        onClick={toggleLike}
+                      >
+                        <ThumbsUpIcon
+                          size={20}
+                          fill={liked ? "blue" : "none"}
+                          stroke={liked ? "blue" : "currentColor"}
+                        />
+                        <p className="text-md">{liked ? "Liked" : "Like"}</p>
+                      </div>
 
-                    <div
-                      className="flex justify-center cursor-pointer items-center gap-2 
+                      <div
+                        className="flex justify-center cursor-pointer items-center gap-2 
                   p-3 rounded-lg hover:bg-white/20 transition-all duration-250 ease-in select-none"
-                    >
-                      <Share2 size={20} />
-                      <p className="text-md">Share</p>
+                      >
+                        <Share2 size={20} />
+                        <p className="text-md">Share</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                {user && (
+                {user && !shouldHideAction && (
                   <div className="flex md:gap-3 gap-2">
                     <Avatar
                       src={user.profile.avatar_url}
@@ -389,6 +437,10 @@ const ViewPostMediaDetailsOverlay: React.FC<
                   </div>
                 )}
 
+                {user?.role === RoleEnum.admin && (
+                  <Divider className="dark:bg-white/30" />
+                )}
+
                 {comments?.length > 0 ? (
                   <>
                     <div className="flex flex-col md:gap-3 gap-2 md:mt-2 mt-1">
@@ -420,16 +472,38 @@ const ViewPostMediaDetailsOverlay: React.FC<
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            <div
+                              className="flex items-center gap-3 mt-1 text-xs 
+                            text-gray-500 dark:text-white/60"
+                            >
                               <span>{formatDateTime(comment.created_at)}</span>
-                              <button className={`cursor-pointer`}>Like</button>
+                              {user?.role === RoleEnum.user && (
+                                <button className={`cursor-pointer`}>
+                                  Like
+                                </button>
+                              )}
+
+                              {(user?.role === RoleEnum.admin ||
+                                (user?.role === RoleEnum.user &&
+                                  post.user.id === user.id) ||
+                                comment.user.id === user?.id) && (
+                                <button
+                                  className={`cursor-pointer hover:dark:text-white/80`}
+                                  onClick={() => {
+                                    if (isPending) return;
+                                    handleDeleteComment(comment.id);
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    {nextCuror && (
+                    {nextCursor && (
                       <p
                         className="text-right mt-3 cursor-pointer hover:underline hover:text-blue-500"
                         onClick={handleLoadMore}
@@ -442,10 +516,17 @@ const ViewPostMediaDetailsOverlay: React.FC<
                   <div className="flex flex-col md:gap-1 items-center md:mt-4 mt-3">
                     <h1>No Comments Yet</h1>
 
-                    <p className="text-white/60">
-                      Be the first to leave a comment on this{" "}
-                      {type === "video" ? "video" : "image"}.
-                    </p>
+                    {user?.role === RoleEnum.admin ? (
+                      <p className="text-white/70">
+                        The image hasn&apos;t received any comments from users
+                        yet.
+                      </p>
+                    ) : (
+                      <p className="text-white/70">
+                        Be the first to leave a comment on this{" "}
+                        {type === "video" ? "video" : "image"}.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

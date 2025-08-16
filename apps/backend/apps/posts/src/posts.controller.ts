@@ -13,6 +13,7 @@ import {
   GetTaggedUsersQueryDto,
   GetUserLikesQueryDto,
   LikePostMediaDto,
+  ReportPostDto,
   UnlikeMediaPostQueryDto,
   UpdatePostDto,
 } from '@app/common/dtos/posts';
@@ -306,5 +307,44 @@ export class PostsController {
     deleteBookMarksQueryDto: DeleteBookMarksQueryDto,
   ) {
     return this.postsService.deleteBookMarks(email, deleteBookMarksQueryDto);
+  }
+
+  @MessagePattern('get-posts-today')
+  async getPostsToday() {
+    return JSON.stringify(await this.postsService.getPostsToday());
+  }
+
+  @MessagePattern('get-new-comments')
+  async getNewComments() {
+    return JSON.stringify(await this.postsService.getNewComments());
+  }
+
+  @MessagePattern('get-active-reports')
+  async getActiveReports() {
+    return JSON.stringify(await this.postsService.getActiveReports());
+  }
+
+  @MessagePattern('get-formatted-post')
+  async getFormattedPost(
+    @Payload('postId') postId: string,
+    @Payload('userId') userId: string,
+    @Payload('parentPostId') parentPostId?: string,
+    @Payload('withDeleted') withDeleted?: boolean,
+  ) {
+    return this.postsService.getFormattedPost(
+      postId,
+      userId,
+      parentPostId,
+      withDeleted,
+    );
+  }
+
+  @MessagePattern('report-post')
+  async reportPost(
+    @Payload('email') email: string,
+    @Payload('postId') postId: string,
+    @Payload('reportPostDto') reportPostDto: ReportPostDto,
+  ) {
+    return this.postsService.reportPost(email, postId, reportPostDto);
   }
 }

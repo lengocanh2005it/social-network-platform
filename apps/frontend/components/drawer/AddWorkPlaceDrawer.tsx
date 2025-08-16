@@ -148,7 +148,7 @@ const AddWorkPlaceDrawer = () => {
             <>
               <DrawerHeader className="flex flex-col gap-1 text-center">
                 <h1>Add New Work Place</h1>
-                <p className="text-gray-600 font-normal">
+                <p className="text-gray-600 font-normal dark:text-white/70">
                   Fill out the form to add a new work place record.
                 </p>
               </DrawerHeader>
@@ -163,7 +163,9 @@ const AddWorkPlaceDrawer = () => {
                       name="company_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Name</FormLabel>
+                          <FormLabel className="text-black dark:text-white">
+                            Company Name
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="FPT Software" {...field} />
                           </FormControl>
@@ -177,7 +179,9 @@ const AddWorkPlaceDrawer = () => {
                       name="position"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Position</FormLabel>
+                          <FormLabel className="dark:text-white text-black">
+                            Position
+                          </FormLabel>
                           <FormControl>
                             <Input placeholder="Backend Developer" {...field} />
                           </FormControl>
@@ -191,7 +195,7 @@ const AddWorkPlaceDrawer = () => {
                       name="start_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black">
+                          <FormLabel className="text-black dark:text-white">
                             Start Date
                           </FormLabel>
                           <FormControl>
@@ -214,7 +218,7 @@ const AddWorkPlaceDrawer = () => {
                       name="end_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-black">
+                          <FormLabel className="text-black dark:text-white">
                             End Date (Optional)
                           </FormLabel>
                           <FormControl>

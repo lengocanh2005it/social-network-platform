@@ -22,6 +22,7 @@ import { Verify2FaActions } from '@app/common/utils';
 import { Controller } from '@nestjs/common';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
+import { UpdateUserSuspensionDto } from '@app/common/dtos/admin';
 
 @Controller()
 export class UsersController {
@@ -304,5 +305,24 @@ export class UsersController {
     @Payload('updateThemeDto') updateThemeDto: UpdateThemeDto,
   ) {
     return this.usersService.updateThemeOfUser(email, updateThemeDto);
+  }
+
+  @MessagePattern('get-users-stats')
+  async getUsersStats() {
+    return JSON.stringify(await this.usersService.getUsersStats());
+  }
+
+  @MessagePattern('update-user-suspension')
+  async updateUserSuspension(
+    @Payload('email') email: string,
+    @Payload('userId') userId: string,
+    @Payload('updateUserSuspensionDto')
+    updateUserSuspensionDto: UpdateUserSuspensionDto,
+  ) {
+    return this.usersService.updateUserSuspension(
+      email,
+      userId,
+      updateUserSuspensionDto,
+    );
   }
 }

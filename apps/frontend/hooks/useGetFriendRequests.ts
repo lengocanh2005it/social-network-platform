@@ -7,5 +7,6 @@ export const useGetFriendRequests = (userId: string) => {
     queryFn: () => getFriendRequests(),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    enabled: !!userId,
   });
 };
