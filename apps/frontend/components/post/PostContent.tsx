@@ -49,32 +49,6 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
         <PostMediaItem post={homePost} images={homePost.images} />
       )}
 
-      {/* <div
-        className={`grid gap-3 md:mt-3 mt-2 ${
-          homePost.images.length === 1
-            ? "grid-cols-1"
-            : homePost.images.length === 2
-              ? "grid-cols-2"
-              : "grid-cols-3"
-        }`}
-      >
-        {homePost.images.map((image) => (
-          <div
-            key={image.id}
-            className="relative w-full aspect-[4/3] overflow-hidden rounded-md"
-          >
-            <Image
-              src={image.image_url}
-              alt="post"
-              fill
-              priority
-              sizes="100vw"
-              className="select-none"
-            />
-          </div>
-        ))}
-      </div> */}
-
       {homePost?.parent_post_id && (
         <>
           {homePost?.parent_post ? (
@@ -89,7 +63,7 @@ const PostContent: React.FC<PostContentProps> = ({ homePost }) => {
               <div
                 className="p-6 flex flex-col items-center justify-center
               text-center border border-black/10 dark:border-white/20
-              rounded-lg gap-2 md:mb-3 mb-2"
+              rounded-lg gap-2 md:mb-3 mb-2 mt-3"
               >
                 <AlertTriangle className="text-yellow-500 w-10 h-10 flex-shrink-0" />
                 <p className="text-sm text-gray-600 dark:text-gray-300">

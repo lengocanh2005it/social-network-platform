@@ -127,3 +127,9 @@ export const createTrustDevice = async (
 
   return response.data;
 };
+
+export const useGetProfileFallback = async () => {
+  const response = await axios.get(`/auth/profile`);
+
+  return response.data;
+};
