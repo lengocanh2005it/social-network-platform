@@ -21,7 +21,7 @@ const CallToActionSection = () => {
   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
       className="relative overflow-hidden py-20 px-6 sm:px-10 rounded-3xl 
         max-w-6xl mx-auto mt-24 shadow-2xl bg-gradient-to-br from-indigo-600 

@@ -74,9 +74,20 @@ axiosInstance.interceptors.response.use(
           "Refresh token is invalid or expired.",
         ))
     ) {
-      toast.error(error?.response?.data?.message);
-      localStorage.removeItem("user-storage");
-      localStorage.removeItem("app-storage");
+      const fomattedErrorMessage = error?.response?.data?.message?.includes(
+        "Missing access and refresh tokens. Please log in again.",
+      )
+        ? "Your session has expired. Please log in again."
+        : error?.response?.data?.message;
+      toast.error(fomattedErrorMessage);
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(";").forEach((cookie) => {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substring(0, eqPos) : cookie;
+        document.cookie =
+          name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      });
       window.location.href = "/auth/sign-in";
     }
 

@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type FullUserType = UsersType & {
+export type FullUserType = Omit<UsersType, "password"> & {
   profile: UserProfilesType;
   educations: UserEducationsType[];
   socials: UserSocialsType[];

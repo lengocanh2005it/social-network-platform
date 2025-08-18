@@ -11,7 +11,7 @@ const SignInSection = () => {
       <div className="text-center w-full flex flex-col items-center justify-center md:gap-1 h-1/2">
         <h1 className="md:text-2xl text-xl">Sign In</h1>
 
-        <p className="md:text-sm text-[14px] text-black/60 dark:text-white">
+        <p className="md:text-sm text-[14px] text-black/60 dark:text-white/60">
           Sign in to catch up with your friends and shares moments together
         </p>
       </div>

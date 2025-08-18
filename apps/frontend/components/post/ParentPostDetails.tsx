@@ -18,7 +18,8 @@ const ParentPostDetails: React.FC<ParentPostDetailsProps> = ({
 }) => {
   return (
     <div
-      className="p-6 border border-black/10 dark:border-white/20 rounded-lg md:mb-3 mb-2"
+      className="p-6 border border-black/10 dark:border-white/20 rounded-lg md:mb-3 mb-2
+      mt-2"
       onClick={onClick}
     >
       <div className="flex items-center mb-3 gap-2">

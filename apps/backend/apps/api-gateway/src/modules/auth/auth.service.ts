@@ -24,6 +24,7 @@ export class AuthService implements OnModuleInit {
   constructor(
     @Inject('AUTH_SERVICE')
     private readonly authClient: ClientKafka,
+    @Inject('USERS_SERVICE') private readonly usersClient: ClientKafka,
   ) {}
 
   onModuleInit() {
@@ -49,6 +50,7 @@ export class AuthService implements OnModuleInit {
     patterns.forEach((pattern) => {
       this.authClient.subscribeToResponseOf(pattern);
     });
+    this.usersClient.subscribeToResponseOf('get-user-by-field');
   }
 
   public signIn = async (signInDto: SignInDto) => {
@@ -180,6 +182,20 @@ export class AuthService implements OnModuleInit {
       JSON.stringify({
         finger_print,
         trustDeviceDto: toPlain(trustDeviceDto),
+      }),
+    );
+  };
+
+  public getProfile = async (email: string) => {
+    return sendWithTimeout(
+      this.usersClient,
+      'get-user-by-field',
+      JSON.stringify({
+        field: 'email',
+        value: email,
+        getUserQueryDto: {
+          includeProfile: true,
+        },
       }),
     );
   };

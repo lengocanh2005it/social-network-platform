@@ -1,3 +1,4 @@
+import { SkipUserActivity } from '@app/common/decorators';
 import {
   ChangePasswordDto,
   ForgotPasswordDto,
@@ -19,6 +20,7 @@ import { clearCookies, initializeCookies } from '@app/common/utils';
 import {
   Body,
   Controller,
+  Get,
   Headers,
   HttpException,
   HttpStatus,
@@ -30,7 +32,6 @@ import { RoleEnum } from '@repo/db';
 import { Request, Response } from 'express';
 import { KeycloakUser, Public, Roles } from 'nest-keycloak-connect';
 import { AuthService } from './auth.service';
-import { SkipUserActivity } from '@app/common/decorators';
 
 @Controller('auth')
 export class AuthController {
@@ -139,7 +140,7 @@ export class AuthController {
   }
 
   @Public()
-  @Post('token/refresh')
+  @Post('refresh-token')
   async refreshToken(
     @Req() req: Request,
     @Res() res: Response,
@@ -318,5 +319,19 @@ export class AuthController {
       );
 
     return this.authService.trustDevice(finger_print, trustDeviceDto);
+  }
+
+  @Get('profile')
+  @Roles(RoleEnum.admin, RoleEnum.user)
+  async getProfile(@KeycloakUser() user: any) {
+    const { email } = user;
+
+    if (!email || typeof email !== 'string')
+      throw new HttpException(
+        'Email not found in the access token.',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return this.authService.getProfile(email);
   }
 }

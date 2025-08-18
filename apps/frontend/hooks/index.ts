@@ -58,6 +58,7 @@ export * from "./useInfiniteScroll";
 export * from "./useLikeComment";
 export * from "./useLikeMediaPost";
 export * from "./useLikePost";
+export * from "./useMutateGetProfileFallback";
 export * from "./useOAuthCallback";
 export * from "./useReportPost";
 export * from "./useResetPassword";

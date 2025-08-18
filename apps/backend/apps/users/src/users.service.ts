@@ -743,7 +743,7 @@ export class UsersService implements OnModuleInit {
         message: `This ${fieldDisplayMap[field] || field} has not been registered.`,
       });
 
-    return findUser;
+    return omit(findUser, ['password']);
   };
 
   public updateStatus2Fa = async (email: string, action: Verify2FaActions) => {
