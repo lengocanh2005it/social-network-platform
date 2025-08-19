@@ -2,11 +2,12 @@
 import FriendRequests from "@/components/FriendRequests";
 import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useFingerprint, useGetFriendsList, useSocket } from "@/hooks";
+import { getFriendsList } from "@/lib/api/users";
 import { useFriendStore, useUserStore } from "@/store";
-import { FriendListType, SocketNamespace } from "@/utils";
+import { FriendListType, handleAxiosError, SocketNamespace } from "@/utils";
 import { Avatar, Divider } from "@heroui/react";
 import { Ellipsis, SearchIcon, Users } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const SideBarPage: React.FC = () => {
   const { user } = useUserStore();
@@ -18,11 +19,14 @@ const SideBarPage: React.FC = () => {
     openChat,
     clearOpenChats,
     updateOnlineStatus,
+    addFriends,
   } = useFriendStore();
   const { on, off, emit } = useSocket(
     SocketNamespace.PRESENCE,
     fingerprint ?? "",
   );
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isHasMore, setIsHasMore] = useState<boolean>(false);
 
   useEffect(() => {
     const handleOnlineFriends = (friendIds: string[]) =>
@@ -60,15 +64,44 @@ const SideBarPage: React.FC = () => {
     type: FriendListType.FRIENDS,
   });
 
+  const loadMore = async () => {
+    if (isHasMore || !nextCursor || !user?.profile?.username) return;
+    try {
+      setIsHasMore(true);
+      const res = await getFriendsList({
+        username: user.profile.username,
+        type: FriendListType.FRIENDS,
+        after: nextCursor,
+      });
+      addFriends(res?.data ?? []);
+      setNextCursor(res?.nextCursor ?? null);
+    } catch (error) {
+      handleAxiosError(error);
+    } finally {
+      setIsHasMore(false);
+    }
+  };
+
   useEffect(() => {
     if (data?.data) setFriends(data.data);
     if (data?.total_friends) setTotalFriends(data.total_friends);
-
+    setNextCursor(data?.nextCursor ?? null);
     return () => clearOpenChats();
-  }, [data, setFriends, setTotalFriends, clearOpenChats]);
+  }, [data, setFriends, setTotalFriends, clearOpenChats, setNextCursor]);
 
   return (
-    <main className="flex flex-col md:gap-1 flex-1">
+    <main
+      className="flex flex-col md:gap-1 flex-1 overflow-y-auto h-full pr-2 pt-6"
+      onScroll={(e) => {
+        const target = e.currentTarget;
+        if (
+          target.scrollTop + target.clientHeight >= target.scrollHeight - 20 &&
+          nextCursor
+        ) {
+          loadMore();
+        }
+      }}
+    >
       <FriendRequests />
 
       <Divider className="md:my-3 my-2 dark:bg-white/30" />
@@ -127,6 +160,8 @@ const SideBarPage: React.FC = () => {
                       </li>
                     ))}
                 </ul>
+
+                {isHasMore && <PrimaryLoading />}
               </>
             ) : (
               <div
