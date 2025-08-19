@@ -157,7 +157,7 @@ const BookMarksTab: React.FC = () => {
     <div
       className="bg-white rounded-lg w-full shadow dark:shadow-none p-4 flex 
       flex-col md:gap-4 gap-3 relative
-    dark:bg-black dark:text-white"
+    dark:bg-black dark:text-white dark:border dark:border-gray-700"
     >
       <div className="flex flex-col text-medium">
         <h1 className="text-medium">Your Bookmarks</h1>
@@ -166,18 +166,18 @@ const BookMarksTab: React.FC = () => {
         </p>
       </div>
 
-      <Divider className="bg-gray-200 dark:bg-white/20" />
+      <Divider className="bg-gray-200 dark:bg-gray-700" />
 
       <>
         {currentPageData.length === 0 && !isLoading ? (
           <>
             <div
-              className="text-center text-gray-500 mt-4 flex flex-col items-center justify-center
-            h-[20vh]"
+              className="text-center text-gray-500 dark:text-white/70 
+              mt-4 flex flex-col items-center justify-center h-[20vh]"
             >
               <Bookmark
                 className="mx-auto w-10 h-10 text-gray-400 mb-2
-              dark:text-white/70"
+              dark:text-white/80"
               />
               <p> You don&apos;t have any bookmarks yet.</p>
             </div>
@@ -185,7 +185,7 @@ const BookMarksTab: React.FC = () => {
         ) : (
           <>
             <ScrollArea className="max-h-[450px]">
-              <div className="grid grid-cols-1 md:gap-3 gap-2 pb-2">
+              <div className="grid grid-cols-1 md:gap-3 gap-2 pb-2 pr-4">
                 {currentPageData.map((bookmark) => (
                   <div
                     key={bookmark.id}

@@ -78,7 +78,7 @@ const DeleteAccountSettings: React.FC = () => {
           )}
 
           {!user?.two_factor_enabled && (
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-white/70">
               To delete your account, please enable 2FA by going to the{" "}
               <strong>Security</strong> tab.
             </p>

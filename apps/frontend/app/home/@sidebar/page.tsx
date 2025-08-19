@@ -4,21 +4,8 @@ import PrimaryLoading from "@/components/loading/PrimaryLoading";
 import { useFingerprint, useGetFriendsList, useSocket } from "@/hooks";
 import { useFriendStore, useUserStore } from "@/store";
 import { FriendListType, SocketNamespace } from "@/utils";
-import {
-  Avatar,
-  Divider,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
-import {
-  CircleX,
-  Ellipsis,
-  MessageSquareWarning,
-  SearchIcon,
-  Users,
-} from "lucide-react";
+import { Avatar, Divider } from "@heroui/react";
+import { Ellipsis, SearchIcon, Users } from "lucide-react";
 import { useEffect } from "react";
 
 const SideBarPage: React.FC = () => {
@@ -97,30 +84,7 @@ const SideBarPage: React.FC = () => {
               <SearchIcon size={20} className="cursor-pointer" />
             )}
 
-            <Dropdown
-              placement="bottom-end"
-              className="text-black dark:text-white"
-              shouldBlockScroll={false}
-            >
-              <DropdownTrigger>
-                <Ellipsis
-                  size={30}
-                  className="cursor-pointer focus:outline-none"
-                />
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Profile Actions" variant="flat">
-                <DropdownItem key="test-1" startContent={<CircleX />}>
-                  Hide post
-                </DropdownItem>
-
-                <DropdownItem
-                  key="test-2"
-                  startContent={<MessageSquareWarning />}
-                >
-                  Test 1
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+            <Ellipsis size={30} className="cursor-pointer focus:outline-none" />
           </div>
         </div>
 

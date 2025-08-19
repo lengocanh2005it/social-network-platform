@@ -51,13 +51,13 @@ const ChatBoxItem: React.FC<ChatBoxItemProps> = ({ friend }) => {
           className="absolute bottom-15 left-0 right-0
         p-3 bg-gray-500 rounded-t-lg border border-black/10 text-white
         flex items-start justify-between text-sm z-[800]
-        dark:bg-black/70 dark:text-white dark:border-white/30"
+        dark:bg-black/70 dark:text-white dark:border-white/30 max-w-full"
         >
           <div className="flex flex-col">
             <span className="text-xs text-white/80">
               Replying to {parentMessage.user.full_name}:
             </span>
-            <span className="text-sm text-white truncate">
+            <span className="text-sm text-white truncate max-w-[250px]">
               {parentMessage.content}
             </span>
           </div>

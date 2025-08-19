@@ -83,7 +83,7 @@ export const useFriendStore = create<FriendState>()(
       removeFriend: (friendId: string) =>
         set((state) => ({
           friends: state.friends.filter(
-            (friend) => friend.user_id !== friendId,
+            (friend) => friend.user_id !== friendId
           ),
         })),
     }),
@@ -95,6 +95,6 @@ export const useFriendStore = create<FriendState>()(
         hiddenChats: state.hiddenChats,
         totalFriends: state.totalFriends,
       }),
-    },
-  ),
+    }
+  )
 );

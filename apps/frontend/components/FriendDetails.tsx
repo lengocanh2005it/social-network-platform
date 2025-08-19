@@ -7,6 +7,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Tooltip,
 } from "@heroui/react";
 import { Ellipsis } from "lucide-react";
 import Image from "next/image";
@@ -99,7 +100,10 @@ const FriendDetails: React.FC<FriendDetailsProps> = ({ friend }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+    <div
+      className="bg-white rounded-lg shadow p-4 flex items-center justify-between
+    dark:bg-black dark:text-white dark:border dark:border-gray-700"
+    >
       <div className="flex md:gap-3 gap-2 items-center">
         <div
           className="w-[100px] h-[100px] relative cursor-pointer opacity-90 hover:opacity-100
@@ -115,12 +119,20 @@ const FriendDetails: React.FC<FriendDetailsProps> = ({ friend }) => {
         </div>
 
         <div className="flex flex-col justify-between">
-          <h2
-            className="cursor-pointer hover:underline"
-            onClick={handleViewProfile}
-          >
-            {friend.full_name} {user?.id === friend.user_id && `(You)`}
-          </h2>
+          <div className="flex flex-col relative">
+            <h2
+              className="cursor-pointer hover:underline"
+              onClick={handleViewProfile}
+            >
+              {friend.full_name} {user?.id === friend.user_id && `(You)`}
+            </h2>
+
+            <Tooltip content="Username" delay={4000}>
+              <p className="text-sm text-black/70 dark:text-white/70">
+                @{friend.username}
+              </p>
+            </Tooltip>
+          </div>
 
           {friend?.mutual_friends > 0 && user?.id !== friend.user_id && (
             <p className="text-gray-500">
@@ -134,7 +146,7 @@ const FriendDetails: React.FC<FriendDetailsProps> = ({ friend }) => {
       {user?.id !== friend.user_id && (
         <Dropdown
           placement="bottom-end"
-          className="text-black"
+          className="text-black dark:text-white"
           shouldBlockScroll={false}
         >
           <DropdownTrigger>

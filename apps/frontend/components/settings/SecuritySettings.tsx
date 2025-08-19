@@ -88,7 +88,7 @@ const SecuritySettings = () => {
             </Button>
 
             {!is2FAEnabled && (
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-white/80">
                 Please enable 2FA to change your password.
               </p>
             )}

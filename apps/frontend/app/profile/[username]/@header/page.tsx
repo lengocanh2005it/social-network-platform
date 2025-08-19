@@ -1,6 +1,5 @@
 "use client";
 import EditImageButton from "@/components/button/EditImageButton";
-import ChatBox from "@/components/chatbox/ChatBox";
 import CreateStoryModal from "@/components/modal/CreateStoryModal";
 import PeopleKnow from "@/components/PeopleKnow";
 import {
@@ -759,8 +758,6 @@ const ProfileHeaderSection = () => {
           </div>
         </>
       )}
-
-      <ChatBox right={10} />
 
       <CreateStoryModal isOpen={isOpen} setIsOpen={setIsOpen} />
     </>
