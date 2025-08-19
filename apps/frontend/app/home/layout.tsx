@@ -41,7 +41,7 @@ export default function HomeLayout({
         <aside
           className="w-1/4 p-4 fixed top-20 right-0 bg-white z-10 
         h-[calc(98vh-4rem)] overflow-y-auto transition-all duration-300 ease-in-out
-        dark:bg-black dark:text-white"
+        dark:bg-black dark:text-white pr-0 pt-0 pb-0"
         >
           {sidebar}
         </aside>
