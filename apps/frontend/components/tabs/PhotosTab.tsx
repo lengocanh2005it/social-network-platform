@@ -64,7 +64,10 @@ const PhotosTab: React.FC = () => {
   const lastPostRef = useInfiniteScroll(loadMore, !!nextCursor);
 
   return (
-    <div className="bg-white rounded-lg w-full shadow p-4 flex flex-col md:gap-4 gap-3">
+    <div
+      className="bg-white rounded-lg w-full shadow p-4 flex flex-col md:gap-4 gap-3
+    dark:bg-black dark:text-white dark:border dark:border-gray-700"
+    >
       {isLoading ? (
         <div className="grid grid-cols-3 gap-1 md:gap-2">
           {Array.from({ length: 3 }).map((_, index) => (
@@ -80,7 +83,7 @@ const PhotosTab: React.FC = () => {
         <>
           {photos?.length === 0 ? (
             <>
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-white/70">
                 {viewedUser?.id === user?.id ? (
                   <>
                     <h1 className="text-medium font-semibold">
@@ -106,7 +109,7 @@ const PhotosTab: React.FC = () => {
             <section className="flex flex-col md:gap-4 gap-2">
               <div className="flex flex-col">
                 <h1 className="text-xl">Photos</h1>
-                <p className="text-gray-700">
+                <p className="text-gray-700 dark:text-white/80">
                   {viewedUser?.id === user?.id
                     ? "Your uploaded photos."
                     : "Photos shared by this user."}
