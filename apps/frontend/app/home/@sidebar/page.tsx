@@ -5,9 +5,10 @@ import { useFingerprint, useGetFriendsList, useSocket } from "@/hooks";
 import { getFriendsList } from "@/lib/api/users";
 import { useFriendStore, useUserStore } from "@/store";
 import { FriendListType, handleAxiosError, SocketNamespace } from "@/utils";
-import { Avatar, Divider } from "@heroui/react";
+import { Avatar, Divider, Input, Spinner } from "@heroui/react";
+import { debounce } from "lodash";
 import { Ellipsis, SearchIcon, Users } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const SideBarPage: React.FC = () => {
   const { user } = useUserStore();
@@ -27,6 +28,46 @@ const SideBarPage: React.FC = () => {
   );
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isHasMore, setIsHasMore] = useState<boolean>(false);
+  const [isShowSearchInput, setIsShowSearchInput] = useState<boolean>(false);
+  const [text, setText] = useState<string>("");
+  const [debouncedText, setDebouncedText] = useState<string>("");
+  const [hasSearching, setHasSearching] = useState<boolean>(false);
+
+  const updateDebouncedText = useMemo(
+    () =>
+      debounce((value: string) => {
+        setDebouncedText(value);
+      }, 500),
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      updateDebouncedText.cancel();
+    };
+  }, [updateDebouncedText]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!user?.profile?.username || hasSearching) return;
+        setHasSearching(true);
+        const res = await getFriendsList({
+          username: user.profile.username,
+          type: FriendListType.FRIENDS,
+          full_name: debouncedText ? debouncedText : undefined,
+        });
+        setFriends(res?.data ?? []);
+        setNextCursor(res?.nextCursor ?? null);
+      } catch (err) {
+        handleAxiosError(err);
+      } finally {
+        setHasSearching(false);
+      }
+    };
+
+    fetchData();
+  }, [debouncedText, hasSearching, setFriends, user?.profile?.username]);
 
   useEffect(() => {
     const handleOnlineFriends = (friendIds: string[]) =>
@@ -89,6 +130,12 @@ const SideBarPage: React.FC = () => {
     return () => clearOpenChats();
   }, [data, setFriends, setTotalFriends, clearOpenChats, setNextCursor]);
 
+  const onClear = () => {
+    setText("");
+    setDebouncedText("");
+    updateDebouncedText.cancel();
+  };
+
   return (
     <main
       className="flex flex-col md:gap-1 flex-1 overflow-y-auto h-full pr-2 pt-6"
@@ -107,27 +154,50 @@ const SideBarPage: React.FC = () => {
       <Divider className="md:my-3 my-2 dark:bg-white/30" />
 
       <div className="flex flex-col md:gap-2 gap-1 h-full">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between md:gap-3 gap-2">
           <h2 className="text-lg font-medium text-black/70 dark:text-white/70">
             Contacts
           </h2>
 
           <div className="flex items-center md:gap-4 gap-2">
             {friends?.length !== 0 && (
-              <SearchIcon size={20} className="cursor-pointer" />
+              <SearchIcon
+                size={20}
+                className="cursor-pointer"
+                onClick={() => {
+                  if (isShowSearchInput) onClear();
+                  setIsShowSearchInput(!isShowSearchInput);
+                }}
+              />
             )}
 
             <Ellipsis size={30} className="cursor-pointer focus:outline-none" />
           </div>
         </div>
 
-        {isLoading ? (
+        {isShowSearchInput && (
+          <Input
+            size="sm"
+            isClearable
+            value={text}
+            endContent={hasSearching && <Spinner size="sm" className="mr-2" />}
+            onChange={(e) => {
+              setText(e.target.value);
+              updateDebouncedText(e.target.value);
+            }}
+            isDisabled={hasSearching}
+            onClear={onClear}
+            placeholder="Contact's name..."
+          />
+        )}
+
+        {isLoading || (hasSearching && friends.length === 0) ? (
           <PrimaryLoading />
         ) : (
           <div className="h-full relative flex-1 flex flex-col">
-            {friends?.length > 0 ? (
+            {friends && friends.length > 0 ? (
               <>
-                <ul className="space-y-3">
+                <ul className="space-y-3 select-none">
                   {friends
                     .slice()
                     .sort((a, b) => {
@@ -138,7 +208,7 @@ const SideBarPage: React.FC = () => {
                       <li
                         key={friend.user_id}
                         className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 
-                      p-2 rounded-sm dark:hover:bg-white/20"
+                p-2 rounded-sm dark:hover:bg-white/20 select-none"
                         onClick={() => openChat(friend)}
                       >
                         <div className="relative">
@@ -151,7 +221,7 @@ const SideBarPage: React.FC = () => {
                           {friend.is_online && (
                             <span
                               className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full 
-              border-2 border-white"
+                      border-2 border-white"
                             />
                           )}
                         </div>
@@ -164,15 +234,24 @@ const SideBarPage: React.FC = () => {
                 {isHasMore && <PrimaryLoading />}
               </>
             ) : (
-              <div
-                className="flex flex-col items-center text-center justify-center 
-              flex-1 space-y-2"
-              >
+              <div className="flex flex-col items-center text-center justify-center flex-1 space-y-2">
                 <Users className="w-10 h-10 text-gray-400" />
-                <h1 className="text-xl font-semibold">No Friends</h1>
-                <p className="text-sm text-gray-500 dark:text-white/80">
-                  Add some friends to get started!
-                </p>
+                {text ? (
+                  <>
+                    <h1 className="text-xl font-semibold">No Results</h1>
+                    <p className="text-sm text-gray-500 dark:text-white/80">
+                      We couldn&apos;t find any users matching &quot;{text}
+                      &quot;
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h1 className="text-xl font-semibold">No Friends</h1>
+                    <p className="text-sm text-gray-500 dark:text-white/80">
+                      Add some friends to get started!
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
