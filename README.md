@@ -1,84 +1,55 @@
-# Turborepo starter
+# 🌐 Social Network Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+![Social Network Banner](https://xoecpwzqzpvdurbhyzgi.supabase.co/storage/v1/object/sign/images/Screenshot%202025-08-21%20211612.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9kMTNkNWEyNi1mMzcyLTRkMTYtYTllMS00MTA2ZTc4ZWM5MDEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvU2NyZWVuc2hvdCAyMDI1LTA4LTIxIDIxMTYxMi5wbmciLCJpYXQiOjE3NTU3ODU4MTQsImV4cCI6MTc4NzMyMTgxNH0.MNRIlHKoGkmoBoiFuqBlQol2npIFCPlYHQhdHCMiKn8)
 
-## Using this example
+---
 
-Run the following command:
+## 📑 Table of Contents
 
-```sh
-npx create-turbo@latest
-```
+- 📖 [Overview](#-overview)
+- ✨ [Features](#-features)
+- 🛠️ [Tech Stack](#-tech-stack)
+- 🗂️ [Project Structure](#-project-structure)
+- ⚡ [Getting Started](#-getting-started)
+- 🗺️ [Roadmap](#-roadmap)
+- 🤝 [Contributing](#-contributing)
+- 📜 [License](#-license)
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## 📖 Overview
 
-### Apps and Packages
+The Social Network Platform was created to bring people together in a digital space where communities can thrive and ideas can be shared seamlessly. In an era of fast-growing online interactions, this project demonstrates how a modern social network can be scalable, secure, and developer-friendly, while delivering a smooth experience for end-users.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Built as a full-stack monorepo application, it combines a Next.js frontend, a NestJS backend, and shared UI components and utilities to showcase how real-world social networks are structured and maintained.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+This project aims to serve as both a practical learning resource for developers and a starter framework for teams looking to build community-driven applications efficiently, following best practices in architecture, security, and CI/CD workflows.
 
-### Utilities
+---
 
-This Turborepo has some additional tools already setup for you:
+## ✨ Features
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+- 🛡️ **Authentication & Security** – Signup, login, forgot password, 2FA, OAuth providers, Cloudflare bot protection
+- 👤 **User Profile & Personalization** – Update personal information, manage account settings, customize profile
+- 📝 **Post & Comment System** – Create posts, comment on posts, like and react to content
+- 📖 **Stories & Bookmarks** – Share daily stories, bookmark favorite posts for later access
+- 🔗 **Post Sharing & Reporting** – Share posts externally or within the platform, and report inappropriate content
+- 💬 **Real-time Chat** – Communicate instantly with users using WebSockets
+- 🔔 **Notifications** – Receive alerts in-app or email
+- 📊 **Admin Dashboard & Management** – Manage users, content, and platform settings with analytics and moderation tools
 
-### Build
+---
 
-To build all apps and packages, run the following command:
+## 🛠️ Tech Stack
 
-```
-cd my-turborepo
-pnpm build
-```
+- **Frontend**: Next.js
+- **UI Libraries**: ShadCN/UI · HeroUI
+- **Backend**: NestJS
+- **Database**: PostgreSQL · Redis
+- **Authentication & Security**: Keycloak · JWT · OAuth2 · Cloudflare
+- **Monitoring**: Prometheus · Grafana
+- **DevOps & Deployment**: Docker · Kubernetes
 
-### Develop
+---
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/docs/reference/command-line-reference)
+## 🗂️ Project Structure
